@@ -28,19 +28,9 @@ struct lws_userdata {
 
 static struct lws_userdata *lws_create_userdata(lua_State *L) {
   struct lws_userdata *user = lua_newuserdata(L, sizeof(struct lws_userdata));;
+  memset(user, 0, sizeof(struct lws_userdata));
   user->L = L;
-  //  user->tableref = LUA_REFNIL;
-  user->ws_context = NULL;
-  user->destroyed = 0;
-  user->protocol_count = 0;
-  memset(user->protocols,0,sizeof(struct libwebsocket_protocols)*MAX_PROTOCOLS);
-  memset(user->extensions,0,sizeof(struct libwebsocket_extension)*MAX_EXTENSIONS);
   return user;
-}
-
-static void lws_delete_userdata(lua_State *L, struct lws_userdata *lws_user) {
-  //  lua_unref(L, lws_user->tableref);
-  //  lws_user->tableref = LUA_REFNIL;
 }
 
 static int lws_callback(struct libwebsocket_context * context,
@@ -52,12 +42,22 @@ static int lws_callback(struct libwebsocket_context * context,
   lua_State* L = lws_user->L;
   int argc = 2;
   int res;
+  if(reason == LWS_CALLBACK_ADD_POLL_FD) {
+    
+  }
   lua_rawgeti(L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);
   //  lua_rawgeti(lws_user->L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);
   lua_pushstring(L,"ws");
   lua_pushnumber(L,reason);
   switch(reason) {
-  case LWS_CALLBACK_ADD_POLL_FD:
+  case LWS_CALLBACK_SET_MODE_POLL_FD:
+  case LWS_CALLBACK_CLEAR_MODE_POLL_FD:
+    lua_pushnumber(L,(int)(session));
+    ++argc;
+    lua_pushnumber(L,len);
+    ++argc;
+    break;
+  case LWS_CALLBACK_ADD_POLL_FD:    
   case LWS_CALLBACK_DEL_POLL_FD:
     lua_pushnumber(L,(int)(session));
     ++argc;
@@ -71,8 +71,9 @@ static int lws_callback(struct libwebsocket_context * context,
     }
     break;
   }
-  lua_call(lws_user->L,argc,0);
-  //  res = luaL_optint(L,1,1);
+  lua_call(lws_user->L,argc,1);  
+  res = luaL_optint(L,-1,1);
+  lua_pop(L,1);
   return res;
 }
 
@@ -129,13 +130,17 @@ static int lws_context(lua_State *L) {
 }
 
 static int lws_destroy(lua_State *L) {  
+  int n = 0;
   struct lws_userdata *user = (struct lws_userdata *)luaL_checkudata(L, 1, WS_META);
   if(!user->destroyed) {
     if(user->ws_context != NULL) {
       libwebsocket_context_destroy(user->ws_context);
     }
     luaL_argcheck(L, user, 1, "websocket context expected");
-    lws_delete_userdata(L, user);
+    while(user->protocol_function_refs[n]) {
+      luaL_unref(L, LUA_REGISTRYINDEX, user->protocol_function_refs[n]);
+      ++n;
+    }
     user->destroyed = 1;
   }
   return 0;
