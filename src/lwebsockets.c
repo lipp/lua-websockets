@@ -23,7 +23,7 @@ struct lws_link {
 struct lws_context {
   lua_State *L;
   int protocol_function_refs[MAX_PROTOCOLS];
-  struct libwebsocket_context *ws_context;
+  struct libwebsocket_context *context;
   int destroyed;
   int protocol_count;
   char protocol_names[MAX_PROTOCOLS][100];
@@ -157,7 +157,7 @@ static int lws_context(lua_State *L) {
     }
     lua_pop(L, 1);
   }  
-  user->ws_context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
+  user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
   return 1;
 }
 
@@ -165,8 +165,8 @@ static int lws_context_destroy(lua_State *L) {
   int n = 0;
   struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);
   if(!user->destroyed) {
-    if(user->ws_context != NULL) {
-      libwebsocket_context_destroy(user->ws_context);
+    if(user->context != NULL) {
+      libwebsocket_context_destroy(user->context);
     }
     luaL_argcheck(L, user, 1, "websocket context expected");
     while(user->protocol_function_refs[n]) {
@@ -178,6 +178,17 @@ static int lws_context_destroy(lua_State *L) {
   return 0;
 }
 
+static int lws_context_fork_service_loop(lua_State *L) {
+  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);
+  int n;
+  if(user->destroyed) {
+    luaL_error(user->L, "websocket context destroyed");
+  }  
+  n = libwebsockets_fork_service_loop(user->context);
+  lua_pushinteger(user->L, n);
+  return 1;
+}
+
 static const struct luaL_Reg lws_module_methods [] = {
   {"context",lws_context},
   {NULL,NULL}
@@ -186,6 +197,7 @@ static const struct luaL_Reg lws_module_methods [] = {
 static const struct luaL_Reg lws_context_methods [] = {
   {"destroy",lws_context_destroy},
   {"__gc",lws_context_destroy},
+  {"fork_service_loop",lws_context_fork_service_loop},
   {NULL,NULL}
 };
 
