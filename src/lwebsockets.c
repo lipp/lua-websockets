@@ -200,9 +200,23 @@ static int lws_context(lua_State *L) {
   return 1;
 }
 
+static struct lws_context * checked_context(lua_State *L) {
+  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);  
+  if(user->destroyed) {
+    luaL_error(user->L, "websocket context destroyed");
+  }  
+  return user;
+}
+
+static int lws_context_canonical_hostname(lua_State *L) {
+  struct lws_context *user = checked_context(L);
+  lua_pushstring(L, libwebsocket_canonical_hostname(user->context));
+  return 1;
+}
+
 static int lws_context_destroy(lua_State *L) {  
   int n = 0;
-  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);
+  struct lws_context *user = checked_context(L);
   if(!user->destroyed) {
     if(user->context != NULL) {
       libwebsocket_context_destroy(user->context);
@@ -215,14 +229,6 @@ static int lws_context_destroy(lua_State *L) {
     user->destroyed = 1;
   }
   return 0;
-}
-
-static struct lws_context * checked_context(lua_State *L) {
-  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);  
-  if(user->destroyed) {
-    luaL_error(user->L, "websocket context destroyed");
-  }  
-  return user;
 }
 
 static struct lws_websocket * checked_websocket(lua_State *L) {  
@@ -239,7 +245,21 @@ static int lws_context_fork_service_loop(lua_State *L) {
 
 static int lws_websocket_tostring(lua_State *L) {  
   struct lws_websocket *user = checked_websocket(L);
-  lua_pushstring(L, "websocket XX");
+  lua_pushstring(L, "websocket");
+  return 1;
+}
+
+static int lws_websocket_serve_http_file(lua_State *L) {  
+  struct lws_websocket *user = checked_websocket(L);
+  const char * filename = luaL_checkstring(L, 2);
+  const char * content_type = luaL_checkstring(L, 3);
+  lua_pushinteger(L, libwebsockets_serve_http_file(user->wsi, filename, content_type));
+  return 1;
+}
+
+static int lws_websocket_get_socket_fd(lua_State *L) {  
+  struct lws_websocket *user = checked_websocket(L);
+  lua_pushinteger(L, libwebsocket_get_socket_fd(user->wsi));
   return 1;
 }
 
@@ -262,10 +282,13 @@ static const struct luaL_Reg lws_context_methods [] = {
   {"__gc",lws_context_destroy},
   {"fork_service_loop",lws_context_fork_service_loop},
   {"service",lws_context_service},
+  {"canonical_hostname",lws_context_canonical_hostname},
   {NULL,NULL}
 };
 
 static const struct luaL_Reg lws_websocket_methods [] = {
+  {"serve_http_file",lws_websocket_serve_http_file},
+  {"get_socket_fd",lws_websocket_get_socket_fd},
   {"__tostring",lws_websocket_tostring},
   {NULL,NULL}
 };
