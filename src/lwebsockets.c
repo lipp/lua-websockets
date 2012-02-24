@@ -4,6 +4,37 @@
 #include "libwebsockets.h"
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
+
+static void stackDump (const char* bla, lua_State *L) {
+      int i;
+      int top = lua_gettop(L);
+      printf("%s ",bla);
+      for (i = 1; i <= top; i++) {  /* repeat for each level */
+        int t = lua_type(L, i);
+        switch (t) {
+    
+          case LUA_TSTRING:  /* strings */
+            printf("`%s'", lua_tostring(L, i));
+            break;
+    
+          case LUA_TBOOLEAN:  /* booleans */
+            printf(lua_toboolean(L, i) ? "true" : "false");
+            break;
+    
+          case LUA_TNUMBER:  /* numbers */
+            printf("%g", lua_tonumber(L, i));
+            break;
+    
+          default:  /* other values */
+            printf("%s", lua_typename(L, t));
+            break;
+    
+        }
+        printf("  ");  /* put a separator */
+      }
+      printf("\n");  /* end the listing */
+    }
 
 #define WS_CONTEXT_META "lws.con"
 #define WS_WEBSOCKET_META "lws.ws"
@@ -59,13 +90,18 @@ static int lws_callback(struct libwebsocket_context * context,
   int argc = 0;
   int res;
   int ws_ref = LUA_REFNIL;
+  //  printf("TOP %d %s %d\n",lua_gettop(L),lua_typename(L,lua_type(L,1)),luaL_optint(L,2,-100));
+  stackDump("cbIN",L);
  // printf("CALLBACK %d %p %p %d %p\n",reason,dyn_user,in,len,user);
   if(reason == LWS_CALLBACK_ESTABLISHED || reason == LWS_CALLBACK_CLIENT_ESTABLISHED) {
+    stackDump("cbNEW",L);
     luaL_getmetatable(L, WS_WEBSOCKET_META);
+    stackDump("cbNEW3",L);
     lua_setmetatable(L, -2);
-    lua_pushvalue(L,1);
+    stackDump("cbNEW5",L);
     ws_ref = luaL_ref(L, LUA_REGISTRYINDEX);    
     *(int *)dyn_user = ws_ref;
+    stackDump("cbNEW6",L);
   }
   else if(reason == LWS_CALLBACK_CLOSED) {
     printf("CLOSED\n");
@@ -79,6 +115,7 @@ static int lws_callback(struct libwebsocket_context * context,
   /* second argumen arguments is reason as number */
   lua_pushnumber(L,reason);
   ++argc;
+    stackDump("cbRDY",L);
 
   switch(reason) {
   case LWS_CALLBACK_SET_MODE_POLL_FD:
@@ -111,6 +148,7 @@ static int lws_callback(struct libwebsocket_context * context,
   res = luaL_optint(L,-1,0); /* 0 means ok / continue */
 
   lua_pop(L,1);
+  stackDump("cbOUT",L);
   return res;
 }
 
@@ -125,7 +163,6 @@ static int lws_context(lua_State *L) {
   unsigned int options = 0;
   struct lws_context *user = lws_context_create(L);
   int index = 0;
-
   if( lua_type(L, 1) == LUA_TTABLE ) {
     lua_getfield(L, 1, "port");
     port = luaL_optint(L, -1, 0);    
@@ -135,30 +172,30 @@ static int lws_context(lua_State *L) {
     interf = luaL_optstring(L, -1, NULL);    
     lua_pop(L, 1);
 
+    /* push protocols table on top */
     lua_getfield(L, 1, "protocols");    
     luaL_checktype(L, 1, LUA_TTABLE);
-    lua_pushvalue(L, 1);
-    //    lua_pop(L,-1);
+    lua_pushvalue(L, 1);   
     lua_setfenv(L, -3);
 
+    /* nil is top (-1) */
     lua_pushnil(L);
+    /* lua_next pushed key at -2 and value at -1 (top)  */
     while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {  
       int n = user->protocol_count;
       strcpy(user->protocol_names[n],luaL_checkstring(L,-2));
       user->protocols[n].name = user->protocol_names[n];
       user->protocols[n].callback = lws_callback;
       user->protocols[n].per_session_data_size = sizeof(int); // will hold a luaL_ref to the websocket table
-      lua_pushvalue(L, -1);
       user->protocol_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
-      lua_remove(L, 1);
       ++user->protocol_count;
-      lua_pop(L, 1);
       user->links[n].userdata = user;
       user->links[n].protocol_index = n;
       user->protocols[n].user = &user->links[n];
     }
+    /* pop protocols table on top */
     lua_pop(L, 1);
-  }  
+  }
   user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
   return 1;
 }
@@ -189,9 +226,10 @@ static struct lws_context * checked_context(lua_State *L) {
 }
 
 static struct lws_websocket * checked_websocket(lua_State *L) {
-  printf("ASLDKJSD\n");
+  /*  printf("ASLDKJSD\n");
   struct lws_websocket *user = (struct lws_websocket *)luaL_checkudata(L, 1, WS_WEBSOCKET_META);  
-  return user;
+  return user;*/
+  return NULL;
 }
 
 static int lws_context_fork_service_loop(lua_State *L) {
@@ -210,6 +248,7 @@ static int lws_websocket_tostring(lua_State *L) {
 static int lws_context_service(lua_State *L) {
   struct lws_context *user = checked_context(L);
   int timeout_ms = luaL_optint(L, 2, 0);
+  lua_pop(L,1);
   int n = libwebsocket_service(user->context, timeout_ms);
   lua_pushinteger(user->L, n);
   return 1;
