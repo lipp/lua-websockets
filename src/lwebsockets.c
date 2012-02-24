@@ -36,6 +36,8 @@ static struct lws_context *lws_context_create(lua_State *L) {
   struct lws_context *user = lua_newuserdata(L, sizeof(struct lws_context));;
   memset(user, 0, sizeof(struct lws_context));
   user->L = L;
+  luaL_getmetatable(L, WS_CONTEXT_META);
+  lua_setmetatable(L, -2);
   return user;
 }
 
@@ -57,23 +59,24 @@ static int lws_callback(struct libwebsocket_context * context,
   int argc = 0;
   int res;
   int ws_ref = LUA_REFNIL;
+ // printf("CALLBACK %d %p %p %d %p\n",reason,dyn_user,in,len,user);
   if(reason == LWS_CALLBACK_ESTABLISHED || reason == LWS_CALLBACK_CLIENT_ESTABLISHED) {
     luaL_getmetatable(L, WS_WEBSOCKET_META);
     lua_setmetatable(L, -2);
+    lua_pushvalue(L,1);
     ws_ref = luaL_ref(L, LUA_REGISTRYINDEX);    
     *(int *)dyn_user = ws_ref;
-    lua_remove(L, 1);
   }
   else if(reason == LWS_CALLBACK_CLOSED) {
+    printf("CLOSED\n");
     luaL_unref(L, LUA_REGISTRYINDEX,*(int *)dyn_user);
   }
-  
   /* push Lua protocol callback function on stack */
   lua_rawgeti(L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);  
   /* first arguments is websocket (userdata). may be nil */
   lua_rawgeti(L, LUA_REGISTRYINDEX, ws_ref);
   ++argc;
-  /* first arguments is websocket (userdata). may be nil */
+  /* second argumen arguments is reason as number */
   lua_pushnumber(L,reason);
   ++argc;
 
@@ -105,7 +108,8 @@ static int lws_callback(struct libwebsocket_context * context,
     break;
   }
   lua_call(lws_user->L,argc,1);  
-  res = luaL_optint(L,-1,1);
+  res = luaL_optint(L,-1,0); /* 0 means ok / continue */
+
   lua_pop(L,1);
   return res;
 }
@@ -122,9 +126,6 @@ static int lws_context(lua_State *L) {
   struct lws_context *user = lws_context_create(L);
   int index = 0;
 
-  luaL_getmetatable(L, WS_CONTEXT_META);
-  lua_setmetatable(L, -2);
-
   if( lua_type(L, 1) == LUA_TTABLE ) {
     lua_getfield(L, 1, "port");
     port = luaL_optint(L, -1, 0);    
@@ -137,7 +138,8 @@ static int lws_context(lua_State *L) {
     lua_getfield(L, 1, "protocols");    
     luaL_checktype(L, 1, LUA_TTABLE);
     lua_pushvalue(L, 1);
-    assert(lua_setfenv(L, -3) == 1);
+    //    lua_pop(L,-1);
+    lua_setfenv(L, -3);
 
     lua_pushnil(L);
     while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {  
@@ -178,13 +180,37 @@ static int lws_context_destroy(lua_State *L) {
   return 0;
 }
 
-static int lws_context_fork_service_loop(lua_State *L) {
-  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);
-  int n;
+static struct lws_context * checked_context(lua_State *L) {
+  struct lws_context *user = (struct lws_context *)luaL_checkudata(L, 1, WS_CONTEXT_META);  
   if(user->destroyed) {
     luaL_error(user->L, "websocket context destroyed");
   }  
-  n = libwebsockets_fork_service_loop(user->context);
+  return user;
+}
+
+static struct lws_websocket * checked_websocket(lua_State *L) {
+  printf("ASLDKJSD\n");
+  struct lws_websocket *user = (struct lws_websocket *)luaL_checkudata(L, 1, WS_WEBSOCKET_META);  
+  return user;
+}
+
+static int lws_context_fork_service_loop(lua_State *L) {
+  struct lws_context *user = checked_context(L);  
+  int n = libwebsockets_fork_service_loop(user->context);
+  lua_pushinteger(user->L, n);
+  return 1;
+}
+
+static int lws_websocket_tostring(lua_State *L) {  
+  struct lws_websocket *user = checked_websocket(L);
+  lua_pushstring(L, "websocket");
+  return 1;
+}
+
+static int lws_context_service(lua_State *L) {
+  struct lws_context *user = checked_context(L);
+  int timeout_ms = luaL_optint(L, 2, 0);
+  int n = libwebsocket_service(user->context, timeout_ms);
   lua_pushinteger(user->L, n);
   return 1;
 }
@@ -198,10 +224,12 @@ static const struct luaL_Reg lws_context_methods [] = {
   {"destroy",lws_context_destroy},
   {"__gc",lws_context_destroy},
   {"fork_service_loop",lws_context_fork_service_loop},
+  {"service",lws_context_service},
   {NULL,NULL}
 };
 
 static const struct luaL_Reg lws_websocket_methods [] = {
+  {"__tostring",lws_websocket_tostring},
   {NULL,NULL}
 };
 
