@@ -27,7 +27,7 @@ static void stackDump (const char* bla, lua_State *L) {
             break;
     
           default:  /* other values */
-            printf("%s", lua_typename(L, t));
+            printf("%s %s", lua_typename(L, t), lua_tostring(L,t));
             break;
     
         }
@@ -94,11 +94,12 @@ static int lws_callback(struct libwebsocket_context * context,
   stackDump("cbIN",L);
  // printf("CALLBACK %d %p %p %d %p\n",reason,dyn_user,in,len,user);
   if(reason == LWS_CALLBACK_ESTABLISHED || reason == LWS_CALLBACK_CLIENT_ESTABLISHED) {
+    lws_websocket_create(L, wsi);
     stackDump("cbNEW",L);
     luaL_getmetatable(L, WS_WEBSOCKET_META);
     stackDump("cbNEW3",L);
     lua_setmetatable(L, -2);
-    stackDump("cbNEW5",L);
+    stackDump("cbNEW4",L);
     ws_ref = luaL_ref(L, LUA_REGISTRYINDEX);    
     *(int *)dyn_user = ws_ref;
     stackDump("cbNEW6",L);
@@ -115,7 +116,6 @@ static int lws_callback(struct libwebsocket_context * context,
   /* second argumen arguments is reason as number */
   lua_pushnumber(L,reason);
   ++argc;
-    stackDump("cbRDY",L);
 
   switch(reason) {
   case LWS_CALLBACK_SET_MODE_POLL_FD:
@@ -225,11 +225,9 @@ static struct lws_context * checked_context(lua_State *L) {
   return user;
 }
 
-static struct lws_websocket * checked_websocket(lua_State *L) {
-  /*  printf("ASLDKJSD\n");
+static struct lws_websocket * checked_websocket(lua_State *L) {  
   struct lws_websocket *user = (struct lws_websocket *)luaL_checkudata(L, 1, WS_WEBSOCKET_META);  
-  return user;*/
-  return NULL;
+  return user;
 }
 
 static int lws_context_fork_service_loop(lua_State *L) {
@@ -241,7 +239,7 @@ static int lws_context_fork_service_loop(lua_State *L) {
 
 static int lws_websocket_tostring(lua_State *L) {  
   struct lws_websocket *user = checked_websocket(L);
-  lua_pushstring(L, "websocket");
+  lua_pushstring(L, "websocket XX");
   return 1;
 }
 

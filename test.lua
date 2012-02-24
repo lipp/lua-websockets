@@ -5,9 +5,8 @@ local c = websockets.context{
    protocols = {
       logws = function(...) 
 		 local args = {...}		 
-		 print('LL',#args,type(args[1]),...)
-		 for i,arg in ipairs(args) do
-		    print('logws',i,arg,getmetatable(arg));
+		 for i,arg in pairs(args) do
+		    print('logws',i,arg);
 		 end
 	      end
    }
