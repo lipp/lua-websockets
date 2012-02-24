@@ -1,10 +1,10 @@
 local websockets = require'websockets'
 local c = websockets.context{
    port = 8001,
-   interf = 'lo',
+--   interf = 'eth6',
    protocols = {
       logws = print
    }
 }
 
-context:destroy()
+c:destroy()

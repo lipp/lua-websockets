@@ -5,10 +5,9 @@
 #include <string.h>
 #include <assert.h>
 
-#define WS_META "ws.meta"
+#define WS_META "ws."
 #define MAX_PROTOCOLS 4
 #define MAX_EXTENSIONS 4
-#define MAX_USERDATA 5
 
 struct lws_link {
   void *userdata;
@@ -21,14 +20,11 @@ struct lws_userdata {
   struct libwebsocket_context *ws_context;
   int destroyed;
   int protocol_count;
-  int index;  
   char protocol_names[MAX_PROTOCOLS][100];
   struct libwebsocket_protocols protocols[MAX_PROTOCOLS];
   struct libwebsocket_extension extensions[MAX_EXTENSIONS];
   struct lws_link links[MAX_PROTOCOLS];
 };
-
-static struct lws_userdata* lws_userdatas[MAX_USERDATA];
 
 static struct lws_userdata *lws_create_userdata(lua_State *L) {
   struct lws_userdata *user = lua_newuserdata(L, sizeof(struct lws_userdata));;
@@ -37,7 +33,6 @@ static struct lws_userdata *lws_create_userdata(lua_State *L) {
   user->ws_context = NULL;
   user->destroyed = 0;
   user->protocol_count = 0;
-  user->index = -1;
   memset(user->protocols,0,sizeof(struct libwebsocket_protocols)*MAX_PROTOCOLS);
   memset(user->extensions,0,sizeof(struct libwebsocket_extension)*MAX_EXTENSIONS);
   return user;
@@ -54,16 +49,31 @@ static int lws_callback(struct libwebsocket_context * context,
 			void *in, size_t len, void *user) {
   struct lws_link* link = user;
   struct lws_userdata* lws_user = link->userdata;
-  int argc = 1;
-  lua_rawgeti(lws_user->L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);
-  lua_pushnumber(lws_user->L,reason);
-  if( len > 0 && in != NULL ) {
-    lua_pushlstring(lws_user->L,in,len);
+  lua_State* L = lws_user->L;
+  int argc = 2;
+  int res;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);
+  //  lua_rawgeti(lws_user->L, LUA_REGISTRYINDEX, lws_user->protocol_function_refs[link->protocol_index]);
+  lua_pushstring(L,"ws");
+  lua_pushnumber(L,reason);
+  switch(reason) {
+  case LWS_CALLBACK_ADD_POLL_FD:
+  case LWS_CALLBACK_DEL_POLL_FD:
+    lua_pushnumber(L,(int)(session));
     ++argc;
+    break;
+  case LWS_CALLBACK_RECEIVE:
+  case LWS_CALLBACK_CLIENT_RECEIVE:
+  case LWS_CALLBACK_HTTP:
+    if(len > 0 && in != NULL) {
+      lua_pushlstring(L,in,len);
+      ++argc;    
+    }
+    break;
   }
   lua_call(lws_user->L,argc,0);
-  //  printf("call %s %d\n",name,	lua_isfunction(lws_userdatas[index]->L,1));	
-
+  //  res = luaL_optint(L,1,1);
+  return res;
 }
 
 
@@ -114,15 +124,6 @@ static int lws_context(lua_State *L) {
     }
     lua_pop(L, 1);
   }  
-  while(lws_userdatas[index] != NULL) {
-    ++index;
-    if(index > MAX_USERDATA) {
-      luaL_error(L, "websockets: out of userdata");
-    }    
-  }
-  lws_userdatas[index] = user;
-  user->index = index;
-
   user->ws_context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
   return 1;
 }
@@ -136,9 +137,6 @@ static int lws_destroy(lua_State *L) {
     luaL_argcheck(L, user, 1, "websocket context expected");
     lws_delete_userdata(L, user);
     user->destroyed = 1;
-  }
-  if(user->index > -1) {
-    lws_userdatas[user->index] = NULL;
   }
   return 0;
 }
@@ -155,7 +153,6 @@ static const struct luaL_Reg lws_context_methods [] = {
 };
 
 int luaopen_websockets(lua_State *L) {
-  memset(lws_userdatas, 0 ,sizeof(struct lws_userdata*)*MAX_USERDATA);
   luaL_newmetatable(L, WS_META);
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
