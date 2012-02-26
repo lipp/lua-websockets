@@ -100,7 +100,6 @@ static int luaws_callback(struct libwebsocket_context * context,
     *(int *)dyn_user = ws_ref;
   }
   else if(reason == LWS_CALLBACK_CLOSED) {
-    printf("CLOSED\n");
     luaL_unref(L, LUA_REGISTRYINDEX,*(int *)dyn_user);
   }
   /* push Lua protocol callback function on stack */
@@ -198,14 +197,22 @@ static int luaws_context(lua_State *L) {
     /* nil is top (-1) for starting lua_next with 'start' key */
     lua_pushnil(L);
     /* lua_next pushes key at -2 and value at -1 (top)  */
-    while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {  
-      int n = user->protocol_count;
-      strcpy(user->protocol_names[n],luaL_checkstring(L,-2));
+    while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
+      /* read name */
+      const int n = user->protocol_count;
+      lua_getfield(L, -1, "name");
+      strcpy(user->protocol_names[n],luaL_checkstring(L, -1));
       user->protocols[n].name = user->protocol_names[n];
+      lua_pop(L, 1);
+
+      /* push callback and store ref to callback */
+      lua_getfield(L, -1, "callback");
       user->protocols[n].callback = luaws_callback;
       /* the session user pointer will be initialized in the callback with reason LWS_ESTABLISHED */
       user->protocols[n].per_session_data_size = sizeof(int); // will hold a luaL_ref to the websocket table
       user->protocol_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
+      lua_pop(L, 1);
+
       ++user->protocol_count;
       user->links[n].userdata = user;
       user->links[n].protocol_index = n;

@@ -1,15 +1,10 @@
 local websockets = require'websockets'
 local c = websockets.context{
    port = 8001,
---   interf = 'eth6',
-   protocols = {
-      logws = function(...) 
-		 local args = {...}		 
-		 for i,arg in pairs(args) do
-		    print('logws',i,arg);
-		 end
-	      end
-   }
+   protocols = {{
+                   name = "http-only",
+                   callback = print
+             }}
 }
 
 while true do
