@@ -162,14 +162,40 @@ static int lws_context(lua_State *L) {
   int uid = -1;
   unsigned int options = 0;
   struct lws_context *user = lws_context_create(L);
-  int index = 0;
   if( lua_type(L, 1) == LUA_TTABLE ) {
+    /* read port table entry */
     lua_getfield(L, 1, "port");
     port = luaL_optint(L, -1, 0);    
     lua_pop(L, 1);
 
+    /* read gid table entry */
+    lua_getfield(L, 1, "gid");
+    gid = luaL_optint(L, -1, -1);    
+    lua_pop(L, 1);
+
+    /* read uid table entry */
+    lua_getfield(L, 1, "uid");
+    uid = luaL_optint(L, -1, -1);    
+    lua_pop(L, 1);
+
+    /* read  table entry */
+    lua_getfield(L, 1, "options");
+    options = luaL_optint(L, -1, 0);    
+    lua_pop(L, 1);
+
+    /* read interf table entry */
     lua_getfield(L, 1, "interf");
     interf = luaL_optstring(L, -1, NULL);    
+    lua_pop(L, 1);
+
+    /* read ssl_cert_filepath table entry */
+    lua_getfield(L, 1, "ssl_cert_filepath");
+    ssl_cert_filepath = luaL_optstring(L, -1, NULL);    
+    lua_pop(L, 1);
+
+    /* read ssl_private_key_filepath table entry */
+    lua_getfield(L, 1, "ssl_private_key_filepath");
+    ssl_private_key_filepath = luaL_optstring(L, -1, NULL);    
     lua_pop(L, 1);
 
     /* push protocols table on top */
@@ -178,14 +204,15 @@ static int lws_context(lua_State *L) {
     lua_pushvalue(L, 1);   
     lua_setfenv(L, -3);
 
-    /* nil is top (-1) */
+    /* nil is top (-1) for starting lua_next with 'start' key */
     lua_pushnil(L);
-    /* lua_next pushed key at -2 and value at -1 (top)  */
+    /* lua_next pushes key at -2 and value at -1 (top)  */
     while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {  
       int n = user->protocol_count;
       strcpy(user->protocol_names[n],luaL_checkstring(L,-2));
       user->protocols[n].name = user->protocol_names[n];
       user->protocols[n].callback = lws_callback;
+      /* the session user pointer will be initialized in the callback with reason LWS_ESTABLISHED */
       user->protocols[n].per_session_data_size = sizeof(int); // will hold a luaL_ref to the websocket table
       user->protocol_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
       ++user->protocol_count;
@@ -293,6 +320,24 @@ static const struct luaL_Reg lws_websocket_methods [] = {
   {NULL,NULL}
 };
 
+struct lws_constant {
+  const char *name;
+  int value;
+};
+
+struct lws_constant lws_constants [] = {
+  {"CALLBACK_ESTABLISHED",LWS_CALLBACK_ESTABLISHED},
+  {NULL,0}
+};
+
+static void lws_register_constants(lua_State *L, struct lws_constant *constants) {
+  while(constants->name) {
+    lua_pushinteger(L, constants->value);
+    lua_setfield(L, -2, constants->name);
+    ++constants;
+  }
+}
+
 int luaopen_websockets(lua_State *L) {
   luaL_newmetatable(L, WS_CONTEXT_META);
   lua_pushvalue(L, -1);
@@ -303,5 +348,6 @@ int luaopen_websockets(lua_State *L) {
   lua_setfield(L, -2, "__index");
   luaL_register(L, NULL, lws_websocket_methods);
   luaL_register(L, "websockets", lws_module_methods);
+  lws_register_constants(L, lws_constants);
   return 1;
 }
