@@ -115,8 +115,8 @@ Registers an on_closed callback on the websocket.
 websocket:on_broadcast(websockets.WRITE_TEXT) --forward broadcast as text
 websocket:on_broadcast(websockets.WRITE_BINARY) --forward broadcast binary
 websocket:on_broadcast(
-        function(ws)
-                ws:write('hello',websockets.WRITE_TEXT)
+        function(ws,data)
+                ws:write(data..'hello',websockets.WRITE_TEXT)
         end)
 ```
 
