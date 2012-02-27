@@ -63,10 +63,10 @@ struct luaws_context_link {
 struct luaws_context {
   lua_State *L;
   int http_function_ref;
-  int add_fd_function_refs[MAX_PROTOCOLS];
-  int del_fd_function_refs[MAX_PROTOCOLS];
-  int set_mode_function_refs[MAX_PROTOCOLS];
-  int clear_mode_function_refs[MAX_PROTOCOLS];
+  int add_fd_function_ref;
+  int del_fd_function_ref;
+  int set_mode_function_ref;
+  int clear_mode_function_ref;
   int established_function_refs[MAX_PROTOCOLS];
   struct libwebsocket_context *context;
   int destroyed;
@@ -82,9 +82,10 @@ static struct luaws_context *luaws_context_create(lua_State *L) {
   struct luaws_context *user = lua_newuserdata(L, sizeof(struct luaws_context));;
   memset(user, 0, sizeof(struct luaws_context));
   user->L = L;
+  user->http_function_ref = LUA_REFNIL;
+  user->add_fd_function_ref = LUA_REFNIL;
+  user->del_fd_function_ref = LUA_REFNIL;
   for(i = 0; i < MAX_PROTOCOLS; ++i) {
-    user->add_fd_function_refs[i] = LUA_REFNIL;
-    user->del_fd_function_refs[i] = LUA_REFNIL;
     user->established_function_refs[i] = LUA_REFNIL;
   }
   luaL_getmetatable(L, WS_CONTEXT_META);
@@ -123,7 +124,7 @@ static int luaws_callback(struct libwebsocket_context * context,
   struct luaws_context_link* link = user;
   struct luaws_context* luaws_user = link->userdata;
   lua_State* L = luaws_user->L;
-  printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
+  //  printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
   if(reason == LWS_CALLBACK_ESTABLISHED) {
     struct luaws_websocket * ws = luaws_websocket_create(L, context, wsi);
     *(struct luaws_websocket **)dyn_user = ws;
@@ -200,10 +201,10 @@ static int luaws_callback(struct libwebsocket_context * context,
   }
   else if(reason == LWS_CALLBACK_ADD_POLL_FD || reason == LWS_CALLBACK_DEL_POLL_FD) {
     if(reason == LWS_CALLBACK_ADD_POLL_FD) {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->add_fd_function_refs[link->protocol_index]);  
+      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->add_fd_function_ref);  
     }
     else {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->del_fd_function_refs[link->protocol_index]);  
+      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->del_fd_function_ref);  
     }
     if(!lua_isfunction(L, -1)) {
       lua_pop(L, 1);
@@ -216,10 +217,10 @@ static int luaws_callback(struct libwebsocket_context * context,
   }
   else if(reason == LWS_CALLBACK_SET_MODE_POLL_FD || reason == LWS_CALLBACK_SET_MODE_POLL_FD) {
     if(reason == LWS_CALLBACK_SET_MODE_POLL_FD) {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->set_mode_function_refs[link->protocol_index]);  
+      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->set_mode_function_ref);  
     }
     else {
-      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->clear_mode_function_refs[link->protocol_index]);  
+      lua_rawgeti(L, LUA_REGISTRYINDEX, luaws_user->clear_mode_function_ref);  
     }
     if(!lua_isfunction(L, -1)) {
       lua_pop(L, 1);
@@ -283,6 +284,15 @@ static int luaws_context(lua_State *L) {
   /* get (unique) http handler */
   lua_getfield(L, 1, "on_http");
   user->http_function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  /* push add_fd and store ref */
+  lua_getfield(L, 1, "on_add_fd");
+  user->add_fd_function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  
+  /* push remove_fd and store ref */
+  lua_getfield(L, 1, "on_del_fd");
+  user->del_fd_function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
   user->protocols[0].name = "http-only";
   user->protocols[0].callback = luaws_callback;
   user->protocols[0].per_session_data_size = 0;
@@ -296,45 +306,35 @@ static int luaws_context(lua_State *L) {
   if(lua_istable(L, -1)) {
     lua_pushvalue(L, 1);   
     lua_setfenv(L, -3);
-  
-      /* nil is top (-1) for starting lua_next with 'start' key */
-      lua_pushnil(L);
     
-      /* lua_next pushes key at -2 and value at -1 (top)  */
-      while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
-	/* read name */
-	const int n = user->protocol_count;
-	printf("%d\n",user->protocol_count);
-	strcpy(user->protocol_names[n], luaL_checkstring(L, -2));
-	user->protocols[n].name = user->protocol_names[n];
-	//	lua_pop(L, 1);
+    /* nil is top (-1) for starting lua_next with 'start' key */
+    lua_pushnil(L);
+    
+    /* lua_next pushes key at -2 and value at -1 (top)  */
+    while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
+      /* read name */
+      const int n = user->protocol_count;
+      strcpy(user->protocol_names[n], luaL_checkstring(L, -2));
+      user->protocols[n].name = user->protocol_names[n];
 
-	/* push add_fd and store ref */
-	lua_getfield(L, -1, "on_add_fd");
-	user->add_fd_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
+      /* push established and store ref */
+      lua_getfield(L, -1, "on_established");
+      user->established_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
 
-	/* push remove_fd and store ref */
-	lua_getfield(L, -1, "on_del_fd");
-	user->del_fd_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
+      user->protocols[n].callback = luaws_callback;
+      /* the session user pointer will be initialized in the callback with reason LWS_ESTABLISHED */
+      user->protocols[n].per_session_data_size = sizeof(struct luaws_websocket *); // will hold a luaL_ref to the websocket table
 
-	/* push established and store ref */
-	lua_getfield(L, -1, "on_established");
-	user->established_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
+      user->links[n].userdata = user;
+      user->links[n].protocol_index = n;
+      user->protocols[n].user = &user->links[n];
 
-	user->protocols[n].callback = luaws_callback;
-	/* the session user pointer will be initialized in the callback with reason LWS_ESTABLISHED */
-	user->protocols[n].per_session_data_size = sizeof(struct luaws_websocket *); // will hold a luaL_ref to the websocket table
-
-	user->links[n].userdata = user;
-	user->links[n].protocol_index = n;
-	user->protocols[n].user = &user->links[n];
-
-	/* pop protocol table entry */
-	lua_pop(L, 1);
-	++user->protocol_count;
-      }
-      /* pop protocols table on top */
+      /* pop protocol table entry */
       lua_pop(L, 1);
+      ++user->protocol_count;
+    }
+    /* pop protocols table on top */
+    lua_pop(L, 1);
   }
   user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
   if(user->context == NULL) {
@@ -358,24 +358,15 @@ static int luaws_context_canonical_hostname(lua_State *L) {
 }
 
 static int luaws_context_destroy(lua_State *L) {  
-  int n;
+  int n = 0;
   struct luaws_context *user = checked_context(L);
   if(!user->destroyed) {
     if(user->context != NULL) {
       libwebsocket_context_destroy(user->context);
     }
     luaL_argcheck(L, user, 1, "websocket context expected");
-    n = 0;
-    while(user->add_fd_function_refs[n]) {
-      luaL_unref(L, LUA_REGISTRYINDEX, user->add_fd_function_refs[n]);
-      ++n;
-    }
-    n = 0;
-    while(user->del_fd_function_refs[n]) {
-      luaL_unref(L, LUA_REGISTRYINDEX, user->del_fd_function_refs[n]);
-      ++n;
-    }
-    n = 0;
+    luaL_unref(L, LUA_REGISTRYINDEX, user->add_fd_function_ref);
+    luaL_unref(L, LUA_REGISTRYINDEX, user->del_fd_function_ref);
     while(user->established_function_refs[n]) {
       luaL_unref(L, LUA_REGISTRYINDEX, user->established_function_refs[n]);
       ++n;
