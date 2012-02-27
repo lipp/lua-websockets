@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-static void stackDump (const char* bla, lua_State *L) {
+static int stackDump (const char* bla, lua_State *L) {
   int i;
   int top = lua_gettop(L);
   printf("%s ",bla);
@@ -34,6 +34,7 @@ static void stackDump (const char* bla, lua_State *L) {
     printf("  ");  /* put a separator */
   }
   printf("\n");  /* end the listing */
+  return 1;
 }
 
 #define WS_CONTEXT_META "luaws.con"
@@ -166,6 +167,7 @@ static int luaws_callback(struct libwebsocket_context * context,
     struct luaws_websocket * ws = *(struct luaws_websocket **)dyn_user;    
     if(ws->broadcast_mode == LUAWS_FORWARD) {
       lua_rawgeti(L, LUA_REGISTRYINDEX, ws->broadcast_function_ref);
+      lua_rawgeti(L, LUA_REGISTRYINDEX, ws->ref);
       assert(len >= 0 && in != NULL);
       lua_pushlstring(L,in,len);    
       lua_call(L, 2, 0);
@@ -290,21 +292,25 @@ static int luaws_context(lua_State *L) {
   user->protocol_count = 1;
 
   /* push protocols table on top */
+    stackDump("asd",L);
   lua_getfield(L, 1, "protocols");
+    stackDump("asd",L);
   if(lua_istable(L, -1)) {
-      lua_pushvalue(L, 1);   
-      lua_setfenv(L, -3);
+    lua_pushvalue(L, 1);   
+    lua_setfenv(L, -3);
   
       /* nil is top (-1) for starting lua_next with 'start' key */
+    stackDump("asd",L);
       lua_pushnil(L);
+    
       /* lua_next pushes key at -2 and value at -1 (top)  */
-      while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
+      while(stackDump("asd",L) && user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
 	/* read name */
 	const int n = user->protocol_count;
-	lua_getfield(L, -1, "name");
-	strcpy(user->protocol_names[n],luaL_checkstring(L, -1));
+	printf("%d\n",user->protocol_count);
+	strcpy(user->protocol_names[n], luaL_checkstring(L, -2));
 	user->protocols[n].name = user->protocol_names[n];
-	lua_pop(L, 1);
+	//	lua_pop(L, 1);
 
 	/* push add_fd and store ref */
 	lua_getfield(L, -1, "on_add_fd");
@@ -322,17 +328,17 @@ static int luaws_context(lua_State *L) {
 	/* the session user pointer will be initialized in the callback with reason LWS_ESTABLISHED */
 	user->protocols[n].per_session_data_size = sizeof(struct luaws_websocket *); // will hold a luaL_ref to the websocket table
 
-	++user->protocol_count;
 	user->links[n].userdata = user;
 	user->links[n].protocol_index = n;
 	user->protocols[n].user = &user->links[n];
 
 	/* pop protocol table entry */
 	lua_pop(L, 1);
+	++user->protocol_count;
       }
       /* pop protocols table on top */
       lua_pop(L, 1);
-    }
+  }
   user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);
   if(user->context == NULL) {
     luaL_error(L, "websocket could not create context");
