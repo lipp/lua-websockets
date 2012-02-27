@@ -544,6 +544,7 @@ static const struct luaL_Reg luaws_context_methods [] = {
   {"service",luaws_context_service},
   {"canonical_hostname",luaws_context_canonical_hostname},
   {"broadcast",luaws_context_broadcast},
+  {"__tostring",luaws_context_tostring},
   {NULL,NULL}
 };
 
