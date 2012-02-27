@@ -98,8 +98,7 @@ libwebsockets_serve_http_file.
 
 ```lua
 websocket:write('hello',
-        websockets.WRITE_TEXT -- can be either websockets.WRITE_TEXT
-        or websockets.WRITE_BINARY
+        websockets.WRITE_TEXT -- can be either websockets.WRITE_TEXT or websockets.WRITE_BINARY
         )
 ```
 
