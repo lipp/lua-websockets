@@ -292,19 +292,16 @@ static int luaws_context(lua_State *L) {
   user->protocol_count = 1;
 
   /* push protocols table on top */
-    stackDump("asd",L);
   lua_getfield(L, 1, "protocols");
-    stackDump("asd",L);
   if(lua_istable(L, -1)) {
     lua_pushvalue(L, 1);   
     lua_setfenv(L, -3);
   
       /* nil is top (-1) for starting lua_next with 'start' key */
-    stackDump("asd",L);
       lua_pushnil(L);
     
       /* lua_next pushes key at -2 and value at -1 (top)  */
-      while(stackDump("asd",L) && user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
+      while(user->protocol_count < MAX_PROTOCOLS && lua_next(L, -2) != 0) {
 	/* read name */
 	const int n = user->protocol_count;
 	printf("%d\n",user->protocol_count);
@@ -452,6 +449,19 @@ static int luaws_context_broadcast(lua_State *L) {
   return 1;
 }
 
+static int luaws_websocket_broadcast(lua_State *L) {
+  struct luaws_websocket *user = checked_websocket(L);
+  size_t len;
+  const char *data = lua_tolstring(L, 2, &len);
+  const int padded_len = LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING; 
+  char padded[padded_len];
+  int n;
+  memcpy(padded + LWS_SEND_BUFFER_PRE_PADDING, data, len);
+  n = libwebsockets_broadcast(libwebsockets_get_protocol(user->wsi), padded + LWS_SEND_BUFFER_PRE_PADDING, len);
+  lua_pushinteger(L, n);
+  return 1;
+}
+
 static int luaws_websocket_serve_http_file(lua_State *L) {  
   struct luaws_websocket *user = checked_websocket(L);
   const char * filename = luaL_checkstring(L, 2);
@@ -556,6 +566,7 @@ static const struct luaL_Reg luaws_websocket_methods [] = {
   {"on_receive",luaws_websocket_on_receive},
   {"on_broadcast",luaws_websocket_on_broadcast},
   {"on_server_writeable",luaws_websocket_on_server_writeable},
+  {"broadcast",luaws_websocket_broadcast},
   {"__tostring",luaws_websocket_tostring},
   {NULL,NULL}
 };

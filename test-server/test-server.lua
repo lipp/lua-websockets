@@ -20,11 +20,13 @@ context = websockets.context{
       	 on_established = 
    	    function(ws)
    	       local number = 0
+	       -- intercept broadcast and send custom content (as in test-server.c)
    	       ws:on_broadcast(
    		  function(ws)
    		     ws:write(tostring(number),websockets.WRITE_TEXT)
    		     number = number + 1
    		  end)
+	       -- reset counter if requested
    	       ws:on_receive(
    		  function(ws,data)
    		     if data:match('reset') then
@@ -36,10 +38,11 @@ context = websockets.context{
       ['lws-mirror-protocol'] = {
       	 on_established = 
       	    function(ws)
+	       -- forward broadcast with type WRITE_TEXT
       	       ws:on_broadcast(websockets.WRITE_TEXT)
       	       ws:on_receive(
       	       function(ws,data)
-      		  context:broadcast('lws-mirror-protocol',data)
+      		  ws:broadcast(data)
       	       end)
       	    end
       }
