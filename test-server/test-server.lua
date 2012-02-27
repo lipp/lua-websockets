@@ -8,7 +8,6 @@ context = websockets.context{
    port = 8002,
    on_http = 
       function(ws,uri)
-	 log('serving HTTP URI',uri)
 	 if uri and uri == '/favicon.ico' then
 	    ws:serve_http_file(working_dir..'favicon.ico','image/x-icon')
 	 else
@@ -19,6 +18,7 @@ context = websockets.context{
       ['dumb-increment-protocol'] = {
       	 on_established = 
    	    function(ws)
+	       print(ws,ws:get_socket_fd())
    	       local number = 0
 	       -- intercept broadcast and send custom content (as in test-server.c)
    	       ws:on_broadcast(
@@ -50,8 +50,10 @@ context = websockets.context{
 }
 
 while true do
+   -- service outstanding io with timeout 200ms
    context:service(200)
-   context:broadcast('dumb-increment-protocol','x') -- triggers the increment broadcast
+   -- notify the 'dumb-increment-protocol' to update their counters
+   context:broadcast('dumb-increment-protocol','x')
 end
 
 context:destroy()
