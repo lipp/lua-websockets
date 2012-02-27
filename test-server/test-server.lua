@@ -1,7 +1,7 @@
+--- lua websocket equivalent to test-server.c from libwebsockets.
+-- using build in 'event' loop
 local websockets = require'websockets'
-local working_dir = arg[1] or './'
-local close_testing
-local log = print
+local file_dir = arg[1] or './'
 
 local context 
 context = websockets.context{
@@ -9,9 +9,9 @@ context = websockets.context{
    on_http = 
       function(ws,uri)
 	 if uri and uri == '/favicon.ico' then
-	    ws:serve_http_file(working_dir..'favicon.ico','image/x-icon')
+	    ws:serve_http_file(file_dir..'favicon.ico','image/x-icon')
 	 else
-	    ws:serve_http_file(working_dir..'test.html','text/html')
+	    ws:serve_http_file(file_dir..'test.html','text/html')
 	 end
       end,
    protocols = {
