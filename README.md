@@ -112,10 +112,8 @@ Registers an on_closed callback on the websocket.
 ### websocket:on_broadcast(callback_or_mode)
 
 ```lua  
-websocket:on_broadcast(websockets.WRITE_TEXT) --forward broadcast as
-text
-websocket:on_broadcast(websockets.WRITE_BINARY) --forward broadcast as
-binary
+websocket:on_broadcast(websockets.WRITE_TEXT) --forward broadcast as text
+websocket:on_broadcast(websockets.WRITE_BINARY) --forward broadcast binary
 websocket:on_broadcast(
         function(ws)
                 ws:write('hello',websockets.WRITE_TEXT)
@@ -143,3 +141,8 @@ websocket and the data passed as arguments.
 ### websocket:broadcast(data)
 
 Broadcasts data to all websockets of the same protocol. Behaves like libwebsockets_broadcast.
+
+### websocket:get_socket_fd()
+
+Returns the websocket's socket fd. Useful when using other event loop,
+e.g. lua-ev.
