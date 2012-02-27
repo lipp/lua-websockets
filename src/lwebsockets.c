@@ -124,7 +124,7 @@ static int luaws_callback(struct libwebsocket_context * context,
   struct luaws_context_link* link = user;
   struct luaws_context* luaws_user = link->userdata;
   lua_State* L = luaws_user->L;
-  //  printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
+  printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
   if(reason == LWS_CALLBACK_ESTABLISHED) {
     struct luaws_websocket * ws = luaws_websocket_create(L, context, wsi);
     *(struct luaws_websocket **)dyn_user = ws;
@@ -317,8 +317,7 @@ static int luaws_context(lua_State *L) {
       strcpy(user->protocol_names[n], luaL_checkstring(L, -2));
       user->protocols[n].name = user->protocol_names[n];
 
-      /* push established and store ref */
-      lua_getfield(L, -1, "on_established");
+      /* lua protocol callback function lies on top */ 
       user->established_function_refs[n] = luaL_ref(L, LUA_REGISTRYINDEX);
 
       user->protocols[n].callback = luaws_callback;
@@ -329,8 +328,6 @@ static int luaws_context(lua_State *L) {
       user->links[n].protocol_index = n;
       user->protocols[n].user = &user->links[n];
 
-      /* pop protocol table entry */
-      lua_pop(L, 1);
       ++user->protocol_count;
     }
     /* pop protocols table on top */
