@@ -57,14 +57,19 @@ local context = websockets.context({
 ```
 Behaves like `libwebsocket_context_create`. `'protocols'` is a table, which
 holds entries with key=protocol_name and
+
 value=on_connect_callback. The on_connect_callback gets a websocket
 object as argument.
+
 If not present, all values default as described in C documentation.
 Returns a context object.
+
 The `on_http` callback is called whenever http request are made and it
 gets a `websocket` and the `uri` string passed.
+
 The `on_add_fd` callback gets called for every new file descriptor which has
 to be polled (sockets) with `fd` as argument.
+
 The `on_del_fd` callback gets called whenever a `fd` is not
 used any more (can be removed from polling).
 
