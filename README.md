@@ -55,17 +55,17 @@ local context = websockets.context({
         options --int, optional
 })
 ```
-Behaves like libwebsocket_context_create. 'protocols' is a table, which
+Behaves like `libwebsocket_context_create`. `'protocols'` is a table, which
 holds entries with key=protocol_name and
 value=on_connect_callback. The on_connect_callback gets a websocket
 object as argument.
 If not present, all values default as described in C documentation.
 Returns a context object.
-The on_http callback is called whenever http request are made and it
-gets a websocket and the uri string passed.
-The on_add_fd callback gets called for every new file descriptor which has
-to be polled (sockets) with fd as argument.
-The on_del_fd callback gets called whenever a file descriptor is not
+The `on_http` callback is called whenever http request are made and it
+gets a `websocket` and the `uri` string passed.
+The `on_add_fd` callback gets called for every new file descriptor which has
+to be polled (sockets) with `fd` as argument.
+The `on_del_fd` callback gets called whenever a `fd` is not
 used any more (can be removed from polling).
 
 ## context methods
@@ -74,25 +74,35 @@ A context can be created via websockets.context(...).
 
 ### context:destroy()
 
-Destroys a context. Behaves like libwebsocket_context_destroy.
+```lua
+context:destroy()
+```
+Destroys a context. Behaves like `libwebsocket_context_destroy`.
 
 ### context:service(timeout_ms)
 
+```lua
+while true do
+      context:service(2000)
+end
+```
 Services the context's outstanding io. Behaves like
-libwebsocket_service. The integer timeout_ms value defaults to 0 (no timeout).
+`libwebsocket_service`. The integer `timeout_ms` value defaults to 0 (no timeout).
 
 ### context:canonical_hostname()
-
+```lua
+context:canonical_hostname()
+```
 Returns the context's canonical hostname (machine name). Behaves like
-libwebsocket_canonical_hostname.
+`libwebsocket_canonical_hostname`.
 
 ### context:broadcast(protocol_name,data)
 
 ```lua
 context:broadcast('echo','hello')
 ```
-Broadcast data for all open websockets of kind protocol_name. Behaves
-like libwebsockets_broadcast. Both parameters are strings. 
+Broadcast data for all open websockets of kind `protocol_name`. Behaves
+like `libwebsockets_broadcast`. Both parameters are strings. 
 
 ## websocket methods
 
@@ -114,14 +124,18 @@ libwebsockets_serve_http_file.
 
 ```lua
 websocket:write('hello',
-        websockets.WRITE_TEXT -- can be either websockets.WRITE_TEXT or websockets.WRITE_BINARY
+        websockets.WRITE_TEXT -- must be websockets.WRITE_XYZ
         )
 ```
 
-Writes data to websocket. The write_type must be websockets.WRITE_TEXT
-or websockets.WRITE_BINARY.
+Writes data to websocket. The write_type must be
+websockets.WRITE_XYZ. Behaves like `libwebsocket_write`.
 
 ### websocket:on_closed(callback)
+
+```lua
+websocket:on_closed(function() print('bye') end)
+```
 
 Registers an on_closed callback on the websocket. The callback gets no
 parameters passed in.
@@ -138,10 +152,9 @@ websocket:on_broadcast(
 ```
 
 Registers an on_broadcast callback on the websocket if
-callback_or_mode is a function. If callback_or_mode is either
-websockets.WRITE_TEXT or websockets.WRITE_BINARY, any incoming
-braodcast events forward the message with the respective type. See
-libwebsockets_broadcast and and handling of LWS_CALLBACK_BROADCAST.
+callback_or_mode is a function. If callback_or_mode is int
+(websockets.WRITE_XYZ, any incoming braodcast events forward the message with the respective type. See
+`libwebsockets_broadcast` and and handling of `LWS_CALLBACK_BROADCAST`.
 
 ### websocket:on_receive(callback)
 
@@ -157,7 +170,11 @@ websocket and the data passed as arguments.
 
 ### websocket:broadcast(data)
 
-Broadcasts data to all websockets of the same protocol. Behaves like libwebsockets_broadcast.
+```lua
+websocket:broadcast('all echo hello')
+```
+
+Broadcasts data to all websockets of the same protocol. Behaves like `libwebsockets_broadcast`.
 
 ### websocket:get_socket_fd()
 
@@ -166,4 +183,4 @@ e.g. lua-ev.
 
 ### websocket:close(reason)
 
-Closes the websocket with the optional integer reason. Behaves like libwebsockets_close_and_free_session.
+Closes the websocket with the optional integer reason. Behaves like `libwebsockets_close_and_free_session`.
