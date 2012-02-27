@@ -6,41 +6,10 @@
 #include <assert.h>
 #include <stdio.h>
 
-static int stackDump (const char* bla, lua_State *L) {
-  int i;
-  int top = lua_gettop(L);
-  printf("%s ",bla);
-  for (i = 1; i <= top; i++) {  /* repeat for each level */
-    int t = lua_type(L, i);
-    switch (t) {
-    
-    case LUA_TSTRING:  /* strings */
-      printf("`%s'", lua_tostring(L, i));
-      break;
-    
-    case LUA_TBOOLEAN:  /* booleans */
-      printf(lua_toboolean(L, i) ? "true" : "false");
-      break;
-    
-    case LUA_TNUMBER:  /* numbers */
-      printf("%g", lua_tonumber(L, i));
-      break;
-    
-    default:  /* other values */
-      printf("%s", lua_typename(L, t));
-      break;
-    
-    }
-    printf("  ");  /* put a separator */
-  }
-  printf("\n");  /* end the listing */
-  return 1;
-}
-
 #define WS_CONTEXT_META "luaws.con"
 #define WS_WEBSOCKET_META "luaws.ws"
-#define MAX_PROTOCOLS 4
-#define MAX_EXTENSIONS 4
+#define MAX_PROTOCOLS 20
+#define MAX_EXTENSIONS 1
 #define LUAWS_FORWARD LWS_WRITE_TEXT + LWS_WRITE_BINARY + 2000
 
 struct luaws_websocket {
@@ -124,7 +93,7 @@ static int luaws_callback(struct libwebsocket_context * context,
   struct luaws_context_link* link = user;
   struct luaws_context* luaws_user = link->userdata;
   lua_State* L = luaws_user->L;
-  printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
+  //printf("context:%p wsi:%p reason:%d session:%p in:%p size:%d user:%p\n", context, wsi, reason, dyn_user, in, len, user);
   if(reason == LWS_CALLBACK_ESTABLISHED) {
     struct luaws_websocket * ws = luaws_websocket_create(L, context, wsi);
     *(struct luaws_websocket **)dyn_user = ws;
@@ -397,6 +366,12 @@ static int luaws_websocket_tostring(lua_State *L) {
   lua_pushfstring(L, "websocket %p", user);
   return 1;
 }
+static int luaws_websocket_close(lua_State *L) {
+  struct luaws_websocket *user = checked_websocket(L);
+  int reason = luaL_optint(L, 2, LWS_CLOSE_STATUS_NOSTATUS);
+  libwebsocket_close_and_free_session(user->context, user->wsi, reason);
+  return 0;
+}
 
 static int luaws_websocket_write(lua_State *L) {
   struct luaws_websocket *user = checked_websocket(L);
@@ -556,6 +531,7 @@ static const struct luaL_Reg luaws_websocket_methods [] = {
   {"on_broadcast",luaws_websocket_on_broadcast},
   {"on_server_writeable",luaws_websocket_on_server_writeable},
   {"broadcast",luaws_websocket_broadcast},
+  {"close",luaws_websocket_close},
   {"__tostring",luaws_websocket_tostring},
   {NULL,NULL}
 };
@@ -566,31 +542,8 @@ struct luaws_constant {
 };
 
 struct luaws_constant luaws_constants [] = {
-  {"CALLBACK_ESTABLISHED",LWS_CALLBACK_ESTABLISHED},
   {"SERVER_OPTIONS_DEFEAT_CLIENT_MASK",LWS_SERVER_OPTION_DEFEAT_CLIENT_MASK},
   {"SERVER_OPTION_REQUIRE_VALID_OPENSSL_CLIENT_CERT",LWS_SERVER_OPTION_REQUIRE_VALID_OPENSSL_CLIENT_CERT},
-  {"CALLBACK_ESTABLISHED",LWS_CALLBACK_ESTABLISHED},
-  {"CALLBACK_CLIENT_ESTABLISHED",LWS_CALLBACK_CLIENT_ESTABLISHED},
-  {"CALLBACK_CLOSED",LWS_CALLBACK_CLOSED},
-  {"CALLBACK_RECEIVE",LWS_CALLBACK_RECEIVE},
-  {"CALLBACK_CLIENT_RECEIVE",LWS_CALLBACK_CLIENT_RECEIVE},
-  {"CALLBACK_CLIENT_RECEIVE_PONG",LWS_CALLBACK_CLIENT_RECEIVE_PONG},
-  {"CALLBACK_CLIENT_WRITEABLE",LWS_CALLBACK_CLIENT_WRITEABLE},
-  {"CALLBACK_SERVER_WRITEABLE",LWS_CALLBACK_SERVER_WRITEABLE},
-  {"CALLBACK_HTTP",LWS_CALLBACK_HTTP},
-  {"CALLBACK_BROADCAST",LWS_CALLBACK_BROADCAST},
-  {"CALLBACK_FILTER_NETWORK_CONNECTION",LWS_CALLBACK_FILTER_NETWORK_CONNECTION},
-  {"CALLBACK_FILTER_PROTOCOL_CONNECTION",LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION},
-  {"CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS",LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS},
-  {"CALLBACK_OPENSSL_LOAD_EXTRA_SERVER_VERIFY_CERTS",LWS_CALLBACK_OPENSSL_LOAD_EXTRA_SERVER_VERIFY_CERTS},
-  {"CALLBACK_OPENSSL_PERFORM_CLIENT_CERT_VERIFICATION",LWS_CALLBACK_OPENSSL_PERFORM_CLIENT_CERT_VERIFICATION},
-  {"CALLBACK_CLIENT_APPEND_HANDSHAKE_HEADER",LWS_CALLBACK_CLIENT_APPEND_HANDSHAKE_HEADER},
-  {"CALLBACK_CONFIRM_EXTENSION_OKAY",LWS_CALLBACK_CONFIRM_EXTENSION_OKAY},
-  {"CALLBACK_CLIENT_CONFIRM_EXTENSION_SUPPORTED",LWS_CALLBACK_CLIENT_CONFIRM_EXTENSION_SUPPORTED},
-  {"CALLBACK_ADD_POLL_FD",LWS_CALLBACK_ADD_POLL_FD},
-  {"CALLBACK_DEL_POLL_FD",LWS_CALLBACK_DEL_POLL_FD},
-  {"CALLBACK_SET_MODE_POLL_FD",LWS_CALLBACK_SET_MODE_POLL_FD},
-  {"CALLBACK_CLEAR_MODE_POLL_FD",LWS_CALLBACK_CLEAR_MODE_POLL_FD},
   {"WRITE_TEXT",LWS_WRITE_TEXT},
   {"WRITE_BINARY",LWS_WRITE_BINARY},
   {"WRITE_CONTINUATION",LWS_WRITE_CONTINUATION},
@@ -600,7 +553,6 @@ struct luaws_constant luaws_constants [] = {
   {"WRITE_PONG",LWS_WRITE_PONG},
   {"WRITE_NO_FIN",LWS_WRITE_NO_FIN},
   {"WRITE_CLIENT_IGNORE_XOR_MASK",LWS_WRITE_CLIENT_IGNORE_XOR_MASK},
-  {"FORWARD",LUAWS_FORWARD},
   {NULL,0}
 };
 

@@ -20,14 +20,24 @@ run from cloned repo directory.
 
 # API
 
-## websocket 'global' methods
+## websockets table
+
+### websockets.WRITE_TEXT
+
+To be used as type with websocket:write(data,type)
+
+### websockets.WRITE_BINARY
+
+To be used as type with websocket:write(data,type)
 
 ### websockets.context(config)
 
 ```lua
 local context = websockets.context({
         port = 8001,
-        on_http = function(ws,uri) ws:serve_http_file(uri,'text/html') end
+        on_http = handle_http,
+        on_add_fd = register_fd, --function, optional
+        on_del_fd = unregister_fd, --function, optional
         protocols = {
                   'echo' = 
                          function(ws)
@@ -51,6 +61,12 @@ value=on_connect_callback. The on_connect_callback gets a websocket
 object as argument.
 If not present, all values default as described in C documentation.
 Returns a context object.
+The on_http callback is called whenever http request are made and it
+gets a websocket and the uri string passed.
+The on_add_fd callback gets called for every new file descriptor which has
+to be polled (sockets) with fd as argument.
+The on_del_fd callback gets called whenever a file descriptor is not
+used any more (can be removed from polling).
 
 ## context methods
 
@@ -102,11 +118,13 @@ websocket:write('hello',
         )
 ```
 
-Writes data to websocket. The write_type must be .
+Writes data to websocket. The write_type must be websockets.WRITE_TEXT
+or websockets.WRITE_BINARY.
 
 ### websocket:on_closed(callback)
 
-Registers an on_closed callback on the websocket.
+Registers an on_closed callback on the websocket. The callback gets no
+parameters passed in.
 
 ### websocket:on_broadcast(callback_or_mode)
 
@@ -145,3 +163,7 @@ Broadcasts data to all websockets of the same protocol. Behaves like libwebsocke
 
 Returns the websocket's socket fd. Useful when using other event loop,
 e.g. lua-ev.
+
+### websocket:close(reason)
+
+Closes the websocket with the optional integer reason. Behaves like libwebsockets_close_and_free_session.
