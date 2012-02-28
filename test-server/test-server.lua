@@ -22,7 +22,7 @@ context = websockets.context{
             -- intercept broadcast and send custom content (as in test-server.c)
             ws:on_broadcast(
                function(ws)
-                  ws:write(tostring(number),websockets.WRITE_TEXT)
+                  ws:write(number,websockets.WRITE_TEXT)
                   number = number + 1
                end)
             -- reset counter if requested
