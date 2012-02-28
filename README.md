@@ -4,14 +4,13 @@ A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsock
 
 # Build
 
-Clone and install [libwebsockets-exp](https://github.com/lipp/libwebsockets-exp)
-from github!
-
-Clone and luarocks lua-websockets:
 ```shell 
+git clone git@github.com:lipp/lua-websockets.git
+cd lua-websockets
+git submodule update
+git submodule init
 luarocks make rockspecs/lua-websockets-scm-1.rockspec 
 ```
-(run from cloned repo directory)
 
 # Usage
 
