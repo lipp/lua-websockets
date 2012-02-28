@@ -156,15 +156,9 @@ static int luaws_callback(struct libwebsocket_context * context,
       return 0;
     }
     lua_rawgeti(L, LUA_REGISTRYINDEX, ws->ref);  
-    /* push data */
-    if(len >= 0 && in != NULL) {
-      lua_pushlstring(L,in,len);
-      argc = 2;
-    }
-    else {
-      argc = 1;
-    }
-    lua_call(L, argc, 0);
+    /* push uri */
+    lua_pushstring(L,in);
+    lua_call(L, 2, 0);
     luaws_websocket_delete(ws);
     return 0;
   }
