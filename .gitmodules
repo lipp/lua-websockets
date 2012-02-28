@@ -1,0 +1,3 @@
+[submodule "libwebsockets"]
+	path = libwebsockets
+	url = git@github.com:lipp/libwebsockets-exp.git
