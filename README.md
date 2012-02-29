@@ -1,6 +1,6 @@
 # About
 
-A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). To ease implementation, libwebsockets has been [modified](https://github.com/lipp/libwebsockets-exp) (no biggy, <10 lines). 
+A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). To ease implementation, libwebsockets has been [modified](https://github.com/lipp/libwebsockets-exp) (no biggy, changes<10 lines). 
 
 # Build
 
@@ -20,6 +20,34 @@ See test-server.lua, which is the Lua equivalent to the test-server.c example fr
 lua test-server/test-server.lua test-server/ 
 ```
 run from cloned repo directory.
+
+## Simple echo server
+This is the basic echo server. It uses libwebsockets built in "event-loop" (via `context:service`).
+Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8080','echo');`. The server does not handle HTTP requests though. 
+
+```lua
+-- load module
+local websockets = require'websockets'
+-- this is the callback which is called, whenever a new client connects.
+-- ws is a new websocket instance
+local echo_cb = function(ws)
+      -- on_receive is called whenever data has been received from client
+      ws:on_receive(function(ws,data)
+        -- write/echo back the data
+	ws:write(data,websockets.WRITE_TEXT)
+      end)
+end
+local context = websockets.context({
+      port = 8080,
+      protocols = {
+      		echo = echo_cb
+      }
+})
+-- use the libwebsocket loop
+while true do
+      context:service(100000)
+end   
+```
 
 # API
 
@@ -42,10 +70,10 @@ local context = websockets.context({
         on_add_fd = register_fd, --function, optional
         on_del_fd = unregister_fd, --function, optional
         protocols = {
-                  'echo' = 
+		  'echo' = 
                          function(ws)
                                 ws:on_receive(
-                                        function(data)
+                                        function(ws,data)
                                                 ws:write(data,websockets.WRITE_TEXT)
                                         end) 
                          end
@@ -71,10 +99,10 @@ The `on_http` callback is called whenever http request are made and it
 gets a `websocket` and the `uri` string passed.
 
 The `on_add_fd` callback gets called for every new file descriptor which has
-to be polled (sockets) with `fd` as argument.
+to be polled (sockets) with `fd` as argument. Useful for custom event handling, e.g. with lua-ev.
 
 The `on_del_fd` callback gets called whenever a `fd` is not
-used any more (can be removed from polling).
+used any more (can be removed from polling). Useful for custom event handling, e.g. with lua-ev.
 
 ## context methods
 
