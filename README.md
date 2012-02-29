@@ -33,9 +33,9 @@ local websockets = require'websockets'
 local echo_cb = function(ws)
       	      -- on_receive is called whenever data has been received from client
       	      ws:on_receive(function(ws,data)
-      	      -- write/echo back the data
-      	      ws:write(data,websockets.WRITE_TEXT)
-      end)
+			-- write/echo back the data
+      	      		ws:write(data,websockets.WRITE_TEXT)
+      	      end)
 end
 local context = websockets.context({
       port = 8080,
