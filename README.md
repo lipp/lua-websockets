@@ -70,13 +70,8 @@ local context = websockets.context({
         on_add_fd = register_fd, --function, optional
         on_del_fd = unregister_fd, --function, optional
         protocols = {
-		  echo = 
-                         function(ws)
-                                ws:on_receive(
-                                        function(ws,data)
-                                                ws:write(data,websockets.WRITE_TEXT)
-                                        end) 
-                         end
+		  ['echo'] = echo_cb,
+		  ['super-test'] = super_test_cb
         },
         interf = 'eth0', --optional
         ssl_cert_path, --string, optional
