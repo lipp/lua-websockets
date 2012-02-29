@@ -22,8 +22,8 @@ lua test-server/test-server.lua test-server/
 run from cloned repo directory.
 
 ## Simple echo server
-This is the basic echo server. It uses libwebsockets built in "event-loop" (via `context:service`).
-Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8080','echo');`. The server does not handle HTTP requests though. 
+This is the basic echo server. It uses libwebsocket's built in "event-loop" (via `context:service`).
+Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8080','echo');`. The server does not handle HTTP requests though. If you want to handle HTTP, see on_http callback.
 
 ```lua
 -- load module
@@ -31,10 +31,10 @@ local websockets = require'websockets'
 -- this is the callback which is called, whenever a new client connects.
 -- ws is a new websocket instance
 local echo_cb = function(ws)
-      -- on_receive is called whenever data has been received from client
-      ws:on_receive(function(ws,data)
-        -- write/echo back the data
-	ws:write(data,websockets.WRITE_TEXT)
+      	      -- on_receive is called whenever data has been received from client
+      	      ws:on_receive(function(ws,data)
+      	      -- write/echo back the data
+      	      ws:write(data,websockets.WRITE_TEXT)
       end)
 end
 local context = websockets.context({
@@ -70,7 +70,7 @@ local context = websockets.context({
         on_add_fd = register_fd, --function, optional
         on_del_fd = unregister_fd, --function, optional
         protocols = {
-		  'echo' = 
+		  echo = 
                          function(ws)
                                 ws:on_receive(
                                         function(ws,data)
