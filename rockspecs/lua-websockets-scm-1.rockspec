@@ -12,10 +12,6 @@ dependencies = {
    "lua >= 5.1",
 }
 external_dependencies = {
-   LIBZ = {
-      header = "zlib.h",
-      library = "z",
-   }
 }
 build = {
    type = "builtin",
@@ -33,8 +29,6 @@ build = {
 	    "libwebsockets/lib/parsers.c",
 	    "libwebsockets/lib/sha-1.c",
 	 },		
-	 incdirs = "$(LIBZ_INCDIR)",
-	 libdirs = "$(LIBZ_LIBDIR)",
 	 libraries = {"z"},
       },
    },
