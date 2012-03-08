@@ -5,9 +5,10 @@ A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsock
 # Build
 
 ```shell 
-git clone git@github.com:lipp/lua-websockets.git
+git clone git://github.com/lipp/lua-websockets.git
 cd lua-websockets
-git submodule init --update
+git submodule init
+git submodule update
 luarocks make rockspecs/lua-websockets-scm-1.rockspec 
 ```
 
