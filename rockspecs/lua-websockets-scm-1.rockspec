@@ -17,6 +17,9 @@ build = {
    type = "builtin",
    modules = {
       websockets = {
+	 incdirs = {
+	    "libwebsockets/lib"
+	 }
 	 sources = {
 	    "src/lwebsockets.c",
 	    "libwebsockets/lib/base64-decode.c",
