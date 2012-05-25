@@ -1,7 +1,6 @@
 # About
 
-A Lua binding for *vanilla*
-[libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). Includes
+A Lua binding for vanilla [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). Includes
 libwebsockets as git submodule.
 
 # Build
@@ -22,6 +21,8 @@ See test-server.lua, which is the Lua equivalent to the test-server.c example fr
 lua test-server/test-server.lua test-server/ 
 ```
 run from cloned repo directory.
+Connect with one or more browser windows on localhost:8002 /
+127.0.0.1:8002 and enjoy.
 
 ## Simple echo server
 This is the basic echo server. It uses libwebsocket's built in "event-loop" (via `context:service`).
