@@ -1,3 +1,11 @@
+/*
+  Lua binding for libwebsockets.
+
+  Copyright (c) 2011 by Gerhard Lipp <gelipp@googlemail.com>
+  
+  License see accompanying COPRIGHT file.
+*/
+
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
@@ -26,7 +34,7 @@
 
 /* Lua userdata for (connected) websocket.
    Is created in augmented_call with reason = LWS_CALLBACK_ESTABLISHED.
- */
+*/
 struct websocket {
   lua_State *L;
   struct libwebsocket_context *context;
@@ -42,7 +50,7 @@ struct websocket {
 /* Helper struct for each callback_protocol. 
    The respective callback_protocol (declared by PROTOCOL_TRAMPOLINE)
    passes in the corresponding struct augmented_args.
- */
+*/
 struct augmented_args {
   lua_State *L;
   struct context *lcontext;
@@ -59,21 +67,21 @@ struct augmented_args augmented_args_array[MAX_PROTOCOLS];
 /* The function which gets called by the respective protocol_trampoline_X.
    The respective struct augmented_args will be passed in, to 
    allow protocol specific behaviour (call the right (Lua) callbacks).
- */
+*/
 static int augmented_callback(struct libwebsocket_context * context,
-                   struct libwebsocket *wsi,
-                   enum libwebsocket_callback_reasons reason, void *user,
-                   void *in, size_t len, struct augmented_args);
+                              struct libwebsocket *wsi,
+                              enum libwebsocket_callback_reasons reason, void *user,
+                              void *in, size_t len, struct augmented_args);
 
 
 /* MACRO for defining protocol_trampoline_X trampoline function. */
-#define PROTOCOL_TRAMPOLINE(PROT_INDEX) \
+#define PROTOCOL_TRAMPOLINE(PROT_INDEX)                                 \
   int protocol_trampoline_##PROT_INDEX(struct libwebsocket_context * context, \
-                                           struct libwebsocket *wsi,    \
-                                           enum libwebsocket_callback_reasons reason, void *user, \
-                                           void *in, size_t len) {      \
-    return augmented_callback(context, wsi, reason, user,         \
-                                    in, len, augmented_args_array[PROT_INDEX]); \
+                                       struct libwebsocket *wsi,        \
+                                       enum libwebsocket_callback_reasons reason, void *user, \
+                                       void *in, size_t len) {          \
+    return augmented_callback(context, wsi, reason, user,               \
+                              in, len, augmented_args_array[PROT_INDEX]); \
   }                                                                     \
   
 /* Define MAX_PROTOCOLS trampoline functions */
@@ -90,7 +98,7 @@ PROTOCOL_TRAMPOLINE(9);
 
 /* Insert the functions to an array to make them available 
    programatically.
- */
+*/
 void* protocol_trampolines[MAX_PROTOCOLS] = {
   protocol_trampoline_0,
   protocol_trampoline_1,
@@ -106,7 +114,7 @@ void* protocol_trampolines[MAX_PROTOCOLS] = {
 
 /* The Lua userdata for the websocket_context.
    Created by function context_create (called by function context).
- */
+*/
 struct context {
   lua_State *L;
   int http_function_ref;
@@ -125,7 +133,7 @@ struct context {
 
 /* Creates the Lua userdata of type context with metatable
    and default values.
- */
+*/
 static struct context *context_create(lua_State *L) {
   int i;
   struct context *user = lua_newuserdata(L, sizeof(struct context));;
@@ -144,7 +152,7 @@ static struct context *context_create(lua_State *L) {
 
 /* Creates the Lua userdata of type context  with metatable
    and default values.   
- */
+*/
 static struct websocket *websocket_create(lua_State *L,struct libwebsocket_context *context, struct libwebsocket* wsi) {
   struct websocket *user = lua_newuserdata(L, sizeof(struct websocket));;
   memset(user, 0, sizeof(struct websocket));
@@ -177,9 +185,9 @@ static void websocket_delete(struct websocket *user) {
    
  */
 static int augmented_callback(struct libwebsocket_context * context,
-			  struct libwebsocket *wsi,
-			  enum libwebsocket_callback_reasons reason, void *user,
-			  void *in, size_t len, struct augmented_args args) {
+                              struct libwebsocket *wsi,
+                              enum libwebsocket_callback_reasons reason, void *user,
+                              void *in, size_t len, struct augmented_args args) {
   lua_State *L = args.L;
   if(reason == LWS_CALLBACK_ESTABLISHED) {
     struct websocket * ws = websocket_create(L, context, wsi);
