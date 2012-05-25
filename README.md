@@ -1,6 +1,8 @@
 # About
 
-A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). To ease implementation, libwebsockets has been [modified](https://github.com/lipp/libwebsockets-exp) (no biggy, changes<10 lines). 
+A Lua binding for *vanilla*
+[libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). Includes
+libwebsockets as git submodule.
 
 # Build
 
@@ -160,7 +162,7 @@ websocket:write('hello',
 ```
 
 Writes data to websocket. The write_type must be
-websockets.WRITE_XYZ. Behaves like `libwebsocket_write`.
+websockets.WRITE_XYZ or nil (defaults to WRITE_TEXT). Behaves like `libwebsocket_write`.
 
 ### websocket:on_closed(callback)
 
