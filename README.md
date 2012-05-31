@@ -26,7 +26,7 @@ Connect with one or more browser windows on localhost:8002 /
 
 ## Simple echo server
 This is the basic echo server. It uses libwebsocket's built in "event-loop" (via `context:service`).
-Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8080','echo');`. The server does not handle HTTP requests though. If you want to handle HTTP, see on_http callback.
+Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8002','echo');`. The server does not handle HTTP requests though. If you want to handle HTTP, see on_http callback.
 
 ```lua
 -- load module
@@ -51,6 +51,17 @@ while true do
       context:service(100000)
 end   
 ```
+
+## On HTTP support
+libwebsockets (and thus lua-webscokets) is designed for providing a
+websockets API. The means for handle HTTP are very limited and
+inconvient and mainly for providing self-containing tests/examples. If
+you are looking for a feature rich webserver framework, have a look at
+[orbit](http://keplerproject.github.com/orbit/) or others. 
+
+It is no problem to work with a "normal" webserver and lua-websockets 
+side by side (but on different ports!), since websockets are not subject of the 
+'Same origin policy'.
 
 # API
 
