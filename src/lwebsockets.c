@@ -430,6 +430,20 @@ static int context_destroy(lua_State *L) {
   return 0;
 }
 
+static int context_service_fd(lua_State *L) {  
+  struct context *user = checked_context(L);
+  int fd = lua_tointeger(L, 2); 
+  int i;
+  struct pollfd pfd;
+  pfd.fd = fd;
+  pfd.revents = 0;
+  for(i = 3; i <= lua_gettop(L); ++i) {
+    pfd.revents |= lua_tointeger(L, i);
+  }
+  lua_pushinteger(L, libwebsocket_service_fd(user->context, &pfd));
+  return 1;
+}
+
 static struct websocket * checked_websocket(lua_State *L) {  
   struct websocket *user = (struct websocket *)luaL_checkudata(L, 1, WS_WEBSOCKET_META);  
   return user;
@@ -565,6 +579,37 @@ static int websocket_get_socket_fd(lua_State *L) {
   return 1;
 }
 
+static int websocket_service(lua_State *L) {  
+  struct websocket *user = checked_websocket(L);
+  int fd = libwebsocket_get_socket_fd(user->wsi);
+  int i;
+  struct pollfd pfd;
+  pfd.fd = fd;
+  pfd.revents = 0;
+  for(i = 2; i < lua_gettop(L); ++i) {
+    pfd.revents |= lua_tointeger(L, i);
+  }
+  lua_pushinteger(L, libwebsocket_service_fd(user->context, &pfd));
+  return 1;
+}
+
+static int websocket_get_peer_addresses(lua_State *L) {  
+  char name[100];
+  char rip[100];
+  struct websocket *user = checked_websocket(L);  
+  int fd = libwebsocket_get_socket_fd(user->wsi);
+  libwebsockets_get_peer_addresses(fd, name, sizeof(name), rip, sizeof(rip));  
+  lua_pushstring(L, name);
+  lua_pushstring(L, rip);
+  return 2;
+}
+
+static int websocket_remaining_packet_payload(lua_State *L) {  
+  struct websocket *user = checked_websocket(L);  
+  lua_pushnumber(L, libwebsockets_remaining_packet_payload(user->wsi));
+  return 1;
+}
+
 static int websocket_rx_flow_control(lua_State *L) {  
   struct websocket *user = checked_websocket(L);
   int enable = luaL_checkint(L, 2);
@@ -601,6 +646,7 @@ static const struct luaL_Reg context_methods [] = {
   {"__gc",context_destroy},
   {"fork_service_loop",context_fork_service_loop},
   {"service",context_service},
+  {"service_fd",context_service_fd},
   {"canonical_hostname",context_canonical_hostname},
   {"broadcast",context_broadcast},
   {"__tostring",context_tostring},
@@ -610,6 +656,9 @@ static const struct luaL_Reg context_methods [] = {
 static const struct luaL_Reg websocket_methods [] = {
   {"serve_http_file",websocket_serve_http_file},
   {"get_socket_fd",websocket_get_socket_fd},
+  {"get_peer_addresses",websocket_get_peer_addresses},
+  {"remaining_packet_payload",websocket_remaining_packet_payload},
+  {"service",websocket_service},
   {"rx_flow_control",websocket_rx_flow_control},
   {"set_timeout",websocket_set_timeout},
   {"write",websocket_write},
@@ -640,6 +689,10 @@ struct constant constants [] = {
   {"WRITE_PONG",LWS_WRITE_PONG},
   {"WRITE_NO_FIN",LWS_WRITE_NO_FIN},
   {"WRITE_CLIENT_IGNORE_XOR_MASK",LWS_WRITE_CLIENT_IGNORE_XOR_MASK},
+  {"POLLIN",POLLIN},
+  {"POLLERR",POLLERR},
+  {"POLLOUT",POLLOUT},
+  {"POLLHUP",POLLHUP},
   {NULL,0}
 };
 
