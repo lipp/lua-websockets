@@ -1,15 +1,12 @@
 # About
 
-A Lua binding for vanilla [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). Includes
-libwebsockets as git submodule.
+A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). 
 
 # Build
 
 ```shell 
 git clone git://github.com/lipp/lua-websockets.git
 cd lua-websockets
-git submodule init
-git submodule update
 luarocks make rockspecs/lua-websockets-scm-1.rockspec 
 ```
 
