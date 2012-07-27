@@ -1,38 +1,37 @@
 package = "lua-websockets"
 version = "scm-1"
+
 source = {
    url = "git://github.com/lipp/lua-websockets.git",
 }
+
 description = {
-   summary = "Lua bindings to libwebsockets.",
+   summary = "Lua bindings to libwebsockets (http://git.warmcat.com/cgi-bin/cgit/libwebsockets/).",
    homepage = "http://github.com/lipp/lua-websockets",
    license = "MIT/X11",
 }
+
 dependencies = {
    "lua >= 5.1",
 }
+
 external_dependencies = {
+   LIBWEBSOCKETS = {
+      header = "libwebsockets.h",
+      library = "libwebsockets.so"
+   }
 }
+
 build = {
    type = "builtin",
    modules = {
       websockets = {
-	 incdirs = {
-	    "libwebsockets/lib"
-	 },
 	 sources = {
-	    "src/lwebsockets.c",
-	    "libwebsockets/lib/base64-decode.c",
-	    "libwebsockets/lib/client-handshake.c",
-	    "libwebsockets/lib/extension.c",
-	    "libwebsockets/lib/extension-deflate-stream.c",
-	    "libwebsockets/lib/handshake.c",
-	    "libwebsockets/lib/libwebsockets.c",
-	    "libwebsockets/lib/md5.c",
-	    "libwebsockets/lib/parsers.c",
-	    "libwebsockets/lib/sha-1.c",
+	    "lua_websockets.c"
 	 },		
-	 libraries = {"z"},
+	 libraries = {
+            "websockets"
+         },
       },
    },
 }
