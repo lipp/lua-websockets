@@ -2,7 +2,16 @@
 
 A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). 
 
-# Build
+# Install
+
+Note that libwebsockets must be installed!
+
+## Direct from luarocks repo
+```shell 
+sudo luarocks install lua-websockets
+```
+
+## By cloning
 
 ```shell 
 git clone git://github.com/lipp/lua-websockets.git
