@@ -1,9 +1,9 @@
 /*
   Lua binding for libwebsockets.
 
-  Copyright (c) 2011 by Gerhard Lipp <gelipp@googlemail.com>
+  Copyright (c) 2011 by Gerhard Lipp <gelipp@gmail.com>
   
-  License see accompanying COPRIGHT file.
+  License see accompanying COPYRIGHT file.
 */
 
 #include "lua.h"
