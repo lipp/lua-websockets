@@ -4,7 +4,7 @@ A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsock
 
 # Install
 
-Note that libwebsockets must be installed!
+Note that [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets) must be installed! 
 
 ## Direct from luarocks repo
 ```shell 
@@ -12,11 +12,35 @@ sudo luarocks install lua-websockets
 ```
 
 ## By cloning
-
 ```shell 
 git clone git://github.com/lipp/lua-websockets.git
 cd lua-websockets
 luarocks make rockspecs/lua-websockets-scm-1.rockspec 
+```
+
+## Building and installing libwebsockets
+
+Download the recent version and unpack. cd into the unpacked directory.
+
+### Using Ubuntu (problably applies to most other Linuxes)
+```shell 
+./configure
+make
+sudo make install
+```
+
+### Using OSX with macports
+```shell 
+autoreconf
+glibtoolize
+./configure --enable-nofork
+make
+sudo make install
+```
+
+To disable fork methods for lua-websockets, LWS_NO_FORK must be defined:
+```shell
+sudo luarocks install lua-websockets CFLAGS=-DLWS_NO_FORK
 ```
 
 # Usage
