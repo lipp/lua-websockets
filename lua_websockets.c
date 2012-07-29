@@ -449,12 +449,14 @@ static struct websocket * checked_websocket(lua_State *L) {
   return user;
 }
 
+#ifndef LWS_NO_FORK
 static int context_fork_service_loop(lua_State *L) {
   struct context *user = checked_context(L);  
   int n = libwebsockets_fork_service_loop(user->context);
   lua_pushinteger(user->L, n);
   return 1;
 }
+#endif
 
 static int context_tostring(lua_State *L) {  
   struct context *user = checked_context(L);
@@ -644,7 +646,9 @@ static const struct luaL_Reg module_methods [] = {
 static const struct luaL_Reg context_methods [] = {
   {"destroy",context_destroy},
   {"__gc",context_destroy},
+#ifndef LWS_NO_FORK
   {"fork_service_loop",context_fork_service_loop},
+#endif
   {"service",context_service},
   {"service_fd",context_service_fd},
   {"canonical_hostname",context_canonical_hostname},
