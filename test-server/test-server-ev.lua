@@ -11,8 +11,12 @@ context = websockets.context{
    on_add_fd = 
       function(fd)	
 	 local io = ev.IO.new(
-	    function()
-	       context:service(0)
+	    function(_,_,revents)
+           -- specifically handle THIS fd with THIS revents               
+	       context:service_fd(fd,revents)
+           -- alternatively one could just service ALL fd with all possible
+           -- outstanding revents
+	       -- context:service(0)
 	    end,fd,ev.READ)
 	 ws_ios[fd] = io
 	 io:start(ev.Loop.default)
