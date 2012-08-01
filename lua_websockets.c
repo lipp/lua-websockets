@@ -6,10 +6,11 @@
   License see accompanying COPYRIGHT file.
 */
 
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-#include "libwebsockets.h"
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
+#include <libwebsockets.h>
 
 #include <string.h>
 #include <assert.h>
@@ -479,9 +480,9 @@ static int websocket_close(lua_State *L) {
 static int websocket_write(lua_State *L) {
   struct websocket *user = checked_websocket(L);
   size_t len;
-  const char *data = lua_tolstring(L, 2, &len);
+  const unsigned char *data = (unsigned char*) lua_tolstring(L, 2, &len);
   const int padded_len = LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING; 
-  char padded[padded_len];
+  unsigned char padded[padded_len];
   int protocol = luaL_optint(L, 3, LWS_WRITE_TEXT);
   int n;
   memcpy(padded + LWS_SEND_BUFFER_PRE_PADDING, data, len);
@@ -494,9 +495,9 @@ static int context_broadcast(lua_State *L) {
   struct context *user = checked_context(L);
   size_t len;
   const char *protocol_name = luaL_checkstring(L, 2);
-  const char *data = lua_tolstring(L, 3, &len);
+  const unsigned char *data = (unsigned char*) lua_tolstring(L, 3, &len);
   const int padded_len = LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING; 
-  char padded[padded_len];
+  unsigned char padded[padded_len];
   int n;
   int i;
   struct libwebsocket_protocols *protocol = NULL;
@@ -518,9 +519,9 @@ static int context_broadcast(lua_State *L) {
 static int websocket_broadcast(lua_State *L) {
   struct websocket *user = checked_websocket(L);
   size_t len;
-  const char *data = lua_tolstring(L, 2, &len);
+  const unsigned char *data = (unsigned char*) lua_tolstring(L, 2, &len);
   const int padded_len = LWS_SEND_BUFFER_PRE_PADDING + len + LWS_SEND_BUFFER_POST_PADDING; 
-  char padded[padded_len];
+  unsigned char padded[padded_len];
   int n;
   memcpy(padded + LWS_SEND_BUFFER_PRE_PADDING, data, len);
   n = libwebsockets_broadcast(libwebsockets_get_protocol(user->wsi), padded + LWS_SEND_BUFFER_PRE_PADDING, len);
@@ -620,15 +621,6 @@ static int websocket_rx_flow_control(lua_State *L) {
   return 1;
 }
 
-static int websocket_set_timeout(lua_State *L) {  
-  struct websocket *user = checked_websocket(L);
-  int reason = luaL_checkint(L, 2);
-  int secs = luaL_checkint(L, 3);
-  int n = libwebsocket_set_timeout(user->wsi, reason, secs);
-  lua_pushinteger(L, n);
-  return 1;
-}
-
 static int context_service(lua_State *L) {
   struct context *user = checked_context(L);
   int timeout_ms = luaL_optint(L, 2, 0);
@@ -664,7 +656,6 @@ static const struct luaL_Reg websocket_methods [] = {
   {"remaining_packet_payload",websocket_remaining_packet_payload},
   {"service",websocket_service},
   {"rx_flow_control",websocket_rx_flow_control},
-  {"set_timeout",websocket_set_timeout},
   {"write",websocket_write},
   {"on_closed",websocket_on_closed},
   {"on_receive",websocket_on_receive},
