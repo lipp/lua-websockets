@@ -293,6 +293,3 @@ ws:serve_http_file('./index.html','text/html')
 Serves a file from filesystem. Can only be called from within
 context's on_http callback. Behaves like
 `libwebsockets_serve_http_file`.
-
-### websocket:set_timeout(reason,timeout_secs)
-Behaves like `libwebsocket_set_timeout`.
