@@ -24,6 +24,17 @@ external_dependencies = {
 
 build = {
    type = "builtin",
+   platforms = {
+      macosx = {
+         modules = {
+            websockets = {               
+               defines = {
+                  "LWS_NO_FORK"
+               }
+            }
+         }
+      }
+   },
    modules = {
       websockets = {
 	 sources = {
