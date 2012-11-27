@@ -26,8 +26,10 @@ ln -sf "$src" "$name"
 echo "Creating $tmp/$name.tar.gz"
 tar -czvpf "$name.tar.gz" \
     --dereference \
-    --exclude "$name/.git" \
-    --exclude "$name/rockspec" \
+    --exclude "$name/.git*" \
+    --exclude "$name/*.o" \
+    --exclude "$name/*.so" \
+    --exclude "$name/rockspecs" \
     --exclude "$name/$(basename $0)" \
     "$name"
 echo "Creating $tmp/$name-1.rockspec"
