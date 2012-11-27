@@ -2,7 +2,7 @@ package = "lua-websockets"
 version = "@VERSION@-1"
 
 source = {
-   url = "git://github.com/downloads/lipp/lua-websockets/lua-websockets-@VERSION@.tar.gz",
+   url = "http://github.com/downloads/lipp/lua-websockets/lua-websockets-@VERSION@.tar.gz",
 }
 
 description = {
