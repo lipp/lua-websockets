@@ -1,0 +1,36 @@
+#!/bin/sh -e
+#
+# TODO:
+#
+# * Make it generate a new version number.
+# * Set a tag in git.
+# * Generate a rockspec.
+# * Upload the tarball to github.
+# * Announce
+
+version=$(git tag -l | tail -1)
+
+name="lua-websockets-$version"
+
+tmp="$TEMPDIR"
+if [ -z "$tmp" ]; then
+   tmp="$HOME/Desktop"
+fi
+
+src="$(cd "$(dirname $0)" && pwd)"
+
+cd $tmp
+rm -f "$name"
+ln -sf "$src" "$name"
+
+echo "Creating $tmp/$name.tar.gz"
+tar -czvpf "$name.tar.gz" \
+    --dereference \
+    --exclude "$name/.git" \
+    --exclude "$name/rockspec" \
+    --exclude "$name/$(basename $0)" \
+    "$name"
+echo "Creating $tmp/$name-1.rockspec"
+cat "$src/lua-websockets.rockspec" | \
+    sed s/@VERSION@/$version/ > \
+    "$name-1.rockspec"
