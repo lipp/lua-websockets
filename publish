@@ -29,6 +29,7 @@ tar -czvpf "$name.tar.gz" \
     --exclude "$name/.git*" \
     --exclude "$name/*.o" \
     --exclude "$name/*.so" \
+    --exclude "$name/lua-websockets.rockspec" \
     --exclude "$name/rockspecs" \
     --exclude "$name/$(basename $0)" \
     "$name"
