@@ -1,104 +1,81 @@
 # About
+A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets) which provides easy websocket server functionality for Lua. It works standalone (using the built-in event-loop) or it can be employed together with event frameworks like [lua-ev](https://github.com/brimworks/lua-ev) by providing hooks to get access to raw filedescriptors.
 
-A Lua binding for [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets). 
+Whereas it is very easy to provide a websockets message oriented server via libwebsockets (and thus lua-webscokets), its means for handle HTTP are very limited and rather inconvient and mainly for providing self-containing tests/examples. If you are looking for a feature rich webserver framework, have a look at [orbit](http://keplerproject.github.com/orbit/) or others. 
 
-Works standalone (using the built-in event-loop) or together with event
-frameworks like [lua-ev](https://github.com/brimworks/lua-ev).
-
-# Install
-
-Note that [libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets) must be installed! 
-
-## Direct from luarocks repo
-```shell 
-sudo luarocks install lua-websockets
-```
-
-## By cloning
-```shell 
-git clone git://github.com/lipp/lua-websockets.git
-cd lua-websockets
-luarocks make rockspecs/lua-websockets-scm-1.rockspec 
-```
-
-## Building and installing libwebsockets
-
-Download the recent version and unpack. cd into the unpacked directory.
-
-### Using Ubuntu (problably applies to most other Linuxes)
-```shell 
-./configure
-make
-sudo make install
-```
-
-### Using OSX with macports
-```shell 
-autoreconf
-glibtoolize
-./configure --enable-nofork
-make
-sudo make install
-```
-
-To disable fork methods for lua-websockets, LWS_NO_FORK must be defined:
-```shell
-sudo luarocks install lua-websockets CFLAGS=-DLWS_NO_FORK
-```
+It is no problem to work with a "normal" webserver and lua-websockets side by side (but on different ports!), since websockets are not subject of the 'Same origin policy'.
 
 # Usage
-
-See test-server.lua, which is the Lua equivalent to the test-server.c example from libwebsockets.
-
-```shell
-lua test-server/test-server.lua test-server/ 
-```
-run from cloned repo directory.
-Connect with one or more browser windows on localhost:8002 /
-127.0.0.1:8002 and enjoy.
-
-## Simple echo server
-This is the basic echo server. It uses libwebsocket's built in "event-loop" (via `context:service`).
-Connect to it e.g. from Javascript with `ws = new WebSocket('ws://127.0.0.1:8002','echo');`. The server does not handle HTTP requests though. If you want to handle HTTP, see on_http callback.
+## Example 1: Simple echo server
+This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
 
 ```lua
 -- load module
 local websockets = require'websockets'
--- this is the callback which is called, whenever a new client connects.
--- ws is a new websocket instance
-local echo_cb = function(ws)
-      	      -- on_receive is called whenever data has been received from client
-      	      ws:on_receive(function(ws,data)
-			-- write/echo back the data
-      	      		ws:write(data,websockets.WRITE_TEXT)
-      	      end)
-end
+
+-- you always need one context object
 local context = websockets.context({
-      port = 8080,
-      protocols = {
-      		echo = echo_cb
-      }
+  -- listen on port 8080
+  port = 8080,
+  -- the protocols field holds
+  --   key: protocol name
+  --   value: callback on new connection
+  protocols = {
+    -- this callback is called, whenever a new client connects.
+    -- ws is a new websocket instance
+    echo = function(ws)
+      -- on_receive is called whenever data / a message 
+      -- has been received from the client
+      ws:on_receive(function(ws,data)
+        -- write/echo back the data
+        ws:write(data,websockets.WRITE_TEXT)
+      end)
+    end
+  }
 })
--- use the libwebsocket loop
+
+-- use the libwebsocket loop to dispatch events.
 while true do
-      context:service(100000)
+   context:service(100000)
 end   
 ```
 
-## On HTTP support
-libwebsockets (and thus lua-webscokets) is designed for providing a
-websockets API. The means for handle HTTP are very limited and
-inconvient and mainly for providing self-containing tests/examples. If
-you are looking for a feature rich webserver framework, have a look at
-[orbit](http://keplerproject.github.com/orbit/) or others. 
+There are some important points to notice here:
+  - You need to load the websockets module via `require`
+  - You have to define one context which describes 'global' attributes and behaviour
+  - At least one protocol must be defined ('echo' in this example).
+    The callback specified is called for every new connection. Inside you may register a callback,
+    which is called whenever data is received.
+  - You must somehow kickstart the service loop.
+    In this example libwebsocket's built in "event-loop" is used (via `context:service`).
 
-It is no problem to work with a "normal" webserver and lua-websockets 
-side by side (but on different ports!), since websockets are not subject of the 
-'Same origin policy'.
+Connect to the from Javascript (e.g. chrome's debugging console) like this:
+```Javascript
+var echoWs = new WebSocket('ws://127.0.0.1:8002','echo');
+```
+In opposite to test-server.lua the server does not handle HTTP requests though. If you want to handle HTTP too, implement the context's `on_http` callback.
+
+## Example 2: test-server.lua
+To see a complete working example, have a look at test-server.lua, which is the Lua equivalent to the test-server.c example from the libwebsockets package. If you have downloaded or cloned the lua-websockets package, you can start the test-server.lua like this:
+
+```shell
+lua test-server/test-server.lua test-server/ 
+```
+Now the test-server is running and awaiting clients to connect.
+You can connect with one or more browser windows on http://localhost:8002 or http://127.0.0.1:8002 and play around.
 
 # API
+lua-websockets' API tries to be as close to the underlying libwebsockets as possible. In most cases the original libwebsockets documentation is more detailed then this one. Therefor a mapping between the orginal C API and lua-websockets is gven:
+
+<table>
+  <tr><th>lua-websockets</th><th>C API</th></tr>
+  <tr><td>websockets.context</td><td>libwebsocket_context_create<td></tr>
+  <tr><td>websockets.context</td><td>libwebsocket_context_create<td></tr>
+</table>
 
 ## websockets table
+
+The websockets table is the modules root table/namespace.
 
 ### websockets.WRITE_TEXT
 
@@ -112,39 +89,33 @@ To be used as type with websocket:write(data,type)
 
 ```lua
 local context = websockets.context({
-        port = 8001,
-        on_http = handle_http,
-        on_add_fd = register_fd, --function, optional
-        on_del_fd = unregister_fd, --function, optional
-        protocols = {
-		  ['echo'] = echo_cb,
-		  ['super-test'] = super_test_cb
-        },
-        interf = 'eth0', --optional
-        ssl_cert_path, --string, optional
-        ssl_private_key_filepath, --string, optional
-        gid, --int, optional
-        uid, --int, optional
-        options --int, optional
+   -- the port the websockets server listens for incoming connections
+   port = 8001,
+   -- a callback for http requests
+   on_http = handle_http,
+   -- an (optional) callback for a new fd to service; only
+   -- relevant when using external event-loop
+   on_add_fd = register_fd, --function, optional
+   -- a (optional) callback for a fd which is no more to service; only
+   -- relevant when using external event-loop
+   on_del_fd = unregister_fd, --function, optional
+   -- a map of protocol names and callbacks for this protocol
+   -- at least one protocol must be provided.
+   protocols = {
+     ['echo'] = echo_cb,
+     ['super-test'] = super_test_cb
+   },
+   -- a (optional) string desrcibing the interface to listen on
+   interf = 'eth0',
+   -- a (optional) string specifying the path to the ssl certificate
+   ssl_cert_path, 
+   -- a (optional) string specifying the path to the ssl private key
+   ssl_private_key_path,
+   gid, --int, optional
+   uid, --int, optional
+   options --int, optional
 })
 ```
-Behaves like `libwebsocket_context_create`. `'protocols'` is a table, which
-holds entries with key=protocol_name and
-
-value=on_connect_callback. The on_connect_callback gets a websocket
-object as argument.
-
-If not present, all values default as described in C documentation.
-Returns a context object.
-
-The `on_http` callback is called whenever http request are made and it
-gets a `websocket` and the `uri` string passed.
-
-The `on_add_fd` callback gets called for every new file descriptor which has
-to be polled (sockets) with `fd` as argument. Useful for custom event handling, e.g. with lua-ev.
-
-The `on_del_fd` callback gets called whenever a `fd` is not
-used any more (can be removed from polling). Useful for custom event handling, e.g. with lua-ev.
 
 ## context methods
 
@@ -155,7 +126,7 @@ A context can be created via websockets.context(...).
 context:destroy()
 ```
 Destroys a context. Behaves like `libwebsocket_context_destroy`.
-The context's __gc metamethod calls destroy if necessary (get garbage collected).
+The context's __gc metamethod calls destroy if necessary (garbage collection), so in general this is not required to be called explicitly. 
 
 ### context:service(timeout_ms)
 ```lua
@@ -165,23 +136,20 @@ end
 ```
 Services the context's outstanding io on ALL open fds. Behaves like
 `libwebsocket_service`. The integer `timeout_ms` value defaults to 0
-(no timeout).
+(no timeout, return immediatly after outstanding IO was performed).
 
 ### context:service_fd(fd,revent1,revent2,...)
 ```lua
 -- example to employ service_fd with lua-ev.
 local context
 context = websockets.context{
-   on_add_fd = 
-      function(fd)	
-	 local io = ev.IO.new(
-	    function(_,_,revents)
-               -- specifically handle THIS fd with THIS revents               
-	       context:service_fd(fd,revents)
-	    end,fd,ev.READ)
-	 ws_ios[fd] = io
-	 io:start(ev.Loop.default)
-      end,
+  on_add_fd = function(fd)
+    local io = ev.IO.new(function(_,_,revents)
+      -- specifically handle THIS fd with THIS revents               
+      context:service_fd(fd,revents)
+    end,fd,ev.READ)
+    io:start(ev.Loop.default)
+  end,
    ...
 }
 ```
@@ -217,9 +185,7 @@ various callback methods, e.g. the protocol connect callback handler
 
 ### websocket:write(data,write_type)
 ```lua
-websocket:write('hello',
-        websockets.WRITE_TEXT -- must be websockets.WRITE_XYZ
-        )
+websocket:write('hello',websockets.WRITE_TEXT)
 ```
 Writes data to websocket. The write_type must be
 websockets.WRITE_XYZ or nil (defaults to WRITE_TEXT). Behaves like `libwebsocket_write`.
@@ -235,10 +201,9 @@ parameters passed in.
 ```lua  
 websocket:on_broadcast(websockets.WRITE_TEXT) --forward broadcast as text
 websocket:on_broadcast(websockets.WRITE_BINARY) --forward broadcast binary
-websocket:on_broadcast(
-        function(ws,data)
-                ws:write(data..'hello',websockets.WRITE_TEXT)
-        end)
+websocket:on_broadcast(function(ws,data) -- intercept broadcast
+  ws:write(data..'hello',websockets.WRITE_TEXT)
+end)
 ```
 Registers an on_broadcast callback on the websocket if
 callback_or_mode is a function. If callback_or_mode is int
@@ -247,10 +212,9 @@ callback_or_mode is a function. If callback_or_mode is int
 
 ### websocket:on_receive(callback)
 ```lua
-websocket:on_receive(
-        function(ws,data)
-                ws:write(data,websockets.WRITE_TEXT)
-        end)
+websocket:on_receive(function(ws,data)
+  ws:write(data,websockets.WRITE_TEXT)
+end)
 ```
 Registers a receive handler for incoming data. The callback gets the
 websocket and the data passed as arguments.
@@ -293,3 +257,48 @@ ws:serve_http_file('./index.html','text/html')
 Serves a file from filesystem. Can only be called from within
 context's on_http callback. Behaves like
 `libwebsockets_serve_http_file`.
+
+# Install
+
+## Install lua-websockets
+[libwebsockets](http://git.warmcat.com/cgi-bin/cgit/libwebsockets) must be installed before lua-websockets can be installed. After having the _latest_ libwebsockets in place, lua-websockets can be installed. At the bottom of the page there are some instruction how to build libwebsockets for Unix and OSX. The prefered way is to install a tagged version from luarocks repository:
+
+```shell 
+$ sudo luarocks install lua-websockets
+```
+
+If you need the most recent version from github, you have to clone and perform a luarocks make:
+
+```shell 
+$ git clone git://github.com/lipp/lua-websockets.git
+$ cd lua-websockets
+$ luarocks make rockspecs/lua-websockets-scm-1.rockspec 
+```
+
+## Build and install libwebsockets
+
+### Build libwebsockets with Ubuntu
+This most problably applies to most other Linuxes.
+Download the recent version and unpack. cd into the unpacked directory. 
+```shell 
+$ ./configure
+$ make
+$ sudo make install
+```
+
+### Build with OSX
+You need to install: 
+  - autoconf
+  - automake
+  - libtool
+
+I was successfull using homebrew and using macports.
+Then do the following.
+```shell 
+$ autoreconf
+$ glibtoolize
+$ ./configure --enable-nofork
+$ make
+$ sudo make install
+```
+

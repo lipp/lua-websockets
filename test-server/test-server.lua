@@ -46,8 +46,6 @@ context = websockets.context{
    }
 }
 
-print(context,context:canonical_hostname())
-
 while true do
    -- service outstanding io with timeout 100ms
    context:service(100)
