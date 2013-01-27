@@ -15,6 +15,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 
 /* Some id string for the userdata meta tables */
 #define WS_CONTEXT_META "websockets.ctx"
@@ -270,7 +271,7 @@ static int augmented_callback(struct libwebsocket_context * context,
       return 0;
     }
     /* push fd */
-    lua_pushnumber(L,(int)(user));
+    lua_pushnumber(L,(intptr_t)(user));
     lua_call(L, 1, 0);
     return 0;
   }
@@ -286,7 +287,7 @@ static int augmented_callback(struct libwebsocket_context * context,
       return 0;
     }
     /* push fd */
-    lua_pushnumber(L,(int)(user));
+    lua_pushnumber(L,(intptr_t)(user));
     /* push modification POLLIN or POLLOUT */
     lua_pushnumber(L,len);
     lua_call(L, 2, 0);
@@ -300,6 +301,7 @@ static int context(lua_State *L) {
   const char* interf = NULL;
   const char* ssl_cert_filepath = NULL;
   const char* ssl_private_key_filepath = NULL;
+  const char* ssl_ca_filepath = NULL;
   int gid = -1;
   int uid = -1;
   unsigned int options = 0;
@@ -338,6 +340,11 @@ static int context(lua_State *L) {
   /* read ssl_private_key_filepath table entry */
   lua_getfield(L, 1, "ssl_private_key_filepath");
   ssl_private_key_filepath = luaL_optstring(L, -1, NULL);    
+  lua_pop(L, 1);
+
+  /* read ssl_ca_filepath table entry */
+  lua_getfield(L, 1, "ssl_ca_filepath");
+  ssl_ca_filepath = luaL_optstring(L, -1, NULL);    
   lua_pop(L, 1);
 
   /* get (unique) http handler */
@@ -389,7 +396,9 @@ static int context(lua_State *L) {
     /* pop protocols table on top */
     lua_pop(L, 1);
   }
-  user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, ssl_cert_filepath, ssl_private_key_filepath, gid, uid, options);  
+  user->context = libwebsocket_create_context(port, interf, user->protocols, user->extensions, 
+					      ssl_cert_filepath, ssl_private_key_filepath, ssl_ca_filepath,
+					      gid, uid, options, NULL);  
 
   if(user->context == NULL) {
     luaL_error(L, "websocket could not create context");
