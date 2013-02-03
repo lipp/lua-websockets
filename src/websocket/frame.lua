@@ -5,6 +5,8 @@ local bxor = bit.bxor
 local sunpack = string.unpack
 local tremove = table.remove
 local spack = string.pack
+local srep = string.rep
+local ssub = string.sub
 
 local encode = function()
 end
@@ -21,12 +23,12 @@ local bit_0_6 = bits(0,1,2,3,4,5,6)
 
 local decode_masked = function(encoded,payload)
    local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
-   encoded = encoded:sub(pos,#encoded)
+   encoded = ssub(encoded,pos,#encoded)
    local mask = {
       m1,m2,m3,m4
    }
    local transformed = {}
-   local format = string.rep('b',payload)
+   local format = srep('b',payload)
    local original = {sunpack(encoded,format)}
    tremove(original,1)
    for i=1,#original do
@@ -38,7 +40,7 @@ end
 
 local decode = function(encoded)
    local pos,header,payload = sunpack(encoded,'bb')
-   encoded = encoded:sub(pos,#encoded)
+   encoded = ssub(encoded,pos,#encoded)
    local fin = band(header,bit_7) > 0
    local opcode = band(header,bit_0_3)
    local mask = band(payload,bit_7) > 0
