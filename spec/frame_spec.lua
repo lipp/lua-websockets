@@ -46,33 +46,37 @@ describe(
       it(
          'RFC: decode a single-frame unmasked text message',
          function()
-            local decoded,fin,opcode = frame.decode(hello_unmasked)
+            local decoded,fin,opcode,bytes = frame.decode(hello_unmasked)
             assert.is_same(opcode,0x1)
             assert.is_true(fin)
             assert.is.same(decoded,'Hello')
+	    assert.is_same(bytes,#hello_unmasked)
          end)
 
       it(
          'RFC: decode a single-frame masked text message',
          function()
-            local decoded,fin,opcode = frame.decode(hello_masked)
+            local decoded,fin,opcode,bytes = frame.decode(hello_masked)
             assert.is_true(fin)
             assert.is_same(opcode,0x1)
             assert.is.same(decoded,'Hello')
+	    assert.is_same(bytes,#hello_masked)
          end)
 
       it(
          'RFC: decode a fragmented test message',
          function()
-            local decoded,fin,opcode = frame.decode(hel)
+            local decoded,fin,opcode,bytes = frame.decode(hel)
             assert.is_falsy(fin)
             assert.is_same(opcode,0x1)
             assert.is.same(decoded,'Hel')
+	    assert.is_same(bytes,#hel)
 
-            decoded,fin,opcode = frame.decode(lo)
+            decoded,fin,opcode,bytes = frame.decode(lo)
             assert.is_true(fin)
             assert.is_same(opcode,0x0)
             assert.is.same(decoded,'lo')
+	    assert.is_same(bytes,#lo)
          end)
 
       it(

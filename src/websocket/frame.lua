@@ -76,6 +76,7 @@ local decode = function(encoded)
    end
    local pos,header,payload = sunpack(encoded,'bb')
    encoded = ssub(encoded,pos,#encoded)
+   local bytes = 2
    local fin = band(header,bit_7) > 0
    local opcode = band(header,bit_0_3)
    local mask = band(payload,bit_7) > 0
@@ -98,6 +99,7 @@ local decode = function(encoded)
 	 assert(false,'INVALID PAYLOAD '..payload)
       end
       encoded = ssub(encoded,pos,#encoded)
+      bytes = bytes + pos
    end
    local decoded
    if mask then
@@ -106,19 +108,21 @@ local decode = function(encoded)
 	 return nil,bytes_short
       end
       local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
-      encoded = ssub(encoded,pos,#encoded)
+      encoded = ssub(encoded,pos,#encoded)      
       local mask = {
 	 m1,m2,m3,m4
       }
       decoded = xor_mask(encoded,mask,payload)
+      bytes = bytes + 4 + payload
    else
       local bytes_short = payload - #encoded
       if bytes_short > 0 then
 	 return nil,bytes_short
       end
       decoded = encoded
+      bytes = bytes + payload
    end
-   return decoded,fin,opcode
+   return decoded,fin,opcode,bytes
 end
 
 return {
