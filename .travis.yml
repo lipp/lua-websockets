@@ -1,0 +1,26 @@
+language: erlang
+
+env:
+  - LUA=""
+  - LUA="luajit"
+
+branches:
+  only:
+    - pure-lua
+
+install:
+  - sudo apt-get install libev-dev
+  - sudo apt-get install luajit
+  - sudo apt-get install luarocks
+  - sudo luarocks install luafilesystem
+  - sudo luarocks install luasocket
+  - sudo luarocks install lua-ev
+  - sudo luarocks install lua-cjson
+  - sudo luarocks install lpack
+  - git clone git://github.com/lipp/busted.git
+  - cd busted
+  - sudo luarocks make
+  - cd ../
+
+script: "busted spec"
+
