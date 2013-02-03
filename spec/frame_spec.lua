@@ -75,5 +75,22 @@ describe(
             assert.is.same(decoded,'lo')
          end)
 
+      it(
+         'refuse incomplete unmasked frame',
+         function()
+            local decoded,fin,opcode = frame.decode(hello_unmasked:sub(1,4))
+            assert.is_falsy(decoded)
+            assert.is_same(fin,#hello_unmasked-4)
+            assert.is_falsy(opcode)
+         end)
+
+      it(
+         'refuse incomplete masked frame',
+         function()
+            local decoded,fin,opcode = frame.decode(hello_masked:sub(1,4))
+            assert.is_falsy(decoded)
+            assert.is_same(fin,#hello_masked-4)
+            assert.is_falsy(opcode)
+         end)
 
    end)

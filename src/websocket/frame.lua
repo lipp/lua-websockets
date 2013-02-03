@@ -47,8 +47,16 @@ local decode = function(encoded)
    payload = band(payload,bit_0_6)
    local decoded
    if mask then
+      local bytes_short = payload + 4 - #encoded
+      if bytes_short > 0 then
+	 return nil,bytes_short
+      end
       decoded = decode_masked(encoded,payload)
    else
+      local bytes_short = payload - #encoded
+      if bytes_short > 0 then
+	 return nil,bytes_short
+      end
       decoded = encoded
    end
    return decoded,fin,opcode
