@@ -16,6 +16,30 @@ local sec_websocket_accept = function(sec_websocket_key)
    return base64.encode(sha1_binary)
 end
 
+local http_headers = function(request)
+   local headers = {}
+   if not request:match('GET /%w* HTTP/1%.1') then
+      return 
+   end
+   request = request:match('[^\r\n]+\n(.*)')
+   for line in request:gmatch('[^\r\n]+') do
+      local name,val = line:match('([^%s]+)%s*:%s*([^%s%\n]+)')
+      if not name then
+	 return headers
+      end
+      name = name:lower()
+      if not name:match('sec%-websocket') then
+	 val = val:lower()
+      end
+      headers[name] = val
+   end
+end
+
+local accept_upgrade = function(request)
+
+end
+
 return {
-   sec_websocket_accept = sec_websocket_accept
+   sec_websocket_accept = sec_websocket_accept,
+   http_headers = http_headers
        }
