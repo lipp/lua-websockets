@@ -98,6 +98,12 @@ describe(
          function()
 	    local encoded = frame.encode('Hello')
 	    assert.is_same(encoded,hello_unmasked)
+	    local encoded = frame.encode('Hello',frame.TEXT)
+	    assert.is_same(encoded,hello_unmasked)
+	    local encoded = frame.encode('Hello',frame.TEXT,false)
+	    assert.is_same(encoded,hello_unmasked)
+	    local encoded = frame.encode('Hello',frame.TEXT,false,true)
+	    assert.is_same(encoded,hello_unmasked)
          end)
 
    end)
