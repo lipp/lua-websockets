@@ -93,4 +93,11 @@ describe(
             assert.is_falsy(opcode)
          end)
 
+      it(
+         'encode single-frame unmasked text',
+         function()
+	    local encoded = frame.encode('Hello')
+	    assert.is_same(encoded,hello_unmasked)
+         end)
+
    end)

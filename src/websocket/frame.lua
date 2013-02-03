@@ -3,14 +3,14 @@ require'pack'
 local bit = require'bit'
 local band = bit.band
 local bxor = bit.bxor
+local bor = bit.bor
 local sunpack = string.unpack
 local tremove = table.remove
 local spack = string.pack
 local srep = string.rep
 local ssub = string.sub
 
-local encode = function()
-end
+
 local bits = function(...)
    local n = 0
    for _,bitn in pairs{...} do
@@ -18,9 +18,35 @@ local bits = function(...)
    end
    return n
 end
+
 local bit_7 = bits(7)
 local bit_0_3 = bits(0,1,2,3)
 local bit_0_6 = bits(0,1,2,3,4,5,6)
+
+local encode = function(data,opcode,masked,fin)
+   local encoded
+   local header = opcode or 1 -- TEXT is default opcode
+   if fin == nil or fin == true then
+      header = bor(header,bit_7)
+   end
+   local payload = 0
+   if masked then
+      payload = bor(payload,bit_7)
+   end
+   local len = #data
+   if len < 126 then
+      payload = bor(payload,len)
+      encoded = spack('bb',header,payload)
+   elseif len < 0xffff then
+      encoded = spack('bb>H',header,payload,len)
+   elseif len < 2^53 then
+      local high = math.floor(len/2^32)
+      local low = len - high*2^32
+      encoded = spack('bb>I>I',header,payload,high,low)
+   end
+   encoded = encoded..data
+   return encoded
+end
 
 local decode_masked = function(encoded,payload)
    local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
@@ -40,12 +66,34 @@ local decode_masked = function(encoded,payload)
 end
 
 local decode = function(encoded)
+   if #encoded < 2 then
+      return nil,2
+   end
    local pos,header,payload = sunpack(encoded,'bb')
    encoded = ssub(encoded,pos,#encoded)
    local fin = band(header,bit_7) > 0
    local opcode = band(header,bit_0_3)
    local mask = band(payload,bit_7) > 0
    payload = band(payload,bit_0_6)
+   if payload > 125 then
+      if payload == 126 then
+	 if #encoded < 2 then
+	    return nil,2
+	 end
+	 pos,payload = sunpack(encoded,'>H')
+	 assert(payload > 0xffff,'INVALID PAYLOAD')
+      elseif payload == 127 then
+	 if #encoded < 8 then
+	    return nil,8
+	 end
+	 pos,high,low = sunpack(encoded,'>I>I')
+	 payload = high*2^32 + low
+	 assert(payload > 0xffffffff and payload < 2^53,'INVALID PAYLOAD')
+      else
+	 assert(false,'INVALID PAYLOAD '..payload)
+      end
+      encoded = ssub(encoded,pos,#encoded)
+   end
    local decoded
    if mask then
       local bytes_short = payload + 4 - #encoded
