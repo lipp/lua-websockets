@@ -13,28 +13,13 @@ description = {
 
 dependencies = {
    "lua >= 5.1",
-}
-
-external_dependencies = {
-   LIBWEBSOCKETS = {
-      header = "libwebsockets.h",
-      library = "libwebsockets.so"
-   }
+   "lpack",
+   "lbase64",
+   "slncrypto"
 }
 
 build = {
    type = "builtin",
-   platforms = {
-      macosx = {
-         modules = {
-            websockets = {               
-               defines = {
-                  "LWS_NO_FORK"
-               }
-            }
-         }
-      }
-   },
    modules = {
       websockets = {
 	 sources = {
