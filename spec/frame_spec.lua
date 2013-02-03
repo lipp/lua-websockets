@@ -106,4 +106,30 @@ describe(
 	    assert.is_same(encoded,hello_unmasked)
          end)
 
+      it(
+         'encode single-frame masked text',
+         function()
+	    local encoded = frame.encode('Hello',frame.TEXT,true)	    
+	    local decoded,fin,opcode = frame.decode(encoded)
+	    assert.is_same('Hello',decoded)
+	    assert.is_true(fin)
+	    assert.is_same(opcode,frame.TEXT)
+         end)
+
+      it(
+         'encode fragmented unmasked text',
+         function()
+	    local hel = frame.encode('Hel',frame.TEXT,false,false)
+            local decoded,fin,opcode = frame.decode(hel)
+            assert.is_falsy(fin)
+            assert.is_same(opcode,0x1)
+            assert.is.same(decoded,'Hel')
+
+	    local lo = frame.encode('lo',frame.CONTINUATION,false)
+            decoded,fin,opcode = frame.decode(lo)
+            assert.is_true(fin)
+            assert.is_same(opcode,0x0)
+            assert.is.same(decoded,'lo')
+         end)
+
    end)

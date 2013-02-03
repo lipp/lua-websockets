@@ -23,6 +23,18 @@ local bit_7 = bits(7)
 local bit_0_3 = bits(0,1,2,3)
 local bit_0_6 = bits(0,1,2,3,4,5,6)
 
+local xor_mask = function(encoded,mask,payload)
+   local transformed = {}
+   local format = srep('b',payload)
+   local original = {sunpack(encoded,format)}
+   tremove(original,1)
+   for i=1,#original do
+      local j = (i-1) % 4 + 1
+      transformed[i] = bxor(original[i],mask[j])
+   end
+   return spack(format,unpack(transformed))
+end
+
 local encode = function(data,opcode,masked,fin)
    local encoded
    local header = opcode or 1 -- TEXT is default opcode
@@ -44,25 +56,18 @@ local encode = function(data,opcode,masked,fin)
       local low = len - high*2^32
       encoded = spack('bb>I>I',header,payload,high,low)
    end
-   encoded = encoded..data
-   return encoded
-end
-
-local decode_masked = function(encoded,payload)
-   local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
-   encoded = ssub(encoded,pos,#encoded)
-   local mask = {
-      m1,m2,m3,m4
-   }
-   local transformed = {}
-   local format = srep('b',payload)
-   local original = {sunpack(encoded,format)}
-   tremove(original,1)
-   for i=1,#original do
-      local j = (i-1) % 4 + 1
-      transformed[i] = bxor(original[i],mask[j])
+   if not masked then
+      encoded = encoded..data
+   else
+      local m1 = math.random(0,0xff)
+      local m2 = math.random(0,0xff)
+      local m3 = math.random(0,0xff)
+      local m4 = math.random(0,0xff)
+      local mask = {m1,m2,m3,m4}
+      encoded = encoded..spack('bbbb',m1,m2,m3,m4)
+      encoded = encoded..xor_mask(data,mask,#data)
    end
-   return spack(format,unpack(transformed))
+   return encoded
 end
 
 local decode = function(encoded)
@@ -100,7 +105,12 @@ local decode = function(encoded)
       if bytes_short > 0 then
 	 return nil,bytes_short
       end
-      decoded = decode_masked(encoded,payload)
+      local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
+      encoded = ssub(encoded,pos,#encoded)
+      local mask = {
+	 m1,m2,m3,m4
+      }
+      decoded = xor_mask(encoded,mask,payload)
    else
       local bytes_short = payload - #encoded
       if bytes_short > 0 then
