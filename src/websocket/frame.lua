@@ -119,7 +119,11 @@ local decode = function(encoded)
       if bytes_short > 0 then
 	 return nil,bytes_short
       end
-      decoded = encoded
+      if #encoded > payload then
+	 decoded = ssub(encoded,1,payload)
+      else
+	 decoded = encoded
+      end
       bytes = bytes + payload
    end
    return decoded,fin,opcode,bytes
