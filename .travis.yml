@@ -1,4 +1,4 @@
-language: erlang
+language: node
 
 env:
   - LUA=""
@@ -16,12 +16,11 @@ install:
   - sudo luarocks install luabitop
   - sudo luarocks install luasocket
   - sudo luarocks install lua-ev
-  - sudo luarocks install lua-cjson
   - sudo luarocks install lpack
   - git clone git://github.com/lipp/busted.git
   - cd busted
   - sudo luarocks make
   - cd ../
 
-script: "busted spec"
+script: "./test.sh"
 
