@@ -37,4 +37,46 @@ describe(
             local base64 = tools.base64.encode('easure')            
             assert.is_same(base64,'ZWFzdXJl')
 	 end)
+
+      it(
+	 'URL parser works',
+	 function()
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,80)
+	    assert.is_same(uri,'/')
+
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com:8080')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,8080)
+	    assert.is_same(uri,'/')
+
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com:8080/foo')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,8080)
+	    assert.is_same(uri,'/foo')
+
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com:8080/')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,8080)
+	    assert.is_same(uri,'/')
+
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com/')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,80)
+	    assert.is_same(uri,'/')
+
+	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com/foo')
+	    assert.is_same(protocol,'ws')
+	    assert.is_same(host,'www.example.com')
+	    assert.is_same(port,80)
+	    assert.is_same(uri,'/foo')
+
+	 end)
+
    end)

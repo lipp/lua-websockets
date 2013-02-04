@@ -127,9 +127,27 @@ local base64_encode = function(data)
    return result:sub(1,#result-#padding)..padding         
 end
 
+local parse_url = function(url)
+   local protocol,host = url:match('^(%w+)://([^:/]+)')
+   local port,uri = url:match('.+//[^:/]+:?(%d*)(.*)')
+   if port and port ~= '' then
+      port = tonumber(port)
+   elseif protocol == 'ws' then
+      port = 80
+   end
+   if not uri or uri == '' then
+      uri = '/'
+   end
+   if not protocol or not host or not port or not uri then
+      error('Invalid URL:'..url)
+   end
+   return protocol,host,port,uri
+end
+
 return {
    sha1 = sha1,
    base64 = {
       encode = base64_encode
-   }
+   },
+   parse_url = parse_url
        }
