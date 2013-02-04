@@ -5,7 +5,8 @@ local client = require'websocket.client'
 
 describe(
    'The client module',
-   function()           
+   function()     
+      local wsc
       it(
 	 'exposes the correct interface',
 	 function()
@@ -16,11 +17,26 @@ describe(
       it(
 	 'can be constructed',
 	 function()
-	    local wsc = client.new
+	    wsc = client.new
 	    {
 	       url = 'ws://localhost:8080',
 	       protocol = 'echo-protocol'
 	    }
+	 end)
+
+      it(
+	 'can send',
+	 function()
+	    assert.is_same(type(wsc.send),'function')	    
+	    wsc:send('Hello again')
+	 end)
+
+      it(
+	 'can receive',
+	 function()
+	    assert.is_same(type(wsc.receive),'function')	    
+	    local echoed = wsc:receive()
+	    assert.is_same(echoed,'Hello again')
 	 end)
 
    end)

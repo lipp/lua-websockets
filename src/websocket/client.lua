@@ -43,6 +43,34 @@ local new = function(ws)
       local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
       error(msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'))
    end
+   
+   local self = {}
+   self.send = function(_,data,opcode)
+      local encoded = frame.encode(data,opcode or frame.TEXT,true)
+      local n,err = sock:send(encoded)
+      if n ~= #encoded then
+	 error('Websocket client send failed:'..err)
+      end
+   end
+   
+   self.receive = function()
+      local part,err = sock:receive(3)
+      if err then
+	 error('Websocket client receive failed:'..err)
+      end
+      local _,left = frame.decode(part)
+      assert(_ == nil)
+      assert(left > 0)
+      local part2,err = sock:receive(left)
+      if err then
+	 error('Websocket client receive failed:'..err)
+      end
+      local decoded,fin = frame.decode(part..part2)
+      assert(decoded and fin)
+      return decoded
+   end
+   
+   return self
 end
 
 return {
