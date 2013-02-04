@@ -20,7 +20,6 @@ local http_headers = function(request)
       return 
    end
    request = request:match('[^\r\n]+\r\n(.*)')
- --  assert(request,pretty.write(request))
    local empty_line
    for line in request:gmatch('[^\r\n]*\r\n') do
       local name,val = line:match('([^%s]+)%s*:%s*([^\r\n]+)')
@@ -40,11 +39,7 @@ local http_headers = function(request)
          assert(false,line..'('..#line..')')
       end
    end
-   if empty_line then      
-      return headers,request:match('\r\n\r\n(.*)')
-   else
-      return 
-   end
+   return headers,request:match('\r\n\r\n(.*)')
 end
 
 local upgrade_request = function(req)

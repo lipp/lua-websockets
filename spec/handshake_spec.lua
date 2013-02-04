@@ -2,6 +2,7 @@ require'busted'
 package.path = package.path..'../src'
 
 local handshake = require'websocket.handshake'
+local socket = require'socket'
 require'pack'
 
 local request_lines = {
@@ -69,5 +70,37 @@ describe(
             assert.is_same(headers['upgrade'],'websocket')
             assert.is_same(headers['connection'],'upgrade')
             assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
-	 end)            	 
+	 end)
+
+      it(
+         'can connect and upgrade node websocket on port 8080',
+         function()
+            local sock = socket.tcp()
+            sock:settimeout(0.3)
+            sock:connect('localhost',8080)
+            local req = handshake.upgrade_request
+            {
+               key = 'dGhlIHNhbXBsZSBub25jZQ==',
+               host = 'localhost',
+               protocols = {'echo-protocol'},
+               origin = 'http://example.com',
+               uri = '/'
+            }
+            sock:send(req)
+            local resp = {}            
+            repeat 
+               local line,err = sock:receive('*l')               
+               resp[#resp+1] = line
+            until err or line == ''
+            assert.is_falsy(err)
+            local response = table.concat(resp,'\r\n')
+            assert.is_truthy(response:match('^HTTP/1.1 101 Switching Protocols\r\n'))
+
+            local headers = handshake.http_headers(response)
+            assert.is_same(type(headers),'table')
+            assert.is_same(headers['upgrade'],'websocket')
+            assert.is_same(headers['connection'],'upgrade')
+            assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
+            assert.is_truthy(headers['sec-websocket-protocol']:match('echo%-protocol'))          
+         end)
    end)
