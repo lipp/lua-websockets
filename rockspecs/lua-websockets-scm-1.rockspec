@@ -14,8 +14,7 @@ description = {
 dependencies = {
    "lua >= 5.1",
    "lpack",
-   "lbase64",
-   "slncrypto"
+   "lbase64"
 }
 
 build = {

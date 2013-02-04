@@ -15,7 +15,6 @@ install:
   - sudo luarocks install luafilesystem
   - sudo luarocks install luabitop
   - sudo luarocks install lbase64
-  - sudo luarocks install slnscrypto
   - sudo luarocks install luasocket
   - sudo luarocks install lua-ev
   - sudo luarocks install lua-cjson
