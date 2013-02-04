@@ -3,6 +3,7 @@ require'pack'
 
 local sha1 = require'websocket.tools'.sha1
 local base64 = require'websocket.tools'.base64
+local tinsert = table.insert
 
 local guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
@@ -46,6 +47,24 @@ local http_headers = function(request)
    end
 end
 
+local upgrade_request = function(req)
+   local format = string.format
+   local lines = {
+      format('GET %s HTTP/1.1',req.uri or ''),
+      format('Host: %s',req.host),
+      'Upgrade: websocket',
+      'Connection: Upgrade',
+      format('Sec-WebSocket-Key: %s',req.key),
+      format('Sec-WebSocket-Protocol: %s',table.concat(req.protocols,', ')),
+      'Sec-WebSocket-Version: 13',
+   }   
+   if req.origin then
+      tinsert(lines,string.format('Origin: %s',req.origin))
+   end
+   tinsert(lines,'\r\n')
+   return table.concat(lines,'\r\n')
+end
+
 local accept_upgrade = function(request,protocols)
    local headers = http_headers(request)   
    if headers['upgrade'] ~= 'websocket' or
@@ -76,11 +95,12 @@ local accept_upgrade = function(request,protocols)
       string.format('Sec-Websocket-Protocol: %s',prot),
       '\r\n'
    }
-   return table.concat(lines,'\r\n')
+   return table.concat(lines,'\r\n'),prot
 end
 
 return {
    sec_websocket_accept = sec_websocket_accept,
    http_headers = http_headers,
    accept_upgrade = accept_upgrade,
+   upgrade_request = upgrade_request,
        }
