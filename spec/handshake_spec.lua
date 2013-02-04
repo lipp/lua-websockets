@@ -4,6 +4,19 @@ package.path = package.path..'../src'
 local handshake = require'websocket.handshake'
 require'pack'
 
+local request_lines = {
+   'GET /chat HTTP/1.1',
+   'Host: server.example.com',
+   'Upgrade: websocket',
+   'Connection: Upgrade',
+   'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==',
+   'Origin: http://example.com',
+   'Sec-WebSocket-Protocol: chat, superchat',
+   'Sec-WebSocket-Version: 13',
+   '\r\n'
+}
+local request_header = table.concat(request_lines,'\r\n')
+
 describe(
    'The handshake module',
    function()
@@ -18,24 +31,28 @@ describe(
       it(
 	 'can parse handshake header',
 	 function()
-	    local request = [[
-GET /chat HTTP/1.1
-Host: server.example.com
-Upgrade: websocket
-Connection: Upgrade
-Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-Origin: http://example.com
-Sec-WebSocket-Protocol: chat, superchat
-Sec-WebSocket-Version: 13
-	 ]]
-	 local headers = handshake.http_headers(request)
-	 assert.is_same(type(headers),'table')
-	 assert.is_same('websocket','websocket')
-	 assert.is_same(headers['upgrade'],'websocket')
-	 assert.is_same(headers['connection'],'upgrade')
-	 assert.is_same(headers['sec-websocket-key'],'dGhlIHNhbXBsZSBub25jZQ==')
-	 assert.is_same(headers['sec-websocket-version'],'13')
+            local headers,remainder = handshake.http_headers(request_header..'foo')
+            assert.is_same(type(headers),'table')
+            assert.is_same(headers['upgrade'],'websocket')
+            assert.is_same(headers['connection'],'upgrade')
+            assert.is_same(headers['sec-websocket-key'],'dGhlIHNhbXBsZSBub25jZQ==')
+            assert.is_same(headers['sec-websocket-version'],'13')
+            assert.is_same(headers['sec-websocket-protocol'],'chat, superchat')
+            assert.is_same(headers['origin'],'http://example.com')
+            assert.is_same(headers['host'],'server.example.com')
+            assert.is_same(remainder,'foo')
 	 end)
-	 
-	 
+
+      it(
+	 'generates correct upgrade response',
+	 function()
+            local response = handshake.accept_upgrade(request_header,{'chat'})
+            assert.is_same(type(response),'string')
+            assert.is_truthy(response:match('^HTTP/1.1 101 Switching Protocols\r\n'))
+            local headers = handshake.http_headers(response)
+            assert.is_same(type(headers),'table')
+            assert.is_same(headers['upgrade'],'websocket')
+            assert.is_same(headers['connection'],'upgrade')
+            assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
+	 end)            	 
    end)
