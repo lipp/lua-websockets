@@ -30,13 +30,11 @@ local new = function(ws)
    repeat 
       local line,err = sock:receive('*l')               
       resp[#resp+1] = line
-      print(line)
       if err then
 	 error('Websocket Handshake failed due to socket err:'..err)
       end
    until err or line == ''
    local response = table.concat(resp,'\r\n')
-   print(response)
    local headers = handshake.http_headers(response)
    local expected_accept = handshake.sec_websocket_accept(key)
    if headers['sec-websocket-accept'] ~= expected_accept then
