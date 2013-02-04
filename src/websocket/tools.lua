@@ -14,6 +14,7 @@ local srep = string.rep
 local schar = string.char
 local tremove = table.remove
 
+-- from wiki article, not particularly clever impl
 local sha1 = function(msg)
 
    local h0 = 0x67452301
@@ -23,7 +24,7 @@ local sha1 = function(msg)
    local h4 = 0xC3D2E1F0
 
    local bits = #msg * 8
-   -- append a '1' bit plus seven '0' bits
+   -- append b10000000
    msg = msg..schar(0x80) 
    
    -- 64 bit length will be appended
@@ -95,6 +96,7 @@ end
 
 local base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
+-- from wiki article, not particularly clever impl
 local base64_encode = function(data)
    local result = ''
    local padding = ''
