@@ -144,10 +144,24 @@ local parse_url = function(url)
    return protocol,host,port,uri
 end
 
+local generate_key = function()
+   local q = {}
+   local s = tonumber(tostring(q):match('table:(.*)'))
+   math.randomseed(s + os.time())
+   local r1 = math.random(0,0xfffffff)
+   local r2 = math.random(0,0xfffffff)
+   local r3 = math.random(0,0xfffffff)
+   local r4 = math.random(0,0xfffffff)
+   local key = spack('IIII',r1,r2,r3,r4)
+   assert(#key==16,#key)
+   return base64_encode(key)
+end
+
 return {
    sha1 = sha1,
    base64 = {
       encode = base64_encode
    },
-   parse_url = parse_url
+   parse_url = parse_url,
+   generate_key = generate_key
        }

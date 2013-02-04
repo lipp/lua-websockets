@@ -39,6 +39,13 @@ describe(
 	 end)
 
       it(
+	 'Generate Key works',
+	 function()
+	    local key = tools.generate_key()
+	    assert.is_same(type(key),'string')
+	 end)
+
+      it(
 	 'URL parser works',
 	 function()
 	    local protocol,host,port,uri = tools.parse_url('ws://www.example.com')
