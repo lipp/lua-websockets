@@ -21,6 +21,7 @@ install:
   - cd busted
   - sudo luarocks make
   - cd ../
+  - sudo npm install websocket
 
 script: "./test.sh"
 
