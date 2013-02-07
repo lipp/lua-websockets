@@ -3,7 +3,7 @@ local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 
-local new = function(ws)
+local sync = function(ws)
    local protocol,host,port,uri = tools.parse_url(ws.url)
    if protocol ~= 'ws' then
       error('Protocol not supported:'..protocol)
@@ -98,5 +98,6 @@ local new = function(ws)
 end
 
 return {
-   new = new
+   new = sync,
+   sync = sync
        }

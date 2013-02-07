@@ -12,6 +12,7 @@ describe(
 	 function()
 	    assert.is_same(type(client),'table')
 	    assert.is_same(type(client.new),'function')
+	    assert.is_equal(client.new,client.sync)
 	 end)
 
       it(
