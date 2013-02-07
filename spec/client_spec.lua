@@ -25,6 +25,13 @@ describe(
 	 end)
 
       it(
+	 'can connect',
+	 function()
+	    assert.is_same(type(wsc.connect),'function')
+            assert.has_no_error(function() wsc:connect() end)
+	 end)
+
+      it(
 	 'can send',
 	 function()
 	    assert.is_same(type(wsc.send),'function')	    
