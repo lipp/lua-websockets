@@ -26,21 +26,21 @@ describe(
 	 end)
 
       it(
-	 'can connect',
+	 'can connect (requires external websocket server @port 8080)',
 	 function()
 	    assert.is_same(type(wsc.connect),'function')
             assert.has_no_error(function() wsc:connect() end)
 	 end)
 
       it(
-	 'can send',
+	 'can send (requires external websocket server @port 8080)',
 	 function()
 	    assert.is_same(type(wsc.send),'function')	    
 	    wsc:send('Hello again')
 	 end)
 
       it(
-	 'can receive',
+	 'can receive (requires external websocket server @port 8080)',
 	 function()
 	    assert.is_same(type(wsc.receive),'function')	    
 	    local echoed = wsc:receive()
