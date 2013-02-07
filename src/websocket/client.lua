@@ -61,7 +61,7 @@ local sync = function(ws)
       if not self.connected then
          error('Websocket client send failed: not connected')
       end
-      local parts
+      local frames
       while true do
          local header,err = sock:receive(3)
          if err then
@@ -78,12 +78,12 @@ local sync = function(ws)
          local decoded,fin = frame.decode(encoded)
          assert(decoded)
          if not fin then
-            parts = parts or {}
-            tinsert(parts,decoded)
-         elseif not parts then
+            frames = frames or {}
+            tinsert(frames,decoded)
+         elseif not frames then
             return decoded
          else
-            return tconcat(parts)
+            return tconcat(frames)
          end
       end
    end
@@ -97,7 +97,9 @@ local sync = function(ws)
    return self
 end
 
+
 return {
    new = sync,
-   sync = sync
+   sync = sync,
+   ev = require'websocket.client_ev'
        }
