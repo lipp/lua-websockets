@@ -84,7 +84,7 @@ local ev = function(ws)
                function()
                   local resp = {}            
                   local last
-                  ev.IO.new(
+                  handshake_io = ev.IO.new(
                      function(loop,read_io)
                         repeat 
                            local line,err,part = sock:receive('*l')               
@@ -146,7 +146,8 @@ local ev = function(ws)
                         if on_message then
                            message_io:start(loop)
                         end
-                     end,fd,ev.READ):start(loop) -- handshake
+                     end,fd,ev.READ)
+                  handshake_io:start(loop) -- handshake
                end)
          end,fd,ev.WRITE):start(loop) -- connect
       local _,err = sock:connect(host,port)
@@ -176,7 +177,12 @@ local ev = function(ws)
    end
    
    self.close = function()
-      message_io:stop(loop)
+      if handshake_io then
+         handshake_io:stop(loop)
+      end
+      if message_io then
+         message_io:stop(loop)
+      end
       sock:shutdown()
       sock:close()
       sock = nil
