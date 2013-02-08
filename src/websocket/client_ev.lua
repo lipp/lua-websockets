@@ -56,7 +56,7 @@ local ev = function(ws)
    end
 
    self.send = function(_,message,opcode)
-      local encoded = frame.encode(message,opcode or frame.TEXT)
+      local encoded = frame.encode(message,opcode or frame.TEXT,true)
       send(encoded)
    end
 
