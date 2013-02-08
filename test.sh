@@ -1,5 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 node echo-ws.js 1>/dev/null &
-sleep 1
+pid=$!
+sleep 0.1
 busted spec/
+bustedcode=$?
+kill ${pid}
+exit $bustedcode
 
