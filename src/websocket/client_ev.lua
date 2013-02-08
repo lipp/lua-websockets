@@ -27,7 +27,7 @@ local ev = function(ws)
       if send_buffer then
          -- a write io is still running
          send_buffer = send_buffer..data
-         return 
+         return
       else
          send_buffer = data
       end
@@ -51,7 +51,7 @@ local ev = function(ws)
             else
                assert(sent < len)
                index = sent
-            end            
+            end
          end,fd,ev.WRITE):start(loop)
    end
 
@@ -59,7 +59,7 @@ local ev = function(ws)
       local encoded = frame.encode(message,opcode or frame.TEXT)
       send(encoded)
    end
-   
+
    local connect = function(_,on_connect_arg)
       assert(not sock)
       sock = socket.tcp()
@@ -82,12 +82,12 @@ local ev = function(ws)
             send(
                req,
                function()
-                  local resp = {}            
+                  local resp = {}
                   local last
                   handshake_io = ev.IO.new(
                      function(loop,read_io)
-                        repeat 
-                           local line,err,part = sock:receive('*l')               
+                        repeat
+                           local line,err,part = sock:receive('*l')
                            if line then
                               if last then
                                  line = last..line
@@ -100,7 +100,7 @@ local ev = function(ws)
                               last = part
                               return
                            end
-                        until line == '' 
+                        until line == ''
                         read_io:stop(loop)
                         local response = table.concat(resp,'\r\n')
                         local headers = handshake.http_headers(response)
@@ -110,7 +110,7 @@ local ev = function(ws)
                            msg = msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil')
                            on_error(self,msg)
                            return
-                        end                       
+                        end
                         on_connect(self)
                         local last
                         local frames = {}
@@ -124,12 +124,12 @@ local ev = function(ws)
                                  else
                                     encoded = encoded or part
                                  end
-                              elseif err ~= 'timeout' then                                 
+                              elseif err ~= 'timeout' then
                                  on_error(self,'Websocket message read io failed: '..err)
                                  message_io:stop(loop)
                                  return
                               end
-                              
+
                               repeat
                                  local decoded,fin,opcode,bytes = frame.decode(encoded)
                                  if decoded then
@@ -173,9 +173,9 @@ local ev = function(ws)
       if not on_message and message_io then
          message_io:start(loop)
       end
-      on_message = on_message_arg      
+      on_message = on_message_arg
    end
-   
+
    self.close = function()
       if handshake_io then
          handshake_io:stop(loop)

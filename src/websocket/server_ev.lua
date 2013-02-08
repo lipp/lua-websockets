@@ -22,7 +22,7 @@ local client = function(sock)
       if send_buffer then
          -- a write io is still running
          send_buffer = send_buffer..data
-         return 
+         return
       else
          send_buffer = data
       end
@@ -46,7 +46,7 @@ local client = function(sock)
             else
                assert(sent < len)
                index = sent
-            end            
+            end
          end,fd,ev.WRITE):start(loop)
    end
 
@@ -54,7 +54,7 @@ local client = function(sock)
       local encoded = frame.encode(message,opcode or frame.TEXT)
       send(encoded)
    end
-   
+
    local last
    local frames = {}
    local message_io = ev.IO.new(
@@ -76,7 +76,7 @@ local client = function(sock)
             end
             return
          end
-         
+
          repeat
             local decoded,fin,opcode,bytes = frame.decode(encoded)
             if decoded then
@@ -90,22 +90,22 @@ local client = function(sock)
          until not decoded
          last = encoded
       end,fd,ev.READ)
-   
+
    self.on_close = function(_,on_close_arg)
       on_close = on_close_arg
    end
-   
+
    self.on_error = function(_,on_error_arg)
       on_error = on_error_arg
    end
-   
+
    self.on_message = function(_,on_message_arg)
       if not on_message and message_io then
          message_io:start(loop)
       end
-      on_message = on_message_arg      
+      on_message = on_message_arg
    end
-   
+
    self.close = function()
       message_io:stop(loop)
       sock:shutdown()
@@ -119,17 +119,17 @@ local listen = function(opts)
    assert(opts and (opts.protocols or opts.default))
    ev = require'ev'
    loop = opts.loop or ev.Loop.default
-   local on_error = function(s,err) print('Websocket unhandled error',s,err) end   
+   local on_error = function(s,err) print('Websocket unhandled error',s,err) end
    local protocols = {}
    if opts.protocols then
       for protocol in pairs(opts.protocols) do
          tinsert(protocols,protocol)
       end
    end
-   
+
    local listener,err = socket.bind(opts.interface or '*',opts.port or 80)
    assert(listener,err)
-   listener:settimeout(0)   
+   listener:settimeout(0)
    listen_io = ev.IO.new(
       function()
          local client_sock = listener:accept()
@@ -137,7 +137,7 @@ local listen = function(opts)
          local request = {}
          ev.IO.new(
             function(loop,read_io)
-               repeat 
+               repeat
                   local line,err,part = client_sock:receive('*l')
                   if line then
                      if last then
@@ -151,7 +151,7 @@ local listen = function(opts)
                      last = part
                      return
                   end
-               until line == '' 
+               until line == ''
                read_io:stop(loop)
                local upgrade_request = tconcat(request,'\r\n')
                local response,protocol = handshake.accept_upgrade(upgrade_request,protocols)
@@ -177,8 +177,8 @@ local listen = function(opts)
                      else
                         assert(sent < len)
                         index = sent
-                     end            
-                  end,client_sock:getfd(),ev.WRITE):start(loop)           
+                     end
+                  end,client_sock:getfd(),ev.WRITE):start(loop)
             end,client_sock:getfd(),ev.READ):start(loop)
       end,listener:getfd(),ev.READ)
    local self = {}

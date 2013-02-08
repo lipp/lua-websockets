@@ -108,7 +108,7 @@ local decode = function(encoded)
 	 return nil,bytes_short
       end
       local pos,m1,m2,m3,m4 = sunpack(encoded,'bbbb')
-      encoded = ssub(encoded,pos,#encoded)      
+      encoded = ssub(encoded,pos,#encoded)
       local mask = {
 	 m1,m2,m3,m4
       }

@@ -17,7 +17,7 @@ end
 local http_headers = function(request)
    local headers = {}
    if not request:match('.*HTTP/1%.1') then
-      return 
+      return
    end
    request = request:match('[^\r\n]+\r\n(.*)')
    local empty_line
@@ -34,7 +34,7 @@ local http_headers = function(request)
             headers[name] = headers[name]..','..val
          end
       elseif line == '\r\n' then
-         empty_line = true  
+         empty_line = true
       else
          assert(false,line..'('..#line..')')
       end
@@ -52,7 +52,7 @@ local upgrade_request = function(req)
       format('Sec-WebSocket-Key: %s',req.key),
       format('Sec-WebSocket-Protocol: %s',table.concat(req.protocols,', ')),
       'Sec-WebSocket-Version: 13',
-   }   
+   }
    if req.origin then
       tinsert(lines,string.format('Origin: %s',req.origin))
    end
@@ -61,13 +61,13 @@ local upgrade_request = function(req)
 end
 
 local accept_upgrade = function(request,protocols)
-   local headers = http_headers(request)   
+   local headers = http_headers(request)
    if headers['upgrade'] ~= 'websocket' or
       headers['connection'] ~= 'upgrade' or
-      headers['sec-websocket-key'] == nil or 
+      headers['sec-websocket-key'] == nil or
       headers['sec-websocket-version'] ~= '13' then
       return nil,'HTTP/1.1 400 Bad Request\r\n\r\n'
-   end      
+   end
    local prot
    if headers['sec-websocket-protocol'] then
       for protocol in headers['sec-websocket-protocol']:gmatch('([^,%s]+)%s?,?') do

@@ -13,11 +13,11 @@ local sync = function(ws)
       sock:settimeout(ws.timeout)
    end
 
-   local connect = function(self)      
+   local connect = function(self)
       local _,err = sock:connect(host,port)
       if err then
          error('Websocket could not connect to '..ws.url)
-      end      
+      end
       local key = tools.generate_key()
       local req = handshake.upgrade_request
       {
@@ -28,9 +28,9 @@ local sync = function(ws)
          uri = uri
       }
       sock:send(req)
-      local resp = {}            
-      repeat 
-         local line,err = sock:receive('*l')               
+      local resp = {}
+      repeat
+         local line,err = sock:receive('*l')
          resp[#resp+1] = line
          if err then
             error('Websocket Handshake failed due to socket err:'..err)
@@ -45,7 +45,7 @@ local sync = function(ws)
       end
       self.connected = true
    end
-   
+
    local send = function(self,data,opcode)
       if not self.connected then
          error('Websocket client send failed: not connected')
@@ -74,7 +74,7 @@ local sync = function(ws)
          encoded = header..encoded
          if err then
             error('Websocket client receive failed:'..err)
-         end         
+         end
          local decoded,fin = frame.decode(encoded)
          assert(decoded)
          if not fin then
@@ -87,13 +87,13 @@ local sync = function(ws)
          end
       end
    end
-  
+
    local self = {
       connect = connect,
       send = send,
       receive = receive
    }
-   
+
    return self
 end
 

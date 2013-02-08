@@ -25,17 +25,17 @@ local sha1 = function(msg)
 
    local bits = #msg * 8
    -- append b10000000
-   msg = msg..schar(0x80) 
-   
+   msg = msg..schar(0x80)
+
    -- 64 bit length will be appended
-   local bytes = #msg + 8 
-   
+   local bytes = #msg + 8
+
    -- 512 bit append stuff
-   local fill_bytes = 64 - (bytes % 64) 
+   local fill_bytes = 64 - (bytes % 64)
    if fill_bytes ~= 64 then
       msg = msg..srep(schar(0),fill_bytes)
    end
-   
+
    -- append 64 big endian length
    local high = math.floor(bits/2^32)
    local low = bits - high*2^32
@@ -53,16 +53,16 @@ local sha1 = function(msg)
       for i=17,80 do
          words[i] = bxor(words[i-3],words[i-8],words[i-14],words[i-16])
          words[i] = rol(words[i],1)
-      end       
+      end
       local a = h0
       local b = h1
       local c = h2
       local d = h3
       local e = h4
- 
+
       for i=1,80 do
          local k,f
-         if i > 0 and i < 21 then              
+         if i > 0 and i < 21 then
             f = bor(band(b,c),band(bnot(b),d))
             k = 0x5A827999
          elseif i > 20 and i < 41 then
@@ -75,7 +75,7 @@ local sha1 = function(msg)
             f = bxor(b,c,d)
             k = 0xCA62C1D6
          end
-         
+
          local temp = rol(a,5) + f + e + k + words[i]
          e = d
          d = c
@@ -110,7 +110,7 @@ local base64_encode = function(data)
    end
    assert(#data % 3 == 0,#data % 3)
    local bytes = 0
-   for i=1,#data,3 do      
+   for i=1,#data,3 do
       local chars = {data:sub(i,i+2):byte(1,3)}
       assert(#chars==3,#chars)
       local n = lshift(chars[1],16) + lshift(chars[2],8) + chars[3]
@@ -124,7 +124,7 @@ local base64_encode = function(data)
       result = result..base64chars:sub(narr[3],narr[3])
       result = result..base64chars:sub(narr[4],narr[4])
    end
-   return result:sub(1,#result-#padding)..padding         
+   return result:sub(1,#result-#padding)..padding
 end
 
 local parse_url = function(url)
