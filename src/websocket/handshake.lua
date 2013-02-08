@@ -65,21 +65,21 @@ local accept_upgrade = function(request,protocols)
    if headers['upgrade'] ~= 'websocket' or
       headers['connection'] ~= 'upgrade' or
       headers['sec-websocket-key'] == nil or 
-      headers['sec-websocket-protocol'] == nil or 
       headers['sec-websocket-version'] ~= '13' then
---      assert(false,pretty.write(headers))
       return nil,'HTTP/1.1 400 Bad Request\r\n\r\n'
    end      
    local prot
-   for protocol in headers['sec-websocket-protocol']:gmatch('([^,%s]+)%s?,?') do
-      for _,supported in ipairs(protocols) do
-         if supported == protocol then
-            prot = protocol
+   if headers['sec-websocket-protocol'] then
+      for protocol in headers['sec-websocket-protocol']:gmatch('([^,%s]+)%s?,?') do
+         for _,supported in ipairs(protocols) do
+            if supported == protocol then
+               prot = protocol
+               break
+            end
+         end
+         if prot then
             break
          end
-      end
-      if prot then
-         break
       end
    end
    local lines = {
@@ -87,9 +87,11 @@ local accept_upgrade = function(request,protocols)
       'Upgrade: websocket',
       'Connection: Upgrade',
       string.format('Sec-Websocket-Accept: %s',sec_websocket_accept(headers['sec-websocket-key'])),
-      string.format('Sec-Websocket-Protocol: %s',prot),
-      '\r\n'
    }
+   if prot then
+      tinsert(lines,string.format('Sec-Websocket-Protocol: %s',prot))
+   end
+   tinsert(lines,'\r\n')
    return table.concat(lines,'\r\n'),prot
 end
 

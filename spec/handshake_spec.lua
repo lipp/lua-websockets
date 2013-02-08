@@ -75,6 +75,22 @@ describe(
             assert.is_same(type(headers),'table')
             assert.is_same(headers['upgrade'],'websocket')
             assert.is_same(headers['connection'],'upgrade')
+            assert.is_same(headers['sec-websocket-protocol'],'chat')
+            assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
+	 end)
+
+      it(
+	 'generates correct upgrade response for unsupported protocol',
+	 function()
+            local response,protocol = handshake.accept_upgrade(request_header,{'bla'})
+            assert.is_same(type(response),'string')
+            assert.is_truthy(response:match('^HTTP/1.1 101 Switching Protocols\r\n'))
+            assert.is_same(protocol,nil)
+            local headers = handshake.http_headers(response)
+            assert.is_same(type(headers),'table')
+            assert.is_same(headers['upgrade'],'websocket')
+            assert.is_same(headers['connection'],'upgrade')
+            assert.is_same(headers['sec-websocket-protocol'],nil)
             assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
 	 end)
 
