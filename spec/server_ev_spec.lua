@@ -88,10 +88,42 @@ describe(
                      assert.is_same(type(client.close),'function')
                      assert.is_same(type(client.send),'function')
                      client:close()
-                     wsc:close()
-                     done()
                   end
-                  wsc:connect()
+                  wsc:connect(
+                     function()
+                        wsc:close()
+                        done()
+                     end)
+               end)
+
+            it(
+               'echo works',
+               async,
+               function(done)
+                  local wsc = client.ev
+                  {
+                     url = 'ws://localhost:'..port,
+                     protocol = 'echo'
+                  }
+                  on_new_echo_client = function(client)
+                     client:on_message(
+                        function(self,msg)
+                           assert.is_equal(self,client)
+                           msg:send('Hello')
+                           self:close()
+                        end)
+                  end
+                  wsc:connect(
+                     function(self)
+                        assert.is_equal(self,wsc)
+                        self:send('Hello')
+                        self:on_message(
+                           function(_,message)
+                              assert.is_same(message,'Hello')
+                              self:close()
+                              done()
+                           end)
+                     end)
                end)
             
             after(

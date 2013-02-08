@@ -157,19 +157,19 @@ local ev = function(ws)
       end
    end
 
-   self.on_close = function(on_close_arg)
+   self.on_close = function(_,on_close_arg)
       on_close = on_close_arg
    end
 
-   self.on_error = function(on_error_arg)
+   self.on_error = function(_,on_error_arg)
       on_error = on_error_arg
    end
 
-   self.on_connect = function(on_connect_arg)
+   self.on_connect = function(_,on_connect_arg)
       on_connect = on_connect_arg
    end
 
-   self.on_message = function(on_message_arg)
+   self.on_message = function(_,on_message_arg)
       if not on_message and message_io then
          message_io:start(loop)
       end

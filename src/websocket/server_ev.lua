@@ -67,9 +67,13 @@ local client = function(sock)
             else
                encoded = encoded or part
             end
-         elseif err ~= 'timeout' then                                 
-            on_error(self,'Websocket message read io failed: '..err)
+         elseif err ~= 'timeout' then
             message_io:stop(loop)
+            if err == 'closed' then
+               on_close()
+            else
+               on_error(self,'Websocket message read io failed: '..err)
+            end
             return
          end
          
@@ -87,15 +91,15 @@ local client = function(sock)
          last = encoded
       end,fd,ev.READ)
    
-   self.on_close = function(on_close_arg)
+   self.on_close = function(_,on_close_arg)
       on_close = on_close_arg
    end
    
-   self.on_error = function(on_error_arg)
+   self.on_error = function(_,on_error_arg)
       on_error = on_error_arg
    end
    
-   self.on_message = function(on_message_arg)
+   self.on_message = function(_,on_message_arg)
       if not on_message and message_io then
          message_io:start(loop)
       end
@@ -151,15 +155,30 @@ local listen = function(opts)
                read_io:stop(loop)
                local upgrade_request = tconcat(request,'\r\n')
                local response,protocol = handshake.accept_upgrade(upgrade_request,protocols)
-               if protocol and opts.protocols[protocol] then
-                  local new_client = client(client_sock)
-                  opts.protocols[protocol](new_client)
-               elseif opts.default then
-                  local new_client = client(client_sock)
-                  opts.default(new_client)
-               else
-                  print('Unsupported protocol:',protocol or '"null"')
-               end
+               local index
+               ev.IO.new(
+                  function(loop,write_io)
+                     local len = #response
+                     local sent,err = client_sock:send(response,index)
+                     if not sent then
+                        write_io:stop(loop)
+                        print('Websocket client closed while handshake',err)
+                     elseif sent == len then
+                        write_io:stop(loop)
+                        if protocol and opts.protocols[protocol] then
+                           local new_client = client(client_sock)
+                           opts.protocols[protocol](new_client)
+                        elseif opts.default then
+                           local new_client = client(client_sock)
+                           opts.default(new_client)
+                        else
+                           print('Unsupported protocol:',protocol or '"null"')
+                        end
+                     else
+                        assert(sent < len)
+                        index = sent
+                     end            
+                  end,client_sock:getfd(),ev.WRITE):start(loop)           
             end,client_sock:getfd(),ev.READ):start(loop)
       end,listener:getfd(),ev.READ)
    local self = {}
