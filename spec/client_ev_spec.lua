@@ -30,7 +30,7 @@ describe(
 	 'can connect (requires external websocket server @port 8080)',
          async,
 	 function(done)            
-            wsc.on_connect(
+            wsc:on_connect(
                guard(
                   function(ws)
                      assert.is_equal(ws,wsc)
@@ -44,13 +44,13 @@ describe(
          async,
          function(done)
             assert.is_same(type(wsc.send),'function')	    
-            wsc.on_message( 
+            wsc:on_message( 
                guard(
                   function(ws,message,opcode)
+                     ws:close()
                      assert.is_equal(ws,wsc)
                      assert.is_same(message,'Hello again')
                      assert.is_same(opcode,frame.TEXT)
-                     ws:close()
                      done()
                   end))
                wsc:send('Hello again')

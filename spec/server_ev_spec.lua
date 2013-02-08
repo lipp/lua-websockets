@@ -82,18 +82,20 @@ describe(
                      url = 'ws://localhost:'..port,
                      protocol = 'echo'
                   }
-                  on_new_echo_client = function(client)
-                     assert.is_same(type(client),'table')
-                     assert.is_same(type(client.on_message),'function')
-                     assert.is_same(type(client.close),'function')
-                     assert.is_same(type(client.send),'function')
-                     client:close()
-                  end
-                  wsc:connect(
-                     function()
-                        wsc:close()
-                        done()
+                  on_new_echo_client = guard(
+                     function(client)
+                        assert.is_same(type(client),'table')
+                        assert.is_same(type(client.on_message),'function')
+                        assert.is_same(type(client.close),'function')
+                        assert.is_same(type(client.send),'function')
+                        client:close()
                      end)
+                  wsc:connect(
+                     guard(                     
+                        function()
+                           wsc:close()
+                           done()
+                        end))
                end)
 
             it(
@@ -105,25 +107,29 @@ describe(
                      url = 'ws://localhost:'..port,
                      protocol = 'echo'
                   }
-                  on_new_echo_client = function(client)
-                     client:on_message(
-                        function(self,msg)
-                           assert.is_equal(self,client)
-                           msg:send('Hello')
-                           self:close()
-                        end)
-                  end
-                  wsc:connect(
-                     function(self)
-                        assert.is_equal(self,wsc)
-                        self:send('Hello')
-                        self:on_message(
-                           function(_,message)
-                              assert.is_same(message,'Hello')
-                              self:close()
-                              done()
-                           end)
+                  on_new_echo_client = guard(
+                     function(client)
+                        client:on_message(
+                           guard(
+                              function(self,msg)
+                                 assert.is_equal(self,client)
+                                 msg:send('Hello')
+                                 self:close()
+                              end))
                      end)
+               
+                  wsc:connect(
+                     guard(
+                        function(self)
+                           assert.is_equal(self,wsc)
+                           self:send('Hello')
+                           self:on_message(
+                              function(_,message)
+                                 assert.is_same(message,'Hello')
+                                 self:close()
+                                 done()
+                              end)
+                        end))
                end)
             
             after(
