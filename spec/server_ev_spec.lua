@@ -2,6 +2,7 @@ require'busted'
 package.path = package.path..'../src'
 
 local server = require'websocket.server'
+local client = require'websocket.client'
 local ev = require'ev'
 local port = os.getenv('LUAWS_PORT') or 8081
 
@@ -53,6 +54,51 @@ describe(
                   s:close()
                end)
 	 end)
+
+      describe(
+         'communicating with clients',
+         function()
+            local s
+            local on_new_echo_client
+            before(
+               function()
+                  s = server.ev.listen
+                  {
+                     port = port,
+                     protocols = {
+                        echo = function(client)
+                           on_new_echo_client(client)
+                        end                       
+                     }
+                  }
+               end)
+            
+            it(
+               'handshake works',
+               async,
+               function(done)
+                  local wsc = client.ev
+                  {
+                     url = 'ws://localhost:'..port,
+                     protocol = 'echo'
+                  }
+                  on_new_echo_client = function(client)
+                     assert.is_same(type(client),'table')
+                     assert.is_same(type(client.on_message),'function')
+                     assert.is_same(type(client.close),'function')
+                     assert.is_same(type(client.send),'function')
+                     client:close()
+                     wsc:close()
+                     done()
+                  end
+                  wsc:connect()
+               end)
+            
+            after(
+               function()
+                  s:close()
+               end)
+         end)
 
    end)
 

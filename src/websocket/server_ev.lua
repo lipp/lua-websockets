@@ -5,10 +5,10 @@ local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 local tconcat = table.concat
 local tinsert = table.insert
-local loop
+local ev
 
 local client = function(sock)
-   assert(sock and loop)
+   assert(sock)
    sock:settimeout(0)
    local fd = sock:getfd()
    local message_io
@@ -113,7 +113,7 @@ end
 
 local listen = function(opts)
    assert(opts and (opts.protocols or opts.default))
-   local ev = require'ev'
+   ev = require'ev'
    loop = opts.loop or ev.Loop.default
    local on_error = function(s,err) print('Websocket unhandled error',s,err) end   
    local protocols = {}
@@ -140,7 +140,7 @@ local listen = function(opts)
                         line = last..line
                         last = nil
                      end
-                     request[#update_request+1] = line
+                     request[#request+1] = line
                   elseif err ~= 'timeout' then
                      on_error(self,'Websocket Handshake failed due to socket err:'..err)
                   else
@@ -152,13 +152,13 @@ local listen = function(opts)
                local upgrade_request = tconcat(request,'\r\n')
                local response,protocol = handshake.accept_upgrade(upgrade_request,protocols)
                if protocol and opts.protocols[protocol] then
-                  local new_client = client(sock)
+                  local new_client = client(client_sock)
                   opts.protocols[protocol](new_client)
-               elseif not protocol and opts.default then
-                  local new_client = client(sock)
+               elseif opts.default then
+                  local new_client = client(client_sock)
                   opts.default(new_client)
                else
-                  assert(false)
+                  print('Unsupported protocol:',protocol or '"null"')
                end
             end,client_sock:getfd(),ev.READ):start(loop)
       end,listener:getfd(),ev.READ)
