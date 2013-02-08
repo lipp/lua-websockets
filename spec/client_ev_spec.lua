@@ -19,14 +19,11 @@ describe(
       it(
 	 'can be constructed',
 	 function()
---            assert.has_no_error(
---               function()
-                  wsc = client.ev
-                  {
-                     url = 'ws://localhost:8080',
-                     protocol = 'echo-protocol'
-                  }
-  --             end)
+            wsc = client.ev
+            {
+               url = 'ws://localhost:8080',
+               protocol = 'echo-protocol'
+            }
 	 end)
 
       it(
