@@ -179,7 +179,6 @@ document.getElementById("brow").textContent = " " + BrowserDetect.browser + " "
 
 function get_appropriate_ws_url()
 {
-	var pcol;
 	var u = document.URL;
 
 	/*
@@ -188,17 +187,10 @@ function get_appropriate_ws_url()
 	 */
 
 	if (u.substring(0, 5) == "https") {
-		pcol = "wss://";
-		u = u.substr(8);
+		return "ws://localhost:12345";
 	} else {
-		pcol = "ws://";
-		if (u.substring(0, 4) == "http")
-			u = u.substr(7);
+		return "ws://localhost:12345";
 	}
-
-	u = u.split('/');
-
-	return pcol + u[0];
 }
 
 
