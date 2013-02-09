@@ -55,6 +55,25 @@ describe(
          end)
 
       it(
+         'RFC: decode a single-frame unmasked text message bytewise and check min length',
+         function()
+            for i=1,#hello_unmasked do
+               local sub = hello_unmasked:sub(1,i)
+               local decoded,fin,opcode,bytes = frame.decode(sub)
+               if i ~= #hello_unmasked then                  
+                  assert.is_same(decoded,nil)
+                  assert.is_same(type(fin),'number')
+                  assert.is_truthy(i+fin <= #hello_unmasked)
+               else
+                  assert.is_same(opcode,0x1)
+                  assert.is_true(fin)
+                  assert.is.same(decoded,'Hello')
+                  assert.is_same(bytes,#hello_unmasked)
+               end
+            end
+         end)
+
+      it(
          'RFC: decode a single-frame masked text message',
          function()
             local decoded,fin,opcode,bytes = frame.decode(hello_masked..'foo')
