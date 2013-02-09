@@ -7,13 +7,14 @@ local tconcat = table.concat
 local tinsert = table.insert
 local ev
 
-local client = function(sock)
+local clients = {}
+
+local client = function(sock,protocol)
    assert(sock)
-   sock:settimeout(0)
    local fd = sock:getfd()
    local message_io
    local on_message
-   local on_error = function(s,err) print('Websocket unhandled error',s,err) end
+   local on_error = function(s,err) print('Websocket server unhandled error with client instance',s,err) end
    local on_close = function() end
    local self = {}
 
@@ -30,9 +31,10 @@ local client = function(sock)
       ev.IO.new(
          function(loop,write_io)
             local len = #send_buffer
-            local sent,err = sock:send(send_buffer,index)
+            local sent,err,bla = sock:send(send_buffer,index)
             if not sent then
                write_io:stop(loop)
+	       clients[protocol][self] = nil
                if err == 'closed' then
                   on_close(self)
                end
@@ -69,6 +71,7 @@ local client = function(sock)
             end
          elseif err ~= 'timeout' then
             message_io:stop(loop)
+	    clients[protocol][self] = nil
             if err == 'closed' then
                on_close()
             else
@@ -106,7 +109,14 @@ local client = function(sock)
       on_message = on_message_arg
    end
 
+   self.broadcast = function(_,...)
+      for client in pairs(clients[protocol]) do
+	 client:send(...)
+      end
+   end
+
    self.close = function()
+      clients[protocol][self] = nil
       message_io:stop(loop)
       sock:shutdown()
       sock:close()
@@ -123,6 +133,7 @@ local listen = function(opts)
    local protocols = {}
    if opts.protocols then
       for protocol in pairs(opts.protocols) do
+	 clients[protocol] = {}
          tinsert(protocols,protocol)
       end
    end
@@ -133,6 +144,7 @@ local listen = function(opts)
    listen_io = ev.IO.new(
       function()
          local client_sock = listener:accept()
+	 client_sock:settimeout(0)
          assert(client_sock)
          local request = {}
          ev.IO.new(
@@ -166,7 +178,8 @@ local listen = function(opts)
                      elseif sent == len then
                         write_io:stop(loop)
                         if protocol and opts.protocols[protocol] then
-                           local new_client = client(client_sock)
+                           local new_client = client(client_sock,protocol)
+			   clients[protocol][new_client] = true
                            opts.protocols[protocol](new_client)
                         elseif opts.default then
                            local new_client = client(client_sock)
@@ -182,9 +195,16 @@ local listen = function(opts)
             end,client_sock:getfd(),ev.READ):start(loop)
       end,listener:getfd(),ev.READ)
    local self = {}
-   self.close = function()
+   self.close = function(keep_clients)
       listen_io:stop(loop)
       listener:close()
+      if not keep_clients then
+	 for protocol,clients in pairs(clients) do
+	    for client in pairs(clients) do
+	       client:close()
+	    end
+	 end
+      end
    end
    listen_io:start(loop)
    return self
