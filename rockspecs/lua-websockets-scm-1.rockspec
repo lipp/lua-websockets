@@ -14,18 +14,21 @@ description = {
 dependencies = {
    "lua >= 5.1",
    "lpack",
+   "luasocket"
+}
+build = {
+  type = 'none',
+  install = {
+    lua = {
+      ['websocket'] = 'src/websocket.lua',
+      ['websocket.client'] = 'src/websocket/client.lua',
+      ['websocket.client_ev'] = 'src/websocket/client_ev.lua',
+      ['websocket.server'] = 'src/websocket/server.lua',
+      ['websocket.server_ev'] = 'src/websocket/server_ev.lua',
+      ['websocket.handshake'] = 'src/websocket/handshake.lua',
+      ['websocket.tools'] = 'src/websocket/tools.lua',
+      ['websocket.frame'] = 'src/websocket/frame.lua',
+    }
+  }
 }
 
-build = {
-   type = "builtin",
-   modules = {
-      websockets = {
-	 sources = {
-	    "lua_websockets.c"
-	 },		
-	 libraries = {
-            "websockets"
-         },
-      },
-   },
-}
