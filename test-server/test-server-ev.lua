@@ -1,3 +1,4 @@
+#!/usr/bin/env lua
 --- lua websocket equivalent to test-server.c from libwebsockets.
 -- using lua-ev event loop 
 package.path = package.path..';../src/?.lua'
