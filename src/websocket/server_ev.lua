@@ -20,7 +20,7 @@ local client = function(sock,protocol)
    local self = {}
 
    local send_buffer
-   send = function(data,on_sent)
+   local send = function(data,on_sent)
       if send_buffer then
          -- a write io is still running
          send_buffer = send_buffer..data
@@ -59,7 +59,8 @@ local client = function(sock,protocol)
    end
 
    local last
-   local frames = {}
+   local frames
+   local first_opcode
    local message_io = ev.IO.new(
       function(loop,message_io)
          local encoded,err,part = sock:receive(4096)
@@ -82,14 +83,25 @@ local client = function(sock,protocol)
          end
 
          repeat
-            local decoded,fin,opcode,bytes = frame.decode(encoded)
+            local decoded,fin,opcode,rest = frame.decode(encoded)
             if decoded then
-               tinsert(frames,decoded)
-               encoded = encoded:sub(bytes)
-            end
-            if fin == true then
-               on_message(self,tconcat(frames),opcode)
-               frames = {}
+               encoded = rest
+               if fin and not frames then
+                  on_message(self,decoded,opcode)
+               else
+                  if not frames then
+                     frames = {}
+                     first_opcode = opcode
+                  elseif opcode ~= frame.CONTINUATION then
+                        on_error('Continuation frame expected, got '..opcode)
+                        self:close()
+                  end
+                  tinsert(frames,decoded)
+                  if fin == true then
+                     on_message(self,tconcat(frames),first_opcode)
+                     frames = nil
+                  end
+               end               
             end
          until not decoded
          last = encoded
