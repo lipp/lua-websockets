@@ -131,10 +131,10 @@ local ev = function(ws)
                               end
 
                               repeat
-                                 local decoded,fin,opcode,bytes = frame.decode(encoded)
+                                 local decoded,fin,opcode,rest = frame.decode(encoded)
                                  if decoded then
                                     tinsert(frames,decoded)
-                                    encoded = encoded:sub(bytes)
+                                    encoded = rest
                                  end
                                  if fin == true then
                                     on_message(self,tconcat(frames),opcode)
