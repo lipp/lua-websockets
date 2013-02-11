@@ -47,11 +47,11 @@ describe(
       it(
          'RFC: decode a single-frame unmasked text message',
          function()
-            local decoded,fin,opcode,bytes = frame.decode(hello_unmasked..'foo')
+            local decoded,fin,opcode,rest = frame.decode(hello_unmasked..'foo')
             assert.is_same(opcode,0x1)
             assert.is_true(fin)
             assert.is.same(decoded,'Hello')
-	    assert.is_same(bytes,#hello_unmasked)
+	    assert.is_same(rest,'foo')
          end)
 
       it(
@@ -59,7 +59,7 @@ describe(
          function()
             for i=1,#hello_unmasked do
                local sub = hello_unmasked:sub(1,i)
-               local decoded,fin,opcode,bytes = frame.decode(sub)
+               local decoded,fin,opcode,rest = frame.decode(sub)
                if i ~= #hello_unmasked then                  
                   assert.is_same(decoded,nil)
                   assert.is_same(type(fin),'number')
@@ -68,7 +68,7 @@ describe(
                   assert.is_same(opcode,0x1)
                   assert.is_true(fin)
                   assert.is.same(decoded,'Hello')
-                  assert.is_same(bytes,#hello_unmasked)
+                  assert.is_same(rest,'')
                end
             end
          end)
@@ -76,27 +76,27 @@ describe(
       it(
          'RFC: decode a single-frame masked text message',
          function()
-            local decoded,fin,opcode,bytes = frame.decode(hello_masked..'foo')
+            local decoded,fin,opcode,rest = frame.decode(hello_masked..'foo')
             assert.is_true(fin)
             assert.is_same(opcode,0x1)
             assert.is.same(decoded,'Hello')
-	    assert.is_same(bytes,#hello_masked)
+	    assert.is_same(rest,'foo')
          end)
 
       it(
          'RFC: decode a fragmented test message',
          function()
-            local decoded,fin,opcode,bytes = frame.decode(hel)
+            local decoded,fin,opcode,rest = frame.decode(hel)
             assert.is_falsy(fin)
             assert.is_same(opcode,0x1)
             assert.is.same(decoded,'Hel')
-	    assert.is_same(bytes,#hel)
+	    assert.is_same(rest,'')
 
-            decoded,fin,opcode,bytes = frame.decode(lo)
+            decoded,fin,opcode,rest = frame.decode(lo)
             assert.is_true(fin)
             assert.is_same(opcode,0x0)
             assert.is.same(decoded,'lo')
-	    assert.is_same(bytes,#lo)
+	    assert.is_same(rest,'')
          end)
 
       it(

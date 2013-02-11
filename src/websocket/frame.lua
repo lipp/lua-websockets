@@ -71,6 +71,7 @@ local encode = function(data,opcode,masked,fin)
 end
 
 local decode = function(encoded)
+   local encoded_bak = encoded
    if #encoded < 2 then
       return nil,2
    end
@@ -126,7 +127,7 @@ local decode = function(encoded)
       end
       bytes = bytes + payload
    end
-   return decoded,fin,opcode,bytes
+   return decoded,fin,opcode,encoded_bak:sub(bytes+1)
 end
 
 return {
