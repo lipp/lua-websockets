@@ -17,6 +17,7 @@ local client = function(sock,protocol)
    local on_message
    local on_error = function(s,err) print('Websocket server unhandled error with client instance',s,err) end
    local on_close = function() end
+   local send_io
    local self = {}
 
    local send_buffer
@@ -29,10 +30,10 @@ local client = function(sock,protocol)
          send_buffer = data
       end
       local index
-      ev.IO.new(
+      send_io = ev.IO.new(
          function(loop,write_io)
             local len = #send_buffer
-            local sent,err,bla = sock:send(send_buffer,index)
+            local sent,err = sock:send(send_buffer,index)
             if not sent then
                write_io:stop(loop)
 	       clients[protocol][self] = nil
@@ -50,7 +51,8 @@ local client = function(sock,protocol)
                assert(sent < len)
                index = sent
             end
-         end,fd,ev.WRITE):start(loop)
+         end,fd,ev.WRITE)
+      send_io:start(loop)
    end
 
    self.send = function(_,message,opcode)
@@ -130,7 +132,12 @@ local client = function(sock,protocol)
 
    self.close = function()
       clients[protocol][self] = nil
-      message_io:stop(loop)
+      if message_io then
+         message_io:stop(loop)
+      end
+      if send_io then
+         send_io:stop(loop)
+      end
       sock:shutdown()
       sock:close()
       sock = nil
@@ -211,6 +218,7 @@ local listen = function(opts)
    self.close = function(keep_clients)
       listen_io:stop(loop)
       listener:close()
+      listener = nil
       if not keep_clients then
 	 for protocol,clients in pairs(clients) do
 	    for client in pairs(clients) do

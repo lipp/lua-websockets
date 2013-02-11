@@ -17,7 +17,7 @@ local ev = function(ws)
    local fd
    local message_io
    local on_message
-   local on_error = function(s,err) print('Websocket unhandled error',s,err) end
+   local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
    local on_close = function() end
    local on_connect = function() end
    local self = {}
@@ -66,6 +66,7 @@ local ev = function(ws)
       fd = sock:getfd()
       -- set non blocking
       sock:settimeout(0)
+      sock:setoption('tcp-nodelay',true)
       on_connect = on_connect_arg or on_connect
       ev.IO.new(
          function(loop,connect_io)
@@ -125,8 +126,8 @@ local ev = function(ws)
                                     encoded = encoded or part
                                  end
                               elseif err ~= 'timeout' then
-                                 on_error(self,'Websocket message read io failed: '..err)
-                                 message_io:stop(loop)
+                                 on_error(self,'Websocket  message read io failed: '..err)
+                                 self:close()
                                  return
                               end
 
