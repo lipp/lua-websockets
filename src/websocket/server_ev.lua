@@ -11,6 +11,7 @@ local clients = {}
 
 local client = function(sock,protocol)
    assert(sock)
+   sock:setoption('tcp-nodelay',true)
    local fd = sock:getfd()
    local message_io
    local on_message
