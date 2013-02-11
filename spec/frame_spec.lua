@@ -128,6 +128,10 @@ describe(
 	    assert.is_same(encoded,hello_unmasked)
 	    local encoded = frame.encode('Hello',frame.TEXT,false,true)
 	    assert.is_same(encoded,hello_unmasked)
+	    local decoded,fin,opcode = frame.decode(encoded)
+	    assert.is_same('Hello',decoded)
+	    assert.is_true(fin)
+	    assert.is_same(opcode,frame.TEXT)
          end)
 
       it(
