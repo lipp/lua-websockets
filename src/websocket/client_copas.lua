@@ -3,21 +3,24 @@ local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 
-local sync = function(ws)
+local new = function(ws)
+   local copas = require'copas'
    local protocol,host,port,uri = tools.parse_url(ws.url)
    if protocol ~= 'ws' then
       error('Protocol not supported:'..protocol)
    end
+   local csock
    local sock = socket.tcp()
    if ws.timeout ~= nil then
       sock:settimeout(ws.timeout)
    end
 
    local connect = function(self)
-      local _,err = sock:connect(host,port)
-      if err then
-         error('Websocket could not connect to '..ws.url)
-      end
+      local _,err = copas.connect(sock,host,port)
+--      if err then
+--         error('Websocket could not connect to '..ws.url..': '..err)
+--      end
+      csock = copas.wrap(sock)
       local key = tools.generate_key()
       local req = handshake.upgrade_request
       {
@@ -27,10 +30,10 @@ local sync = function(ws)
          origin = ws.origin,
          uri = uri
       }
-      sock:send(req)
+      csock:send(req)
       local resp = {}
       repeat
-         local line,err = sock:receive('*l')
+         local line,err = csock:receive('*l')
          resp[#resp+1] = line
          if err then
             error('Websocket Handshake failed due to socket err:'..err)
@@ -51,7 +54,7 @@ local sync = function(ws)
          error('Websocket client send failed: not connected')
       end
       local encoded = frame.encode(data,opcode or frame.TEXT,true)
-      local n,err = sock:send(encoded)
+      local n,err = csock:send(encoded)
       if n ~= #encoded then
 	 error('Websocket client send failed:'..err)
       end
@@ -63,14 +66,14 @@ local sync = function(ws)
       end
       local frames
       while true do
-         local header,err = sock:receive(3)
+         local header,err = csock:receive(3)
          if err then
             error('Websocket client receive failed:'..err)
          end
          local _,left = frame.decode(header)
          assert(_ == nil)
          assert(left > 0)
-         local encoded,err = sock:receive(left)
+         local encoded,err = csock:receive(left)
          encoded = header..encoded
          if err then
             error('Websocket client receive failed:'..err)
@@ -88,19 +91,18 @@ local sync = function(ws)
       end
    end
 
+   local close = function()
+      sock:close()
+   end
+
    local self = {
       connect = connect,
       send = send,
-      receive = receive
+      receive = receive,
+      close = close
    }
 
    return self
 end
 
-
-return {
-   new = sync,
-   sync = sync,
-   ev = require'websocket.client_ev',
-   copas = require'websocket.client_copas'
-       }
+return new
