@@ -113,8 +113,7 @@ describe(
                            guard(
                               function(self,msg)
                                  assert.is_equal(self,client)
-                                 msg:send('Hello')
-                                 self:close()
+                                 self:send('Hello')
                               end))
                      end)
                
@@ -124,11 +123,12 @@ describe(
                            assert.is_equal(self,wsc)
                            self:send('Hello')
                            self:on_message(
-                              function(_,message)
-                                 assert.is_same(message,'Hello')
-                                 self:close()
-                                 done()
-                              end)
+                              guard(
+                                 function(_,message)
+                                    assert.is_same(message,'Hello')
+                                    self:close()
+                                    done()
+                                 end))
                         end))
                end)
             
