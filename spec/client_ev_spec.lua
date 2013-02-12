@@ -1,9 +1,10 @@
-require'busted'
 package.path = package.path..'../src'
 
 local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
+
+setloop('ev')
 
 describe(
    'The client (ev) module',
@@ -56,7 +57,3 @@ describe(
                wsc:send('Hello again')
          end)
    end)
-
-return function()
-   ev.Loop.default:loop()
-       end

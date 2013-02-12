@@ -1,10 +1,11 @@
-require'busted'
 package.path = package.path..'../src'
 
 local server = require'websocket.server'
 local client = require'websocket.client'
 local ev = require'ev'
 local port = os.getenv('LUAWS_PORT') or 8081
+
+setloop('ev')
 
 describe(
    'The server (ev) module',
@@ -140,6 +141,3 @@ describe(
 
    end)
 
-return function()
-   ev.Loop.default:loop()
-       end

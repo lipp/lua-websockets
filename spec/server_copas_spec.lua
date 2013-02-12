@@ -1,10 +1,11 @@
-require'busted'
 package.path = package.path..'../src'
 
 local server = require'websocket.server'
 local client = require'websocket.client'
 local port = os.getenv('LUAWS_PORT') or 8081
 local copas = require'copas'
+
+setloop('copas')
 
 describe(
    'The server (copas) module',
@@ -135,6 +136,3 @@ describe(
 
    end)
 
-return function()
-   copas.step(0)
-       end

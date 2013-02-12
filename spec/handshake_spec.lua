@@ -1,4 +1,3 @@
-require'busted'
 package.path = package.path..'../src'
 
 local handshake = require'websocket.handshake'

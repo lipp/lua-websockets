@@ -1,4 +1,3 @@
-require'busted'
 package.path = package.path..'../src'
 
 local tools = require'websocket.tools'

@@ -1,4 +1,3 @@
-require'busted'
 package.path = package.path..'../src'
 
 local client = require'websocket.client'
