@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 --- lua websocket equivalent to test-server.c from libwebsockets.
--- using lua-copas copasent loop 
+-- using copas as server framework
 package.path = '../src/?.lua;../src/?/?.lua;'..package.path
 local copas = require'copas'
 local socket = require'socket'
@@ -33,6 +33,10 @@ local server = require'websocket'.server.copas.listen
    port = 12345
 }
 
+-- this fairly complex mechanism is required due to the
+-- lack of copas timers...
+-- sends periodically the 'dumb-increment-protocol' count
+-- to the respective client.
 copas.addthread(
    function()
       local last = socket.gettime()
