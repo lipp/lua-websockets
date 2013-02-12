@@ -14,7 +14,7 @@ local client = function(sock,protocol)
    local self = {}
 
    self.send = function(self,data,opcode)
-      local encoded = frame.encode(data,opcode or frame.TEXT,true)
+      local encoded = frame.encode(data,opcode or frame.TEXT)
       local n,err = copas.send(sock,encoded)
       if n ~= #encoded then
 	 error('Websocket server send failed:'..err)
