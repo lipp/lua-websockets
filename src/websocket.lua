@@ -1,4 +1,4 @@
 return {
-   client = require'websocket.client',
-   server = require'websocket.server',
-       }
+  client = require'websocket.client',
+  server = require'websocket.server',
+}
