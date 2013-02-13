@@ -148,9 +148,9 @@ local ev = function(ws)
                   message_io:start(loop)
                 end
               end,fd,ev.READ)
-            handshake_io:start(loop) -- handshake
+            handshake_io:start(loop)-- handshake
           end)
-      end,fd,ev.WRITE):start(loop) -- connect
+      end,fd,ev.WRITE):start(loop)-- connect
     local _,err = sock:connect(host,port)
     assert(_ == nil)
     if err ~= 'timeout' then

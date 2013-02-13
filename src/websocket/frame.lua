@@ -37,7 +37,7 @@ end
 
 local encode = function(data,opcode,masked,fin)
   local encoded
-  local header = opcode or 1 -- TEXT is default opcode
+  local header = opcode or 1-- TEXT is default opcode
   if fin == nil or fin == true then
     header = bor(header,bit_7)
   end
