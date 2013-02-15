@@ -2,6 +2,8 @@ local socket = require'socket'
 local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
+local tinsert = table.insert
+local tconcat = table.concat
 
 local sync = function(ws)
   local protocol,host,port,uri = tools.parse_url(ws.url)
@@ -61,29 +63,36 @@ local sync = function(ws)
     if not self.connected then
       error('Websocket client send failed: not connected')
     end
+    local first_opcode
     local frames
+    local bytes = 3
+    local encoded = ''
     while true do
-      local header,err = sock:receive(3)
+      local chunk,err = sock:receive(bytes)
       if err then
         error('Websocket client receive failed:'..err)
       end
-      local _,left = frame.decode(header)
-      assert(_ == nil)
-      assert(left > 0)
-      local encoded,err = sock:receive(left)
-      encoded = header..encoded
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      local decoded,fin = frame.decode(encoded)
-      assert(decoded)
-      if not fin then
-        frames = frames or {}
-        tinsert(frames,decoded)
-      elseif not frames then
-        return decoded
+      encoded = encoded..chunk
+      local decoded,fin,opcode = frame.decode(encoded)
+      print(decoded and #decoded,fin)
+      if decoded then
+        if not first_opcode then
+          first_opcode = opcode
+        end
+        if not fin then
+          frames = frames or {}
+          bytes = 3
+          encoded = ''
+          tinsert(frames,decoded)
+        elseif not frames then
+          return decoded,first_opcode
+        else
+          tinsert(frames,decoded)
+          return tconcat(frames),first_opcode
+        end
       else
-        return tconcat(frames)
+        assert(type(fin) == 'number' and fin > 0)
+        bytes = fin
       end
     end
   end

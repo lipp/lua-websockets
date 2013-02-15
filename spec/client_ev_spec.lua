@@ -48,12 +48,68 @@ describe(
         wsc:on_message(
           guard(
             function(ws,message,opcode)
-              ws:close()
               assert.is_equal(ws,wsc)
               assert.is_same(message,'Hello again')
               assert.is_same(opcode,frame.TEXT)
               done()
           end))
         wsc:send('Hello again')
+      end)
+    
+    local random_text = function(len)
+      local chars = {}
+      for i=1,len do
+        chars[i] = string.char(math.random(33,126))
+      end
+      return table.concat(chars)
+    end
+    
+    it(
+      'can send and receive data 127 byte messages(requires external websocket server @port 8080)',
+      async,
+      function(done)
+        local msg = random_text(127)
+        wsc:on_message(
+          guard(
+            function(ws,message,opcode)
+              assert.is_same(#msg,#message)
+              assert.is_same(msg,message)
+              assert.is_same(opcode,frame.TEXT)
+              done()
+          end))
+        wsc:send(msg)
+      end)
+    
+    it(
+      'can send and receive data 0xffff-1 byte messages(requires external websocket server @port 8080)',
+      async,
+      function(done)
+        local msg = random_text(0xffff-1)
+        wsc:on_message(
+          guard(
+            function(ws,message,opcode)
+              assert.is_same(#msg,#message)
+              assert.is_same(msg,message)
+              assert.is_same(opcode,frame.TEXT)
+              done()
+          end))
+        wsc:send(msg)
+      end)
+    
+    it(
+      'can send and receive data 0xffff+1 byte messages(requires external websocket server @port 8080)',
+      async,
+      function(done)
+        local msg = random_text(0xffff+1)
+        wsc:on_message(
+          guard(
+            function(ws,message,opcode)
+              ws:close()
+              assert.is_same(#msg,#message)
+              assert.is_same(msg,message)
+              assert.is_same(opcode,frame.TEXT)
+              done()
+          end))
+        wsc:send(msg)
       end)
   end)

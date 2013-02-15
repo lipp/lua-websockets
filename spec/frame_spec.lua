@@ -3,11 +3,7 @@ package.path = package.path..'../src'
 local frame = require'websocket.frame'
 require'pack'
 
-local bytes = function(...)
-  local args = {...}
-  local format = string.rep('b',#args)
-  return string.pack(format,...)
-end
+local bytes = string.char
 
 -- from rfc doc
 local hello_unmasked = bytes(0x81,0x05,0x48,0x65,0x6c,0x6c,0x6f)

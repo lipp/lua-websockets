@@ -46,4 +46,43 @@ describe(
         assert.is_same(echoed,'Hello again')
       end)
     
+    local random_text = function(len)
+      local chars = {}
+      for i=1,len do
+        chars[i] = string.char(math.random(33,126))
+      end
+      return table.concat(chars)
+    end
+    
+    it(
+      'can send with payload 127 (requires external websocket server @port 8080)',
+      function()
+        local text = random_text(127)
+        wsc:send(text)
+        local echoed = wsc:receive()
+        assert.is_same(text,echoed)
+      end)
+    
+    it(
+      'can send with payload 0xffff-1 (requires external websocket server @port 8080)',
+      function()
+        local text = random_text(0xffff-1)
+        assert.is_same(#text,0xffff-1)
+        wsc:send(text)
+        local echoed = wsc:receive()
+        assert.is_same(#text,#echoed)
+        assert.is_same(text,echoed)
+      end)
+    
+    it(
+      'can send with payload 0xffff+1 (requires external websocket server @port 8080)',
+      function()
+        local text = random_text(0xffff+1)
+        assert.is_same(#text,0xffff+1)
+        wsc:send(text)
+        local echoed = wsc:receive()
+        assert.is_same(#text,#echoed)
+        assert.is_same(text,echoed)
+      end)
+    
   end)

@@ -115,31 +115,35 @@ local ev = function(ws)
                 on_connect(self)
                 local last
                 local frames = {}
+                local first_opcode
                 message_io = ev.IO.new(
                   function(loop,message_io)
-                    local encoded,err,part = sock:receive(4096)
-                    if encoded or #part > 0 then
-                      if last then
-                        encoded = last..(encoded or part)
-                        last = nil
-                      else
-                        encoded = encoded or part
-                      end
-                    elseif err ~= 'timeout' then
+                    local encoded,err,part = sock:receive(100000)
+                    if err and err ~= 'timeout' then
                       on_error(self,'Websocket  message read io failed: '..err)
                       self:close()
                       return
+                    else
+                      if last then
+                        encoded = last..(encoded or part)
+                      else
+                        encoded = encoded or part
+                      end
                     end
                     
                     repeat
                       local decoded,fin,opcode,rest = frame.decode(encoded)
                       if decoded then
+                        if not first_opcode then
+                          first_opcode = opcode
+                        end
                         tinsert(frames,decoded)
                         encoded = rest
                       end
                       if fin == true then
-                        on_message(self,tconcat(frames),opcode)
+                        on_message(self,tconcat(frames),first_opcode)
                         frames = {}
+                        first_opcode = nil
                       end
                     until not decoded
                     last = encoded
