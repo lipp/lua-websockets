@@ -74,7 +74,6 @@ local sync = function(ws)
       end
       encoded = encoded..chunk
       local decoded,fin,opcode = frame.decode(encoded)
-      print(decoded and #decoded,fin)
       if decoded then
         if not first_opcode then
           first_opcode = opcode
