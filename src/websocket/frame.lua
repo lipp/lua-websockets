@@ -9,6 +9,8 @@ local tremove = table.remove
 local spack = string.pack
 local srep = string.rep
 local ssub = string.sub
+local sbyte = string.byte
+local schar = string.char
 
 
 local bits = function(...)
@@ -25,14 +27,12 @@ local bit_0_6 = bits(0,1,2,3,4,5,6)
 
 local xor_mask = function(encoded,mask,payload)
   local transformed = {}
-  local format = srep('b',payload)
-  local original = {sunpack(encoded,format)}
-  tremove(original,1)
+  local original = {sbyte(encoded,1,payload)}
   for i=1,#original do
     local j = (i-1) % 4 + 1
     transformed[i] = bxor(original[i],mask[j])
   end
-  return spack(format,unpack(transformed))
+  return schar(unpack(transformed))
 end
 
 local encode = function(data,opcode,masked,fin)
