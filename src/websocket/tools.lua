@@ -13,6 +13,10 @@ local sunpack = string.unpack
 local srep = string.rep
 local schar = string.char
 local tremove = table.remove
+local mrandom = math.random
+
+-- used for generate key random ops
+math.randomseed(os.time())
 
 -- from wiki article, not particularly clever impl
 local sha1 = function(msg)
@@ -145,13 +149,10 @@ local parse_url = function(url)
 end
 
 local generate_key = function()
-  local q = {}
-  local s = tonumber(tostring(q):match('table:(.*)'))
-  math.randomseed(s + os.time())
-  local r1 = math.random(0,0xfffffff)
-  local r2 = math.random(0,0xfffffff)
-  local r3 = math.random(0,0xfffffff)
-  local r4 = math.random(0,0xfffffff)
+  local r1 = mrandom(0,0xfffffff)
+  local r2 = mrandom(0,0xfffffff)
+  local r3 = mrandom(0,0xfffffff)
+  local r4 = mrandom(0,0xfffffff)
   local key = spack('IIII',r1,r2,r3,r4)
   assert(#key==16,#key)
   return base64_encode(key)
