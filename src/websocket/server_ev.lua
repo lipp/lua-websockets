@@ -187,6 +187,12 @@ local listen = function(opts)
           read_io:stop(loop)
           local upgrade_request = tconcat(request,'\r\n')
           local response,protocol = handshake.accept_upgrade(upgrade_request,protocols)
+          if not response then
+            print('Handshake failed, Request:')
+            print(upgrade_request)
+            client_sock:close()
+            return
+          end
           local index
           ev.IO.new(
             function(loop,write_io)
