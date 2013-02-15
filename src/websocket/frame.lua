@@ -50,10 +50,12 @@ local encode = function(data,opcode,masked,fin)
     payload = bor(payload,len)
     encoded = spack('bb',header,payload)
   elseif len < 0xffff then
+    payload = bor(payload,126)
     encoded = spack('bb>H',header,payload,len)
   elseif len < 2^53 then
     local high = math.floor(len/2^32)
     local low = len - high*2^32
+    payload = bor(payload,127)
     encoded = spack('bb>I>I',header,payload,high,low)
   end
   if not masked then
@@ -88,14 +90,15 @@ local decode = function(encoded)
         return nil,2
       end
       pos,payload = sunpack(encoded,'>H')
-      assert(payload > 0xffff,'INVALID PAYLOAD')
     elseif payload == 127 then
       if #encoded < 8 then
         return nil,8
       end
       pos,high,low = sunpack(encoded,'>I>I')
       payload = high*2^32 + low
-      assert(payload > 0xffffffff and payload < 2^53,'INVALID PAYLOAD')
+      if payload < 0xffff or payload > 2^53 then
+        assert(false,'INVALID PAYLOAD '..payload)
+      end
     else
       assert(false,'INVALID PAYLOAD '..payload)
     end

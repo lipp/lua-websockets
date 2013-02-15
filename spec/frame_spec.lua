@@ -133,6 +133,56 @@ describe(
         assert.is_same(opcode,frame.TEXT)
       end)
     
+    local random_text = function(len)
+      local chars = {}
+      for i=1,len do
+        chars[i] = string.char(math.random(33,126))
+      end
+      return table.concat(chars)
+    end
+    
+    it(
+      'encode and decode single-frame of length 127 unmasked text',
+      function()
+        local len = 127
+        local text = random_text(len)
+        assert.is_same(#text,len)
+        local encoded = frame.encode(text)
+        local decoded,fin,opcode = frame.decode(encoded)
+        assert.is_same(text,decoded)
+        assert.is_same(#text,len)
+        assert.is_true(fin)
+        assert.is_same(opcode,frame.TEXT)
+      end)
+    
+    it(
+      'encode and decode single-frame of length 0xffff-1 unmasked text',
+      function()
+        local len = 0xffff-1
+        local text = random_text(len)
+        assert.is_same(#text,len)
+        local encoded = frame.encode(text)
+        local decoded,fin,opcode = frame.decode(encoded)
+        assert.is_same(text,decoded)
+        assert.is_same(#text,len)
+        assert.is_true(fin)
+        assert.is_same(opcode,frame.TEXT)
+      end)
+    
+    it(
+      'encode and decode single-frame of length 0xffff+1 unmasked text',
+      function()
+        local len = 0xffff+1
+        local text = random_text(len)
+        assert.is_same(#text,len)
+        local encoded = frame.encode(text)
+        local decoded,fin,opcode = frame.decode(encoded)
+        assert.is_same(text,decoded)
+        assert.is_same(#text,len)
+        assert.is_true(fin)
+        assert.is_same(opcode,frame.TEXT)
+      end)
+    
     it(
       'encode single-frame masked text',
       function()
