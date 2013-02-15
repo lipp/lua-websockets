@@ -133,6 +133,119 @@ describe(
               end))
           end)
         
+        local random_text = function(len)
+          local chars = {}
+          for i=1,len do
+            chars[i] = string.char(math.random(33,126))
+          end
+          return table.concat(chars)
+        end
+        
+        it(
+          'echo works with 127 byte messages',
+          async,
+          function(done)
+            local message = random_text(127)
+            local wsc = client.ev
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo'
+            }
+            on_new_echo_client = guard(
+              function(client)
+                client:on_message(
+                  guard(
+                    function(self,msg)
+                      assert.is_equal(self,client)
+                      self:send(message)
+                  end))
+              end)
+            
+            wsc:connect(
+              guard(
+                function(self)
+                  assert.is_equal(self,wsc)
+                  self:send(message)
+                  self:on_message(
+                    guard(
+                      function(_,echoed)
+                        assert.is_same(message,echoed)
+                        self:close()
+                        done()
+                    end))
+              end))
+          end)
+        
+        it(
+          'echo works with 0xffff-1 byte messages',
+          async,
+          function(done)
+            local message = random_text(0xffff-1)
+            local wsc = client.ev
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo'
+            }
+            on_new_echo_client = guard(
+              function(client)
+                client:on_message(
+                  guard(
+                    function(self,msg)
+                      assert.is_equal(self,client)
+                      self:send(message)
+                  end))
+              end)
+            
+            wsc:connect(
+              guard(
+                function(self)
+                  assert.is_equal(self,wsc)
+                  self:send(message)
+                  self:on_message(
+                    guard(
+                      function(_,echoed)
+                        assert.is_same(message,echoed)
+                        self:close()
+                        done()
+                    end))
+              end))
+          end)
+        
+        it(
+          'echo works with 0xffff+1 byte messages',
+          async,
+          function(done)
+            local message = random_text(0xffff+1)
+            local wsc = client.ev
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo'
+            }
+            on_new_echo_client = guard(
+              function(client)
+                client:on_message(
+                  guard(
+                    function(self,msg)
+                      assert.is_equal(self,client)
+                      self:send(message)
+                  end))
+              end)
+            
+            wsc:connect(
+              guard(
+                function(self)
+                  assert.is_equal(self,wsc)
+                  self:send(message)
+                  self:on_message(
+                    guard(
+                      function(_,echoed)
+                        assert.is_same(message,echoed)
+                        self:close()
+                        done()
+                    end))
+              end))
+          end)
+        
         after(
           function()
             s:close()
