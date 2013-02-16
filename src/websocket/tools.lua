@@ -1,6 +1,6 @@
 
 require'pack'
-local bit = require'bit'
+local bit = require'websocket.bit'
 local rol = bit.rol
 local bxor = bit.bxor
 local bor = bit.bor
