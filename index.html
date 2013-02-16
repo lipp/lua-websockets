@@ -1,44 +1,54 @@
-<!doctype html>
-<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
-<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
+<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
 
-  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
-  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script type="text/javascript" src="javascripts/script.js"></script>
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
 
-  <title>Lua-websockets</title>
-  <meta name="description" content="Websockets for the Lua language.">
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Lua-websockets by lipp</title>
+  </head>
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <body>
+    <a id="forkme_banner" href="https://github.com/lipp/lua-websockets">View on GitHub</a>
+    <div class="shell">
 
-</head>
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Lua-websockets</h1>
+            <h2>Websockets for the Lua language.</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
 
-<body>
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/lipp/lua-websockets/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/lipp/lua-websockets/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
 
-  <div class="wrapper">
-    <header>
-      <h1 class="title">Lua-websockets</h1>
-    </header>
-    <div id="container">
-      <p class="tagline">Websockets for the Lua language.</p>
-      <div id="main" role="main">
-        <div class="download-bar">
-        <div class="inner">
-          <a href="https://github.com/lipp/lua-websockets/tarball/master" class="download-button tar"><span>Download</span></a>
-          <a href="https://github.com/lipp/lua-websockets/zipball/master" class="download-button zip"><span>Download</span></a>
-          <a href="https://github.com/lipp/lua-websockets" class="code">View Lua-websockets on GitHub</a>
-        </div>
-        <span class="blc"></span><span class="trc"></span>
-        </div>
-        <article class="markdown-body">
-          <h1>About</h1>
 
-<p>This project provides Lua modules for <a href="http://tools.ietf.org/html/rfc6455">Websocket Version 13</a> conformant clients and servers. <a href="https://travis-ci.org/lipp/lua-websockets"><img src="https://travis-ci.org/lipp/lua-websockets.png?branch=master" alt="Build Status"></a></p>
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <h1>About</h1>
+
+<p>This project provides Lua modules for <a href="http://tools.ietf.org/html/rfc6455">Websocket Version 13</a> conformant clients and servers. <a href="https://travis-ci.org/lipp/lua-websockets"><img src="https://travis-ci.org/lipp/lua-websockets.png" alt="Build Status"></a></p>
 
 <p>Clients are available in three different flavours:</p>
 
@@ -79,7 +89,7 @@
       <span class="k">end</span>
     <span class="k">end</span>
   <span class="p">}</span>
-<span class="p">})</span>
+<span class="p">}</span>
 
 <span class="c1">-- use the copas loop</span>
 <span class="n">copas</span><span class="p">.</span><span class="n">loop</span><span class="p">()</span>
@@ -108,7 +118,7 @@
       <span class="k">end</span><span class="p">)</span>
     <span class="k">end</span>
   <span class="p">}</span>
-<span class="p">})</span>
+<span class="p">}</span>
 
 <span class="c1">-- use the lua-ev loop</span>
 <span class="n">ev</span><span class="p">.</span><span class="n">Loop</span><span class="p">.</span><span class="n">default</span><span class="p">:</span><span class="n">loop</span><span class="p">()</span>
@@ -118,12 +128,12 @@
 
 <p>The folder test-server contains two re-implementations of the <a href="http://git.warmcat.com/cgi-bin/cgit/libwebsockets/">libwebsocket</a> test-server.c example.</p>
 
-<div class="highlight"><pre><span class="nb">cd test</span>-server
-lua <span class="nb">test</span>-server-ev.lua
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd test</span>-server
+<span class="nv">$ </span>lua <span class="nb">test</span>-server-ev.lua
 </pre></div>
 
-<div class="highlight"><pre><span class="nb">cd test</span>-server
-lua <span class="nb">test</span>-server-copas.lua
+<div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd test</span>-server
+<span class="nv">$ </span>lua <span class="nb">test</span>-server-copas.lua
 </pre></div>
 
 <p>Connect to the from Javascript (e.g. chrome's debugging console) like this:</p>
@@ -156,28 +166,24 @@ lua <span class="nb">test</span>-server-copas.lua
 <li><a href="https://github.com/lipp/busted">busted with async test support</a></li>
 <li><a href="http://nodejs.org/">node</a></li>
 <li><a href="https://github.com/Worlize/WebSocket-Node">node-websocket</a></li>
-</ul><div class="highlight"><pre>./test.sh
+</ul><div class="highlight"><pre><span class="nv">$ </span>./test.sh
 </pre></div>
-        </article>
-      </div>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/lipp">lipp</a> can be found on <a href="https://github.com/lipp/lua-websockets">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
     </div>
-    <footer>
-      <div class="owner">
-      <p><a href="https://github.com/lipp" class="avatar"><img src="https://secure.gravatar.com/avatar/c2a0596815788633047cc32a95499e09?s=30&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png" width="48" height="48"/></a> <a href="https://github.com/lipp">lipp</a> maintains <a href="https://github.com/lipp/lua-websockets">Lua-websockets</a></p>
 
-
-      </div>
-      <div class="creds">
-        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
-      </div>
-    </footer>
-  </div>
-  <div class="current-section">
-    <a href="#top">Scroll to top</a>
-    <a href="https://github.com/lipp/lua-websockets/tarball/master" class="tar">tar</a><a href="https://github.com/lipp/lua-websockets/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
-    <p class="name"></p>
-  </div>
-
-  
-</body>
+    
+  </body>
 </html>
