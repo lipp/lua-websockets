@@ -82,7 +82,7 @@ ev.Loop.default:loop()
 
 ## Running test-server examples
 
-The folder test-server contains two re-implementations of the (libwebsocket)[http://git.warmcat.com/cgi-bin/cgit/libwebsockets/] test-server.c example.
+The folder test-server contains two re-implementations of the [libwebsocket](http://git.warmcat.com/cgi-bin/cgit/libwebsockets/) test-server.c example.
 
 ```shell
 cd test-server
@@ -121,9 +121,9 @@ $ luarocks make rockspecs/lua-websockets-scm-1.rockspec
 
 Running tests requires:
 
-  - (busted with async test support)[https://github.com/lipp/busted]
-  - (node)[http://nodejs.org/]
-  - (node-websocket)[https://github.com/Worlize/WebSocket-Node]
+  - [busted with async test support](https://github.com/lipp/busted)
+  - [node](http://nodejs.org/)
+  - [node-websocket](https://github.com/Worlize/WebSocket-Node)
 
 ```shell
 ./test.sh
