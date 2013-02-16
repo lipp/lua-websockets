@@ -1,6 +1,6 @@
 # About
 
-This project provides Lua modules for [Websocket Version 13](http://tools.ietf.org/html/rfc6455) conformant clients and servers. [![Build Status](https://travis-ci.org/lipp/lua-websockets.png?branch=master)](https://travis-ci.org/lipp/lua-websockets)
+This project provides Lua modules for [Websocket Version 13](http://tools.ietf.org/html/rfc6455) conformant clients and servers. [![Build Status](https://travis-ci.org/lipp/lua-websockets.png)](https://travis-ci.org/lipp/lua-websockets)
 
 Clients are available in three different flavours:
 
