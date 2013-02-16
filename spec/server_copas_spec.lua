@@ -128,6 +128,101 @@ describe(
               end))
           end)
         
+        local random_text = function(len)
+          local chars = {}
+          for i=1,len do
+            chars[i] = string.char(math.random(33,126))
+          end
+          return table.concat(chars)
+        end
+        
+        it(
+          'echo 127 bytes works',
+          async,
+          function(done)
+            on_new_echo_client = guard(
+              function(client)
+                local message = client:receive()
+                client:send(message)
+                client:close()
+              end)
+            
+            copas.addthread(
+              guard(
+                function()
+                  local wsc = client.copas
+                  {
+                    url = 'ws://localhost:'..port,
+                    protocol = 'echo'
+                  }
+                  wsc:connect()
+                  local message = random_text(127)
+                  wsc:send(message)
+                  local echoed = wsc:receive()
+                  assert.is_same(message,echoed)
+                  wsc:close()
+                  done()
+              end))
+          end)
+        
+        it(
+          'echo 0xffff-1 bytes works',
+          async,
+          function(done)
+            on_new_echo_client = guard(
+              function(client)
+                local message = client:receive()
+                client:send(message)
+                client:close()
+              end)
+            
+            copas.addthread(
+              guard(
+                function()
+                  local wsc = client.copas
+                  {
+                    url = 'ws://localhost:'..port,
+                    protocol = 'echo'
+                  }
+                  wsc:connect()
+                  local message = random_text(0xffff-1)
+                  wsc:send(message)
+                  local echoed = wsc:receive()
+                  assert.is_same(message,echoed)
+                  wsc:close()
+                  done()
+              end))
+          end)
+        
+        it(
+          'echo 0xffff+1 bytes works',
+          async,
+          function(done)
+            on_new_echo_client = guard(
+              function(client)
+                local message = client:receive()
+                client:send(message)
+                client:close()
+              end)
+            
+            copas.addthread(
+              guard(
+                function()
+                  local wsc = client.copas
+                  {
+                    url = 'ws://localhost:'..port,
+                    protocol = 'echo'
+                  }
+                  wsc:connect()
+                  local message = random_text(0xffff+1)
+                  wsc:send(message)
+                  local echoed = wsc:receive()
+                  assert.is_same(message,echoed)
+                  wsc:close()
+                  done()
+              end))
+          end)
+        
         after(
           function()
             s:close()
