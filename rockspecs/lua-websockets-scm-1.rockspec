@@ -13,36 +13,25 @@ description = {
 
 dependencies = {
    "lua >= 5.1",
+   "lpack",
+   "luasocket"
 }
-
-external_dependencies = {
-   LIBWEBSOCKETS = {
-      header = "libwebsockets.h",
-      library = "libwebsockets.so"
-   }
-}
-
 build = {
-   type = "builtin",
-   platforms = {
-      macosx = {
-         modules = {
-            websockets = {               
-               defines = {
-                  "LWS_NO_FORK"
-               }
-            }
-         }
-      }
-   },
-   modules = {
-      websockets = {
-	 sources = {
-	    "lua_websockets.c"
-	 },		
-	 libraries = {
-            "websockets"
-         },
-      },
-   },
+  type = 'none',
+  install = {
+    lua = {
+      ['websocket'] = 'src/websocket.lua',
+      ['websocket.client'] = 'src/websocket/client.lua',
+      ['websocket.client_ev'] = 'src/websocket/client_ev.lua',
+      ['websocket.client_copas'] = 'src/websocket/client_copas.lua',
+      ['websocket.server'] = 'src/websocket/server.lua',
+      ['websocket.server_ev'] = 'src/websocket/server_ev.lua',
+      ['websocket.server_copas'] = 'src/websocket/server_copas.lua',
+      ['websocket.handshake'] = 'src/websocket/handshake.lua',
+      ['websocket.tools'] = 'src/websocket/tools.lua',
+      ['websocket.frame'] = 'src/websocket/frame.lua',
+      ['websocket.bit'] = 'src/websocket/bit.lua',
+    }
+  }
 }
+
