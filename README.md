@@ -21,9 +21,7 @@ A webserver is NOT part of lua-websockets. If you are looking for a feature rich
 This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
 
 ```lua
--- load module
 local copas = require'copas'
-local websockets = require'websockets'
 
 -- create a copas webserver and start listening
 local server = require'websocket'.server.copas.listen
@@ -53,9 +51,7 @@ copas.loop()
 This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
 
 ```lua
--- load module
-local copas = require'copas'
-local websockets = require'websockets'
+local ev = require'ev'
 
 -- create a copas webserver and start listening
 local server = require'websocket'.server.ev.listen
