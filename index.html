@@ -1,62 +1,69 @@
 <!doctype html>
+<!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
+<!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Lua-websockets by lipp</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-  </head>
-  <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/lipp/lua-websockets">View On GitHub</a></li>
-          <li class="downloads"><a href="https://github.com/lipp/lua-websockets/zipball/master">ZIP</a></li>
-          <li class="downloads"><a href="https://github.com/lipp/lua-websockets/tarball/master">TAR</a></li>
-          <li class="title">DOWNLOADS</li>
-        </nav>
-      </div><!-- end header -->
+  <link rel="stylesheet" href="stylesheets/stylesheet.css" media="screen"/>
+  <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script type="text/javascript" src="javascripts/script.js"></script>
 
-    <div class="wrapper">
+  <title>Lua-websockets</title>
+  <meta name="description" content="A binding for libwebsockets.">
 
-      <section>
-        <div id="title">
-          <h1>Lua-websockets</h1>
-          <p>A binding for libwebsockets.</p>
-          <hr>
-          <span class="credits left">Project maintained by <a href="https://github.com/lipp">lipp</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1 class="title">Lua-websockets</h1>
+    </header>
+    <div id="container">
+      <p class="tagline">A binding for libwebsockets.</p>
+      <div id="main" role="main">
+        <div class="download-bar">
+        <div class="inner">
+          <a href="https://github.com/lipp/lua-websockets/tarball/master" class="download-button tar"><span>Download</span></a>
+          <a href="https://github.com/lipp/lua-websockets/zipball/master" class="download-button zip"><span>Download</span></a>
+          <a href="https://github.com/lipp/lua-websockets" class="code">View Lua-websockets on GitHub</a>
         </div>
+        <span class="blc"></span><span class="trc"></span>
+        </div>
+        <article class="markdown-body">
+          <h1>About</h1>
 
-        <h1>About</h1>
+<p>This project provides Lua modules for <a href="http://tools.ietf.org/html/rfc6455">Websocket Version 13</a> conformant clients and servers. <a href="https://travis-ci.org/lipp/lua-websockets"><img src="https://travis-ci.org/lipp/lua-websockets.png?branch=pure-lua" alt="Build Status"></a></p>
 
-<p>A Lua binding for <a href="http://git.warmcat.com/cgi-bin/cgit/libwebsockets">libwebsockets</a> which provides easy websocket server functionality for Lua. It works standalone (using the built-in event-loop) or it can be employed together with event frameworks like <a href="https://github.com/brimworks/lua-ev">lua-ev</a> by providing hooks to get access to raw filedescriptors.</p>
+<p>Clients are available in three different flavours:</p>
 
-<p>Whereas it is very easy to provide a websockets message oriented server via libwebsockets (and thus lua-webscokets), its means for handle HTTP are very limited and rather inconvient and mainly for providing self-containing tests/examples. If you are looking for a feature rich webserver framework, have a look at <a href="http://keplerproject.github.com/orbit/">orbit</a> or others. </p>
+<ul>
+<li>synchronous </li>
+<li>coroutine based (<a href="http://keplerproject.github.com/copas">copas</a>)</li>
+<li>asynchronous (<a href="https://github.com/brimworks/lua-ev">lua-ev</a>)</li>
+</ul><p>Servers are available as two different flavours:</p>
 
-<p>It is no problem to work with a "normal" webserver and lua-websockets side by side (but on different ports!), since websockets are not subject of the 'Same origin policy'.</p>
+<ul>
+<li>coroutine based (<a href="http://keplerproject.github.com/copas">copas</a>)</li>
+<li>asynchronous (<a href="https://github.com/brimworks/lua-ev">lua-ev</a>)</li>
+</ul><p>A webserver is NOT part of lua-websockets. If you are looking for a feature rich webserver framework, have a look at <a href="http://keplerproject.github.com/orbit/">orbit</a> or others. It is no problem to work with a "normal" webserver and lua-websockets side by side (two processes, different ports), since websockets are not subject of the 'Same origin policy'.</p>
 
 <h1>Usage</h1>
 
-<h2>Example 1: Simple echo server</h2>
+<h2>Example 1: Simple copas echo server</h2>
 
 <p>This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.</p>
 
-<div class="highlight"><pre><span class="c1">-- load module</span>
-<span class="kd">local</span> <span class="n">websockets</span> <span class="o">=</span> <span class="nb">require</span><span class="s1">'</span><span class="s">websockets'</span>
+<div class="highlight"><pre><span class="kd">local</span> <span class="n">copas</span> <span class="o">=</span> <span class="nb">require</span><span class="s1">'</span><span class="s">copas'</span>
 
-<span class="c1">-- you always need one context object</span>
-<span class="kd">local</span> <span class="n">context</span> <span class="o">=</span> <span class="n">websockets</span><span class="p">.</span><span class="n">context</span><span class="p">({</span>
+<span class="c1">-- create a copas webserver and start listening</span>
+<span class="kd">local</span> <span class="n">server</span> <span class="o">=</span> <span class="nb">require</span><span class="s1">'</span><span class="s">websocket'</span><span class="p">.</span><span class="n">server</span><span class="p">.</span><span class="n">copas</span><span class="p">.</span><span class="n">listen</span>
+<span class="p">{</span>
   <span class="c1">-- listen on port 8080</span>
   <span class="n">port</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">,</span>
   <span class="c1">-- the protocols field holds</span>
@@ -66,319 +73,111 @@
     <span class="c1">-- this callback is called, whenever a new client connects.</span>
     <span class="c1">-- ws is a new websocket instance</span>
     <span class="n">echo</span> <span class="o">=</span> <span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
-      <span class="c1">-- on_receive is called whenever data / a message </span>
-      <span class="c1">-- has been received from the client</span>
-      <span class="n">ws</span><span class="p">:</span><span class="n">on_receive</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
-        <span class="c1">-- write/echo back the data</span>
-        <span class="n">ws</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_TEXT</span><span class="p">)</span>
+      <span class="k">while</span> <span class="kc">true</span> <span class="k">do</span>
+        <span class="kd">local</span> <span class="n">message</span> <span class="o">=</span> <span class="n">ws</span><span class="p">:</span><span class="n">receive</span><span class="p">()</span>
+        <span class="n">ws</span><span class="p">:</span><span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1">-- use the copas loop</span>
+<span class="n">copas</span><span class="p">.</span><span class="n">loop</span><span class="p">()</span>
+</pre></div>
+
+<h2>Example 2: Simple lua-ev echo server</h2>
+
+<p>This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.</p>
+
+<div class="highlight"><pre><span class="kd">local</span> <span class="n">ev</span> <span class="o">=</span> <span class="nb">require</span><span class="s1">'</span><span class="s">ev'</span>
+
+<span class="c1">-- create a copas webserver and start listening</span>
+<span class="kd">local</span> <span class="n">server</span> <span class="o">=</span> <span class="nb">require</span><span class="s1">'</span><span class="s">websocket'</span><span class="p">.</span><span class="n">server</span><span class="p">.</span><span class="n">ev</span><span class="p">.</span><span class="n">listen</span>
+<span class="p">{</span>
+  <span class="c1">-- listen on port 8080</span>
+  <span class="n">port</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">,</span>
+  <span class="c1">-- the protocols field holds</span>
+  <span class="c1">--   key: protocol name</span>
+  <span class="c1">--   value: callback on new connection</span>
+  <span class="n">protocols</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1">-- this callback is called, whenever a new client connects.</span>
+    <span class="c1">-- ws is a new websocket instance</span>
+    <span class="n">echo</span> <span class="o">=</span> <span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">)</span>
+      <span class="n">ws</span><span class="p">:</span><span class="n">on_message</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">ws</span><span class="p">:</span><span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
       <span class="k">end</span><span class="p">)</span>
     <span class="k">end</span>
   <span class="p">}</span>
 <span class="p">})</span>
 
-<span class="c1">-- use the libwebsocket loop to dispatch events.</span>
-<span class="k">while</span> <span class="kc">true</span> <span class="k">do</span>
-   <span class="n">context</span><span class="p">:</span><span class="n">service</span><span class="p">(</span><span class="mi">100000</span><span class="p">)</span>
-<span class="k">end</span>   
+<span class="c1">-- use the lua-ev loop</span>
+<span class="n">ev</span><span class="p">.</span><span class="n">Loop</span><span class="p">.</span><span class="n">default</span><span class="p">:</span><span class="n">loop</span><span class="p">()</span>
 </pre></div>
 
-<p>There are some important points to notice here:</p>
+<h2>Running test-server examples</h2>
 
-<ul>
-<li>You need to load the websockets module via <code>require</code>
-</li>
-<li>You have to define one context which describes 'global' attributes and behaviour</li>
-<li>At least one protocol must be defined ('echo' in this example).
-The callback specified is called for every new connection. Inside you may register a callback,
-which is called whenever data is received.</li>
-<li>You must somehow kickstart the service loop.
-In this example libwebsocket's built in "event-loop" is used (via <code>context:service</code>).</li>
-</ul><p>Connect to the from Javascript (e.g. chrome's debugging console) like this:</p>
+<p>The folder test-server contains two re-implementations of the <a href="http://git.warmcat.com/cgi-bin/cgit/libwebsockets/">libwebsocket</a> test-server.c example.</p>
+
+<div class="highlight"><pre><span class="nb">cd test</span>-server
+lua <span class="nb">test</span>-server-ev.lua
+</pre></div>
+
+<div class="highlight"><pre><span class="nb">cd test</span>-server
+lua <span class="nb">test</span>-server-copas.lua
+</pre></div>
+
+<p>Connect to the from Javascript (e.g. chrome's debugging console) like this:</p>
 
 <div class="highlight"><pre><span class="kd">var</span> <span class="nx">echoWs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebSocket</span><span class="p">(</span><span class="s1">'ws://127.0.0.1:8002'</span><span class="p">,</span><span class="s1">'echo'</span><span class="p">);</span>
 </pre></div>
 
-<p>In opposite to test-server.lua the server does not handle HTTP requests though. If you want to handle HTTP too, implement the context's <code>on_http</code> callback.</p>
-
-<h2>Example 2: test-server.lua</h2>
-
-<p>To see a complete working example, have a look at test-server.lua, which is the Lua equivalent to the test-server.c example from the libwebsockets package. If you have downloaded or cloned the lua-websockets package, you can start the test-server.lua like this:</p>
-
-<div class="highlight"><pre>lua <span class="nb">test</span>-server/test-server.lua <span class="nb">test</span>-server/ 
-</pre></div>
-
-<p>Now the test-server is running and awaiting clients to connect.
-You can connect with one or more browser windows on http://localhost:8002 or <a href="http://127.0.0.1:8002">http://127.0.0.1:8002</a> and play around.</p>
-
-<h1>API</h1>
-
-<p>lua-websockets' API tries to be as close to the underlying libwebsockets as possible. In most cases the original libwebsockets documentation is more detailed then this one. Therefor a mapping between the orginal C API and lua-websockets is gven:</p>
-
-<table>
-<tr>
-<th>lua-websockets</th>
-<th>C API</th>
-</tr>
-<tr>
-<td>websockets.context</td>
-<td>libwebsocket_context_create</td>
-<td></td>
-</tr>
-<tr>
-<td>websockets.context</td>
-<td>libwebsocket_context_create</td>
-<td></td>
-</tr>
-</table><h2>websockets table</h2>
-
-<p>The websockets table is the modules root table/namespace.</p>
-
-<h3>websockets.WRITE_TEXT</h3>
-
-<p>To be used as type with websocket:write(data,type)</p>
-
-<h3>websockets.WRITE_BINARY</h3>
-
-<p>To be used as type with websocket:write(data,type)</p>
-
-<h3>websockets.context(config)</h3>
-
-<div class="highlight"><pre><span class="kd">local</span> <span class="n">context</span> <span class="o">=</span> <span class="n">websockets</span><span class="p">.</span><span class="n">context</span><span class="p">({</span>
-   <span class="c1">-- the port the websockets server listens for incoming connections</span>
-   <span class="n">port</span> <span class="o">=</span> <span class="mi">8001</span><span class="p">,</span>
-   <span class="c1">-- a callback for http requests</span>
-   <span class="n">on_http</span> <span class="o">=</span> <span class="n">handle_http</span><span class="p">,</span>
-   <span class="c1">-- an (optional) callback for a new fd to service; only</span>
-   <span class="c1">-- relevant when using external event-loop</span>
-   <span class="n">on_add_fd</span> <span class="o">=</span> <span class="n">register_fd</span><span class="p">,</span> <span class="c1">--function, optional</span>
-   <span class="c1">-- a (optional) callback for a fd which is no more to service; only</span>
-   <span class="c1">-- relevant when using external event-loop</span>
-   <span class="n">on_del_fd</span> <span class="o">=</span> <span class="n">unregister_fd</span><span class="p">,</span> <span class="c1">--function, optional</span>
-   <span class="c1">-- a map of protocol names and callbacks for this protocol</span>
-   <span class="c1">-- at least one protocol must be provided.</span>
-   <span class="n">protocols</span> <span class="o">=</span> <span class="p">{</span>
-     <span class="p">[</span><span class="s1">'</span><span class="s">echo'</span><span class="p">]</span> <span class="o">=</span> <span class="n">echo_cb</span><span class="p">,</span>
-     <span class="p">[</span><span class="s1">'</span><span class="s">super-test'</span><span class="p">]</span> <span class="o">=</span> <span class="n">super_test_cb</span>
-   <span class="p">},</span>
-   <span class="c1">-- a (optional) string desrcibing the interface to listen on</span>
-   <span class="n">interf</span> <span class="o">=</span> <span class="s1">'</span><span class="s">eth0'</span><span class="p">,</span>
-   <span class="c1">-- a (optional) string specifying the path to the ssl certificate</span>
-   <span class="n">ssl_cert_path</span><span class="p">,</span> 
-   <span class="c1">-- a (optional) string specifying the path to the ssl private key</span>
-   <span class="n">ssl_private_key_path</span><span class="p">,</span>
-   <span class="n">gid</span><span class="p">,</span> <span class="c1">--int, optional</span>
-   <span class="n">uid</span><span class="p">,</span> <span class="c1">--int, optional</span>
-   <span class="n">options</span> <span class="c1">--int, optional</span>
-<span class="p">})</span>
-</pre></div>
-
-<h2>context methods</h2>
-
-<p>A context can be created via websockets.context(...).</p>
-
-<h3>context:destroy()</h3>
-
-<div class="highlight"><pre><span class="n">context</span><span class="p">:</span><span class="n">destroy</span><span class="p">()</span>
-</pre></div>
-
-<p>Destroys a context. Behaves like <code>libwebsocket_context_destroy</code>.
-The context's __gc metamethod calls destroy if necessary (garbage collection), so in general this is not required to be called explicitly. </p>
-
-<h3>context:service(timeout_ms)</h3>
-
-<div class="highlight"><pre><span class="k">while</span> <span class="kc">true</span> <span class="k">do</span>
-      <span class="n">context</span><span class="p">:</span><span class="n">service</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
-<span class="k">end</span>
-</pre></div>
-
-<p>Services the context's outstanding io on ALL open fds. Behaves like
-<code>libwebsocket_service</code>. The integer <code>timeout_ms</code> value defaults to 0
-(no timeout, return immediatly after outstanding IO was performed).</p>
-
-<h3>context:service_fd(fd,revent1,revent2,...)</h3>
-
-<div class="highlight"><pre><span class="c1">-- example to employ service_fd with lua-ev.</span>
-<span class="kd">local</span> <span class="n">context</span>
-<span class="n">context</span> <span class="o">=</span> <span class="n">websockets</span><span class="p">.</span><span class="n">context</span><span class="p">{</span>
-  <span class="n">on_add_fd</span> <span class="o">=</span> <span class="k">function</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-    <span class="kd">local</span> <span class="n">io</span> <span class="o">=</span> <span class="n">ev</span><span class="p">.</span><span class="n">IO</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">revents</span><span class="p">)</span>
-      <span class="c1">-- specifically handle THIS fd with THIS revents               </span>
-      <span class="n">context</span><span class="p">:</span><span class="n">service_fd</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="n">revents</span><span class="p">)</span>
-    <span class="k">end</span><span class="p">,</span><span class="n">fd</span><span class="p">,</span><span class="n">ev</span><span class="p">.</span><span class="n">READ</span><span class="p">)</span>
-    <span class="n">io</span><span class="p">:</span><span class="n">start</span><span class="p">(</span><span class="n">ev</span><span class="p">.</span><span class="n">Loop</span><span class="p">.</span><span class="n">default</span><span class="p">)</span>
-  <span class="k">end</span><span class="p">,</span>
-   <span class="o">...</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>Services the fd's specified revent related actions. Behaves like
-<code>libwebsocket_service_fd</code>. At least one revent must be
-specified. Multiple revents are bit OR'ed. The revents are not
-interpreted by lua-websockets layer but directly forwarded to
-<code>libwebsocket_service_fd</code>.</p>
-
-<h3>context:broadcast(protocol_name,data)</h3>
-
-<div class="highlight"><pre><span class="n">context</span><span class="p">:</span><span class="n">broadcast</span><span class="p">(</span><span class="s1">'</span><span class="s">echo'</span><span class="p">,</span><span class="s1">'</span><span class="s">hello'</span><span class="p">)</span>
-</pre></div>
-
-<p>Broadcasts data for all open websockets of kind <code>protocol_name</code>. Behaves
-like <code>libwebsockets_broadcast</code>. Both parameters are strings. The
-behavior of individual websockets may be changed with websocket:on_broadcast.</p>
-
-<h3>context:canonical_hostname()</h3>
-
-<div class="highlight"><pre><span class="kd">local</span> <span class="n">hostname</span> <span class="o">=</span> <span class="n">context</span><span class="p">:</span><span class="n">canonical_hostname</span><span class="p">()</span>
-</pre></div>
-
-<p>Returns the context's canonical hostname (machine name). Behaves like
-<code>libwebsocket_canonical_hostname</code>.</p>
-
-<h3>context:fork_service_loop()</h3>
-
-<p>Behaves like <code>libwebsockets_fork_service_loop</code>.</p>
-
-<h2>websocket methods</h2>
-
-<p>A websocket can not be explicitly created, instead it gets passed to
-various callback methods, e.g. the protocol connect callback handler
-(see websockets.context)</p>
-
-<h3>websocket:write(data,write_type)</h3>
-
-<div class="highlight"><pre><span class="n">websocket</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s1">'</span><span class="s">hello'</span><span class="p">,</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_TEXT</span><span class="p">)</span>
-</pre></div>
-
-<p>Writes data to websocket. The write_type must be
-websockets.WRITE_XYZ or nil (defaults to WRITE_TEXT). Behaves like <code>libwebsocket_write</code>.</p>
-
-<h3>websocket:on_closed(callback)</h3>
-
-<div class="highlight"><pre><span class="n">websocket</span><span class="p">:</span><span class="n">on_closed</span><span class="p">(</span><span class="k">function</span><span class="p">()</span> <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="s">bye'</span><span class="p">)</span> <span class="k">end</span><span class="p">)</span>
-</pre></div>
-
-<p>Registers an on_closed callback on the websocket. The callback gets no
-parameters passed in.</p>
-
-<h3>websocket:on_broadcast(callback_or_mode)</h3>
-
-<div class="highlight"><pre><span class="n">websocket</span><span class="p">:</span><span class="n">on_broadcast</span><span class="p">(</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_TEXT</span><span class="p">)</span> <span class="c1">--forward broadcast as text</span>
-<span class="n">websocket</span><span class="p">:</span><span class="n">on_broadcast</span><span class="p">(</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_BINARY</span><span class="p">)</span> <span class="c1">--forward broadcast binary</span>
-<span class="n">websocket</span><span class="p">:</span><span class="n">on_broadcast</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="n">data</span><span class="p">)</span> <span class="c1">-- intercept broadcast</span>
-  <span class="n">ws</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="o">..</span><span class="s1">'</span><span class="s">hello'</span><span class="p">,</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_TEXT</span><span class="p">)</span>
-<span class="k">end</span><span class="p">)</span>
-</pre></div>
-
-<p>Registers an on_broadcast callback on the websocket if
-callback_or_mode is a function. If callback_or_mode is int
-(websockets.WRITE_XYZ, any incoming braodcast events forward the message with the respective type. See
-<code>libwebsockets_broadcast</code> and and handling of <code>LWS_CALLBACK_BROADCAST</code>.</p>
-
-<h3>websocket:on_receive(callback)</h3>
-
-<div class="highlight"><pre><span class="n">websocket</span><span class="p">:</span><span class="n">on_receive</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="n">data</span><span class="p">)</span>
-  <span class="n">ws</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">websockets</span><span class="p">.</span><span class="n">WRITE_TEXT</span><span class="p">)</span>
-<span class="k">end</span><span class="p">)</span>
-</pre></div>
-
-<p>Registers a receive handler for incoming data. The callback gets the
-websocket and the data passed as arguments.</p>
-
-<h3>websocket:broadcast(data)</h3>
-
-<div class="highlight"><pre><span class="n">ws</span><span class="p">:</span><span class="n">broadcast</span><span class="p">(</span><span class="s1">'</span><span class="s">all echo hello'</span><span class="p">)</span>
-</pre></div>
-
-<p>Broadcasts data to all websockets of the same protocol. Behaves like <code>libwebsockets_broadcast</code>.</p>
-
-<h3>websocket:get_socket_fd()</h3>
-
-<p>Returns the websocket's socket fd. Useful when using other event loop,
-e.g. lua-ev.</p>
-
-<h3>websocket:close(reason)</h3>
-
-<p>Closes the websocket with the optional integer reason. Behaves like <code>libwebsockets_close_and_free_session</code>.</p>
-
-<h3>websocket:get_peer_addresses()</h3>
-
-<div class="highlight"><pre><span class="kd">local</span> <span class="n">name</span><span class="p">,</span><span class="n">rip</span> <span class="o">=</span> <span class="n">ws</span><span class="p">:</span><span class="n">get_peer_addresses</span><span class="p">()</span>
-</pre></div>
-
-<p>Behaves like <code>libwebsocket_get_peer_addresses</code>.</p>
-
-<h3>websocket:remaining_packet_payload()</h3>
-
-<div class="highlight"><pre><span class="kd">local</span> <span class="n">remaining</span> <span class="o">=</span> <span class="n">ws</span><span class="p">:</span><span class="n">remaining_packet_payload</span><span class="p">()</span>
-</pre></div>
-
-<p>Behaves like <code>libwebsocket_remaining_packet_payload</code>.</p>
-
-<h3>websocket:rx_flow_control(enable)</h3>
-
-<div class="highlight"><pre><span class="n">ws</span><span class="p">:</span><span class="n">rx_flow_control</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
-</pre></div>
-
-<p>Enables / disables rx flow control. Behaves like <code>libwebsocket_remaining_packet_payload</code>.</p>
-
-<h3>websocket:serve_http_file(filename,content_type)</h3>
-
-<div class="highlight"><pre><span class="n">ws</span><span class="p">:</span><span class="n">serve_http_file</span><span class="p">(</span><span class="s1">'</span><span class="s">./index.html'</span><span class="p">,</span><span class="s1">'</span><span class="s">text/html'</span><span class="p">)</span>
-</pre></div>
-
-<p>Serves a file from filesystem. Can only be called from within
-context's on_http callback. Behaves like
-<code>libwebsockets_serve_http_file</code>.</p>
-
-<h1>Install</h1>
-
-<h2>Install lua-websockets</h2>
-
-<p><a href="http://git.warmcat.com/cgi-bin/cgit/libwebsockets">libwebsockets</a> must be installed before lua-websockets can be installed. After having the <em>latest</em> libwebsockets in place, lua-websockets can be installed. At the bottom of the page there are some instruction how to build libwebsockets for Unix and OSX. The prefered way is to install a tagged version from luarocks repository:</p>
-
-<div class="highlight"><pre><span class="nv">$ </span>sudo luarocks install lua-websockets
-</pre></div>
-
-<p>If you need the most recent version from github, you have to clone and perform a luarocks make:</p>
+<h1>Dependencies</h1>
+
+<p>The client and server modules depend on:</p>
+
+<ul>
+<li>luasocket</li>
+<li>lpack</li>
+<li>luabitop (if not using Lua 5.2 nor luajit)</li>
+<li>copas (optionally)</li>
+<li>lua-ev (optionally)</li>
+</ul><h1>Install</h1>
 
 <div class="highlight"><pre><span class="nv">$ </span>git clone git://github.com/lipp/lua-websockets.git
 <span class="nv">$ </span><span class="nb">cd </span>lua-websockets
 <span class="nv">$ </span>luarocks make rockspecs/lua-websockets-scm-1.rockspec 
 </pre></div>
 
-<h2>Build and install libwebsockets</h2>
+<h1>Tests</h1>
 
-<h3>Build libwebsockets with Ubuntu</h3>
-
-<p>This most problably applies to most other Linuxes.
-Download the recent version and unpack. cd into the unpacked directory. </p>
-
-<div class="highlight"><pre><span class="nv">$ </span>./configure
-<span class="nv">$ </span>make
-<span class="nv">$ </span>sudo make install
-</pre></div>
-
-<h3>Build with OSX</h3>
-
-<p>You need to install: </p>
+<p>Running tests requires:</p>
 
 <ul>
-<li>autoconf</li>
-<li>automake</li>
-<li>libtool</li>
-</ul><p>I was successfull using homebrew and using macports.
-Then do the following.</p>
-
-<div class="highlight"><pre><span class="nv">$ </span>autoreconf
-<span class="nv">$ </span>glibtoolize
-<span class="nv">$ </span>./configure --enable-nofork
-<span class="nv">$ </span>make
-<span class="nv">$ </span>sudo make install
+<li><a href="https://github.com/lipp/busted">busted with async test support</a></li>
+<li><a href="http://nodejs.org/">node</a></li>
+<li><a href="https://github.com/Worlize/WebSocket-Node">node-websocket</a></li>
+</ul><div class="highlight"><pre>./test.sh
 </pre></div>
-      </section>
-
+        </article>
+      </div>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
-  </body>
+    <footer>
+      <div class="owner">
+      <p><a href="https://github.com/lipp" class="avatar"><img src="https://secure.gravatar.com/avatar/c2a0596815788633047cc32a95499e09?s=30&amp;d=https://a248.e.akamai.net/assets.github.com%2Fimages%2Fgravatars%2Fgravatar-user-420.png" width="48" height="48"/></a> <a href="https://github.com/lipp">lipp</a> maintains <a href="https://github.com/lipp/lua-websockets">Lua-websockets</a></p>
+
+
+      </div>
+      <div class="creds">
+        <small>This page generated using <a href="https://pages.github.com/">GitHub Pages</a><br/>theme by <a href="http://twitter.com/jonrohan/">Jon Rohan</a></small>
+      </div>
+    </footer>
+  </div>
+  <div class="current-section">
+    <a href="#top">Scroll to top</a>
+    <a href="https://github.com/lipp/lua-websockets/tarball/master" class="tar">tar</a><a href="https://github.com/lipp/lua-websockets/zipball/master" class="zip">zip</a><a href="" class="code">source code</a>
+    <p class="name"></p>
+  </div>
+
+  
+</body>
 </html>
