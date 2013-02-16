@@ -64,31 +64,7 @@ local new = function(ws)
     if not self.connected then
       error('Websocket client send failed: not connected')
     end
-    local frames
-    while true do
-      local header,err = csock:receive(3)
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      local _,left = frame.decode(header)
-      assert(_ == nil)
-      assert(left > 0)
-      local encoded,err = csock:receive(left)
-      encoded = header..encoded
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      local decoded,fin = frame.decode(encoded)
-      assert(decoded)
-      if not fin then
-        frames = frames or {}
-        tinsert(frames,decoded)
-      elseif not frames then
-        return decoded
-      else
-        return tconcat(frames)
-      end
-    end
+    return tools.receive_sync(csock)
   end
   
   local close = function()

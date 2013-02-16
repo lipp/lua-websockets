@@ -63,37 +63,7 @@ local sync = function(ws)
     if not self.connected then
       error('Websocket client send failed: not connected')
     end
-    local first_opcode
-    local frames
-    local bytes = 3
-    local encoded = ''
-    while true do
-      local chunk,err = sock:receive(bytes)
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      encoded = encoded..chunk
-      local decoded,fin,opcode = frame.decode(encoded)
-      if decoded then
-        if not first_opcode then
-          first_opcode = opcode
-        end
-        if not fin then
-          frames = frames or {}
-          bytes = 3
-          encoded = ''
-          tinsert(frames,decoded)
-        elseif not frames then
-          return decoded,first_opcode
-        else
-          tinsert(frames,decoded)
-          return tconcat(frames),first_opcode
-        end
-      else
-        assert(type(fin) == 'number' and fin > 0)
-        bytes = fin
-      end
-    end
+    return tools.receive_sync(sock)
   end
   
   local self = {

@@ -21,32 +21,9 @@ local client = function(sock,protocol)
     end
   end
   
+  local csock = copas.wrap(sock)
   self.receive = function(self)
-    local frames
-    while true do
-      local header,err = copas.receive(sock,3)
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      local _,left = frame.decode(header)
-      assert(_ == nil)
-      assert(left > 0)
-      local encoded,err = copas.receive(sock,left)
-      encoded = header..encoded
-      if err then
-        error('Websocket client receive failed:'..err)
-      end
-      local decoded,fin = frame.decode(encoded)
-      assert(decoded)
-      if not fin then
-        frames = frames or {}
-        tinsert(frames,decoded)
-      elseif not frames then
-        return decoded
-      else
-        return tconcat(frames)
-      end
-    end
+    return tools.receive_sync(csock)
   end
   
   self.broadcast = function(_,...)
