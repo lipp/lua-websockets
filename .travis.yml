@@ -4,10 +4,6 @@ env:
   - LUA=""
   - LUA="luajit"
 
-branches:
-  only:
-    - pure-lua
-
 install:
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
