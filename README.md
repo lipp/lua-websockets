@@ -17,7 +17,7 @@ Servers are available as two different flavours:
 A webserver is NOT part of lua-websockets. If you are looking for a feature rich webserver framework, have a look at [orbit](http://keplerproject.github.com/orbit/) or others. It is no problem to work with a "normal" webserver and lua-websockets side by side (two processes, different ports), since websockets are not subject of the 'Same origin policy'.
 
 # Usage
-## Example 1: Simple copas echo server
+## copas echo server
 This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
 
 ```lua
@@ -47,7 +47,7 @@ local server = require'websocket'.server.copas.listen
 copas.loop()
 ```
 
-## Example 2: Simple lua-ev echo server
+## lua-ev echo server
 This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
 
 ```lua
