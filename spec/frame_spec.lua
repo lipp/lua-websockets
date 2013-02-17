@@ -25,6 +25,8 @@ describe(
       function()
         assert.is.same(type(frame.encode),'function')
         assert.is.same(type(frame.decode),'function')
+        assert.is.same(type(frame.encode_close),'function')
+        assert.is.same(type(frame.decode_close),'function')
       end)
     
     it(
@@ -203,6 +205,18 @@ describe(
         assert.is_true(fin)
         assert.is_same(opcode,0x0)
         assert.is.same(decoded,'lo')
+      end)
+    
+    it(
+      'encodes and decodes close packet correctly',
+      function()
+        local reason = 'foobar'
+        local code = 0xfff1
+        local close_frame = frame.encode_close(code,reason)
+        assert.is_same(#close_frame,2+#reason)
+        local dcode,dreason = frame.decode_close(close_frame)
+        assert.is_same(dcode,code)
+        assert.is_same(dreason,reason)
       end)
     
   end)

@@ -144,9 +144,35 @@ local decode = function(encoded)
   return decoded,fin,opcode,encoded_bak:sub(bytes+1)
 end
 
+local encode_close = function(code,reason)
+  local data
+  if code and type(code) == 'number' then
+    data = spack('>H',code)
+    if reason then
+      data = data..tostring(reason)
+    end
+  end
+  return data or ''
+end
+
+local decode_close = function(data)
+  local _,code,reason
+  if data then
+    if #data > 1 then
+      _,code = sunpack(data,'>H')
+    end
+    if #data > 2 then
+      reason = data:sub(3)
+    end
+  end
+  return code,reason
+end
+
 return {
   encode = encode,
   decode = decode,
+  encode_close = encode_close,
+  decode_close = decode_close,
   CONTINUATION = 0,
   TEXT = 1,
   BINARY = 2,
