@@ -3,11 +3,7 @@ package.path = package.path..'../src'
 local tools = require'websocket.tools'
 require'pack'
 
-local bytes = function(...)
-  local args = {...}
-  local format = string.rep('b',#args)
-  return string.pack(format,...)
-end
+local bytes = string.char
 
 -- from wiki article
 local quick_brown_fox_sha1 = bytes(0x2f,0xd4,0xe1,0xc6,

@@ -17,11 +17,7 @@ local request_lines = {
 }
 local request_header = table.concat(request_lines,'\r\n')
 
-local bytes = function(...)
-  local args = {...}
-  local format = string.rep('b',#args)
-  return string.pack(format,...)
-end
+local bytes = string.char
 
 describe(
   'The handshake module',
