@@ -4,6 +4,7 @@ local copas = require'copas'
 local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
+local sync = require'websocket.sync'
 local tconcat = table.concat
 local tinsert = table.insert
 
@@ -12,31 +13,19 @@ local clients = {}
 local client = function(sock,protocol)
   local copas = require'copas'
   local self = {}
-  
-  self.send = function(self,data,opcode)
-    local encoded = frame.encode(data,opcode or frame.TEXT)
-    local n,err = copas.send(sock,encoded)
-    if n ~= #encoded then
-      error('Websocket server send failed:'..err)
-    end
-  end
-  
-  local csock = copas.wrap(sock)
-  self.receive = function(self)
-    return tools.receive_sync(csock)
-  end
-  
+  self.sock = copas.wrap(sock)
+  self = sync.extend(self)
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
       client:send(...)
     end
   end
-  
+  local close = self.close
   self.close = function()
     clients[protocol][self] = nil
     sock:shutdown()
     sock:close()
-    sock = nil
+    --    close(self)
   end
   
   return self
@@ -45,7 +34,7 @@ end
 local listen = function(opts)
   local copas = require'copas'
   assert(opts and (opts.protocols or opts.default))
-  local on_error = opts.on_error or function(s,err) print('Websocket unhandled error',s,err) end
+  local on_error = opts.on_error or function(s) print('Websocket unhandled error',s) end
   local listener = socket.bind(opts.interface or '*',opts.port or 80)
   local protocols = {}
   if opts.protocols then
@@ -67,7 +56,7 @@ local listen = function(opts)
           end
           request[#request+1] = line
         elseif err ~= 'timeout' then
-          on_error(self,'Websocket Handshake failed due to socket err:'..err)
+          on_error('Websocket server Handshake failed due to copas receive err:'..err)
           sock:close()
           return
         else

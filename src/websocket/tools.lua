@@ -1,4 +1,3 @@
-
 require'pack'
 local bit = require'websocket.bit'
 local rol = bit.rol
@@ -16,7 +15,6 @@ local tremove = table.remove
 local tinsert = table.insert
 local tconcat = table.concat
 local mrandom = math.random
-local frame = require'websocket.frame'
 
 -- used for generate key random ops
 math.randomseed(os.time())
@@ -161,40 +159,6 @@ local generate_key = function()
   return base64_encode(key)
 end
 
-local receive_sync = function(sock)
-  local first_opcode
-  local frames
-  local bytes = 3
-  local encoded = ''
-  while true do
-    local chunk,err = sock:receive(bytes)
-    if err then
-      error('Websocket server receive failed:'..err)
-    end
-    encoded = encoded..chunk
-    local decoded,fin,opcode = frame.decode(encoded)
-    if decoded then
-      if not first_opcode then
-        first_opcode = opcode
-      end
-      if not fin then
-        frames = frames or {}
-        bytes = 3
-        encoded = ''
-        tinsert(frames,decoded)
-      elseif not frames then
-        return decoded,first_opcode
-      else
-        tinsert(frames,decoded)
-        return tconcat(frames),first_opcode
-      end
-    else
-      assert(type(fin) == 'number' and fin > 0)
-      bytes = fin
-    end
-  end
-end
-
 return {
   sha1 = sha1,
   base64 = {
@@ -202,5 +166,4 @@ return {
   },
   parse_url = parse_url,
   generate_key = generate_key,
-  receive_sync = receive_sync
 }

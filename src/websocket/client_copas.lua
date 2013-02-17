@@ -1,7 +1,6 @@
 local socket = require'socket'
+local sync = require'websocket.sync'
 local tools = require'websocket.tools'
-local frame = require'websocket.frame'
-local handshake = require'websocket.handshake'
 
 local new = function(ws)
   local copas = require'copas'
@@ -15,68 +14,27 @@ local new = function(ws)
     sock:settimeout(ws.timeout)
   end
   
-  local connect = function(self)
+  local self = {}
+  
+  self = sync.extend(self)
+  
+  self.connect = function(self)
     local _,err = copas.connect(sock,host,port)
-    --      if err then
-    --         error('Websocket could not connect to '..ws.url..': '..err)
-    --      end
-    csock = copas.wrap(sock)
-    local key = tools.generate_key()
-    local req = handshake.upgrade_request
-    {
-      key = key,
-      host = host,
-      protocols = {ws.protocol or ''},
-      origin = ws.origin,
-      uri = uri
-    }
-    csock:send(req)
-    local resp = {}
-    repeat
-      local line,err = csock:receive('*l')
-      resp[#resp+1] = line
-      if err then
-        error('Websocket Handshake failed due to socket err:'..err)
-      end
-    until line == ''
-    local response = table.concat(resp,'\r\n')
-    local headers = handshake.http_headers(response)
-    local expected_accept = handshake.sec_websocket_accept(key)
-    if headers['sec-websocket-accept'] ~= expected_accept then
-      local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
-      error(msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'))
+    if err and err ~= 'already connected' then
+      error('Websocket could not connect to '..ws.url)
     end
+    ws.host = host
+    ws.uri = uri
+    self.sock = copas.wrap(sock)
+    local ok,err = self:make_handshake(ws)
     self.connected = true
+    return ok,err
   end
   
-  local send = function(self,data,opcode)
-    if not self.connected then
-      error('Websocket client send failed: not connected')
-    end
-    local encoded = frame.encode(data,opcode or frame.TEXT,true)
-    local n,err = csock:send(encoded)
-    if n ~= #encoded then
-      error('Websocket client send failed:'..err)
-    end
-  end
-  
-  local receive = function(self)
-    if not self.connected then
-      error('Websocket client send failed: not connected')
-    end
-    return tools.receive_sync(csock)
-  end
-  
-  local close = function()
+  self.close = function()
+    sock:shutdown()
     sock:close()
   end
-  
-  local self = {
-    connect = connect,
-    send = send,
-    receive = receive,
-    close = close
-  }
   
   return self
 end
