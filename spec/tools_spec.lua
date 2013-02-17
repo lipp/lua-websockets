@@ -36,8 +36,17 @@ describe(
     it(
       'Generate Key works',
       function()
-        local key = tools.generate_key()
-        assert.is_same(type(key),'string')
+        local keys = {}
+        for i=1,200 do
+          local key = tools.generate_key()
+          assert.is_same(type(key),'string')
+          assert.is_same(#key,24)
+          assert.is_truthy(key:match('^[%w=/%+]*$'))
+          for _,other in pairs(keys) do
+            assert.is_not_same(other,key)
+          end
+          keys[i] = key
+        end
       end)
     
     it(
