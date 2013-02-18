@@ -44,11 +44,12 @@ describe(
     it(
       'RFC: decode a single-frame unmasked text message',
       function()
-        local decoded,fin,opcode,rest = frame.decode(hello_unmasked..'foo')
+        local decoded,fin,opcode,rest,masked = frame.decode(hello_unmasked..'foo')
         assert.is_same(opcode,0x1)
         assert.is_true(fin)
         assert.is.same(decoded,'Hello')
         assert.is_same(rest,'foo')
+        assert.is_false(masked)
       end)
     
     it(
@@ -56,7 +57,7 @@ describe(
       function()
         for i=1,#hello_unmasked do
           local sub = hello_unmasked:sub(1,i)
-          local decoded,fin,opcode,rest = frame.decode(sub)
+          local decoded,fin,opcode,rest,masked = frame.decode(sub)
           if i ~= #hello_unmasked then
             assert.is_same(decoded,nil)
             assert.is_same(type(fin),'number')
@@ -66,6 +67,7 @@ describe(
             assert.is_true(fin)
             assert.is.same(decoded,'Hello')
             assert.is_same(rest,'')
+            assert.is_false(masked)
           end
         end
       end)
@@ -73,27 +75,30 @@ describe(
     it(
       'RFC: decode a single-frame masked text message',
       function()
-        local decoded,fin,opcode,rest = frame.decode(hello_masked..'foo')
+        local decoded,fin,opcode,rest,masked = frame.decode(hello_masked..'foo')
         assert.is_true(fin)
         assert.is_same(opcode,0x1)
         assert.is.same(decoded,'Hello')
         assert.is_same(rest,'foo')
+        assert.is_truthy(masked)
       end)
     
     it(
       'RFC: decode a fragmented test message',
       function()
-        local decoded,fin,opcode,rest = frame.decode(hel)
+        local decoded,fin,opcode,rest,masked = frame.decode(hel)
         assert.is_falsy(fin)
         assert.is_same(opcode,0x1)
         assert.is.same(decoded,'Hel')
         assert.is_same(rest,'')
+        assert.is_falsy(masked)
         
-        decoded,fin,opcode,rest = frame.decode(lo)
+        decoded,fin,opcode,rest,masked = frame.decode(lo)
         assert.is_true(fin)
         assert.is_same(opcode,0x0)
         assert.is.same(decoded,'lo')
         assert.is_same(rest,'')
+        assert.is_falsy(masked)
       end)
     
     it(
@@ -125,10 +130,11 @@ describe(
         assert.is_same(encoded,hello_unmasked)
         local encoded = frame.encode('Hello',frame.TEXT,false,true)
         assert.is_same(encoded,hello_unmasked)
-        local decoded,fin,opcode = frame.decode(encoded)
+        local decoded,fin,opcode,_,masked = frame.decode(encoded)
         assert.is_same('Hello',decoded)
         assert.is_true(fin)
         assert.is_same(opcode,frame.TEXT)
+        assert.is_falsy(masked)
       end)
     
     local random_text = function(len)
@@ -146,11 +152,13 @@ describe(
         local text = random_text(len)
         assert.is_same(#text,len)
         local encoded = frame.encode(text)
-        local decoded,fin,opcode = frame.decode(encoded)
+        local decoded,fin,opcode,rest,masked = frame.decode(encoded)
         assert.is_same(text,decoded)
         assert.is_same(#text,len)
         assert.is_true(fin)
         assert.is_same(opcode,frame.TEXT)
+        assert.is_same(rest,'')
+        assert.is_falsy(masked)
       end)
     
     it(
@@ -160,11 +168,13 @@ describe(
         local text = random_text(len)
         assert.is_same(#text,len)
         local encoded = frame.encode(text)
-        local decoded,fin,opcode = frame.decode(encoded)
+        local decoded,fin,opcode,rest,masked = frame.decode(encoded)
         assert.is_same(text,decoded)
         assert.is_same(#text,len)
         assert.is_true(fin)
         assert.is_same(opcode,frame.TEXT)
+        assert.is_same(rest,'')
+        assert.is_falsy(masked)
       end)
     
     it(
@@ -185,10 +195,12 @@ describe(
       'encode single-frame masked text',
       function()
         local encoded = frame.encode('Hello',frame.TEXT,true)
-        local decoded,fin,opcode = frame.decode(encoded)
+        local decoded,fin,opcode,rest,masked = frame.decode(encoded)
         assert.is_same('Hello',decoded)
         assert.is_true(fin)
         assert.is_same(opcode,frame.TEXT)
+        assert.is_same(rest,'')
+        assert.is_truthy(masked)
       end)
     
     it(

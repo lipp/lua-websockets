@@ -141,7 +141,7 @@ local decode = function(encoded)
     end
     bytes = bytes + payload
   end
-  return decoded,fin,opcode,encoded_bak:sub(bytes+1)
+  return decoded,fin,opcode,encoded_bak:sub(bytes+1),mask
 end
 
 local encode_close = function(code,reason)
