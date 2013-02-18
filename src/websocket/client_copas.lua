@@ -31,7 +31,9 @@ local new = function(ws)
     return ok,err
   end
   
+  local close = self.close
   self.close = function()
+    close(self)
     sock:shutdown()
     sock:close()
   end

@@ -16,6 +16,7 @@ local client = function(sock,protocol)
   self.sock = copas.wrap(sock)
   self.is_server = true
   self = sync.extend(self)
+  self.state = 'OPEN'
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
       client:send(...)
@@ -23,10 +24,11 @@ local client = function(sock,protocol)
   end
   local close = self.close
   self.close = function()
+    local ok,err = close(self)
     clients[protocol][self] = nil
     sock:shutdown()
     sock:close()
-    --    close(self)
+    return ok,err
   end
   
   return self

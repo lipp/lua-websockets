@@ -6,6 +6,9 @@ local tconcat = table.concat
 
 
 local receive = function(self)
+  if self.state ~= 'OPEN' and self.state ~= 'CLOSING' then
+    error('Websocket not OPEN nor CLOSING')
+  end
   local first_opcode
   local frames
   local bytes = 3
@@ -21,6 +24,15 @@ local receive = function(self)
       return nil,'Websocket receive failed: frame was not masked'
     end
     if decoded then
+      if opcode == frame.CLOSE then
+        if not self.state == 'CLOSING' then
+          pcall(self.send,self,decoded,frame.CLOSE)
+          self.state = 'CLOSED'
+          return nil,'Websocket closed'
+        else
+          return decoded,opcode
+        end
+      end
       if not first_opcode then
         first_opcode = opcode
       end
@@ -47,6 +59,9 @@ local receive = function(self)
 end
 
 local send = function(self,data,opcode)
+  if self.state ~= 'OPEN' then
+    error('Websocket not OPEN')
+  end
   local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self.sock:send(encoded)
   if n ~= #encoded then
@@ -56,13 +71,19 @@ local send = function(self,data,opcode)
 end
 
 local close = function(self,code,reason)
-  local msg = frame.encode_close(code,reason)
-  send(self,msg,frame.CLOSE)
-  local rmsg,opcode = receive(self)
-  if rmsg:sub(1,2) ~= msg:sub(1,2) or opcode ~= frame.CLOSE then
-    return nil,'Websocket client received invalid response to CLOSE ('..rmsg..','..opcode..')'
+  if self.state ~= 'OPEN' then
+    return nil,'Websocket not OPEN'
   end
-  return true
+  local msg = frame.encode_close(code or 1000,reason)
+  pcall(self.send,self,msg,frame.CLOSE)
+  self.state = 'CLOSING'
+  local ok,rmsg,opcode = pcall(self.receive,self)
+  if ok then
+    if rmsg:sub(1,2) == msg:sub(1,2) and opcode == frame.CLOSE then
+      return true
+    end
+  end
+  return nil,'Websocket client close handshake failed'
 end
 
 local make_handshake = function(self,context)
@@ -94,9 +115,11 @@ local make_handshake = function(self,context)
     local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
     error(msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'))
   end
+  self.state = 'OPEN'
 end
 
 local extend = function(obj)
+  obj.state = 'CONNECTING'
   obj.receive = receive
   obj.send = send
   obj.close = close
