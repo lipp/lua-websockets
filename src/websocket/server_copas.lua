@@ -14,6 +14,7 @@ local client = function(sock,protocol)
   local copas = require'copas'
   local self = {}
   self.sock = copas.wrap(sock)
+  self.is_server = true
   self = sync.extend(self)
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do

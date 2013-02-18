@@ -13,16 +13,23 @@ local receive = function(self)
   while true do
     local chunk,err = self.sock:receive(bytes)
     if err then
-      error('Websocket server receive failed:'..err)
+      error('Websocket receive failed:'..err)
     end
     encoded = encoded..chunk
-    local decoded,fin,opcode = frame.decode(encoded)
+    local decoded,fin,opcode,_,masked = frame.decode(encoded)
+    if not self.is_server and masked then
+      return nil,'Websocket receive failed: frame was not masked'
+    end
     if decoded then
       if not first_opcode then
         first_opcode = opcode
       end
       if not fin then
-        frames = frames or {}
+        if not frames then
+          frames = {}
+        elseif opcode ~= frame.CONTINUATION then
+          return nil,'Websocket receive failed: opcode CONTINUATION expected'
+        end
         bytes = 3
         encoded = ''
         tinsert(frames,decoded)
@@ -40,7 +47,7 @@ local receive = function(self)
 end
 
 local send = function(self,data,opcode)
-  local encoded = frame.encode(data,opcode or frame.TEXT,true)
+  local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self.sock:send(encoded)
   if n ~= #encoded then
     error('Websocket client send failed:'..err)
