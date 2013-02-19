@@ -12,23 +12,32 @@ local clients = {}
 
 local client = function(sock,protocol)
   local copas = require'copas'
+  
   local self = {}
-  self.sock = copas.wrap(sock)
-  self.is_server = true
-  self = sync.extend(self)
+  
   self.state = 'OPEN'
+  self.is_server = true
+  
+  self.sock_send = function(self,...)
+    return copas.send(sock,...)
+  end
+  
+  self.sock_receive = function(self,...)
+    return copas.receive(sock,...)
+  end
+  
+  self.sock_close = function(self)
+    clients[protocol][self] = nil
+    sock:shutdown()
+    sock:close()
+  end
+  
+  self = sync.extend(self)
+  
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
       client:send(...)
     end
-  end
-  local close = self.close
-  self.close = function()
-    local ok,err = close(self)
-    clients[protocol][self] = nil
-    sock:shutdown()
-    sock:close()
-    return ok,err
   end
   
   return self

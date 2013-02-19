@@ -3,12 +3,8 @@ local sync = require'websocket.sync'
 local tools = require'websocket.tools'
 
 local new = function(ws)
+  ws = ws or {}
   local copas = require'copas'
-  local protocol,host,port,uri = tools.parse_url(ws.url)
-  if protocol ~= 'ws' then
-    error('Protocol not supported:'..protocol)
-  end
-  local csock
   local sock = socket.tcp()
   if ws.timeout ~= nil then
     sock:settimeout(ws.timeout)
@@ -16,27 +12,27 @@ local new = function(ws)
   
   local self = {}
   
-  self = sync.extend(self)
-  
-  self.connect = function(self)
+  self.sock_connect = function(self,host,port)
     local _,err = copas.connect(sock,host,port)
     if err and err ~= 'already connected' then
-      error('Websocket could not connect to '..ws.url)
+      error('Websocket client could not connect to:'..host..':'..port)
     end
-    ws.host = host
-    ws.uri = uri
-    self.sock = copas.wrap(sock)
-    local ok,err = self:make_handshake(ws)
-    self.connected = true
-    return ok,err
   end
   
-  local close = self.close
-  self.close = function()
-    close(self)
+  self.sock_send = function(self,...)
+    return copas.send(sock,...)
+  end
+  
+  self.sock_receive = function(self,...)
+    return copas.receive(sock,...)
+  end
+  
+  self.sock_close = function(self)
     sock:shutdown()
     sock:close()
   end
+  
+  self = sync.extend(self)
   
   return self
 end

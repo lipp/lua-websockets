@@ -91,12 +91,9 @@ describe(
             copas.addthread(
               guard(
                 function()
-                  local wsc = client.copas
-                  {
-                    url = 'ws://localhost:'..port,
-                    protocol = 'echo'
-                  }
-                  wsc:connect()
+                  local wsc = client.copas()
+                  wsc:connect('ws://localhost:'..port,'echo')
+                  wsc:close()
               end))
           end)
         
@@ -114,15 +111,13 @@ describe(
             copas.addthread(
               guard(
                 function()
-                  local wsc = client.copas
-                  {
-                    url = 'ws://localhost:'..port,
-                    protocol = 'echo'
-                  }
-                  wsc:connect()
-                  wsc:send('Hello')
-                  local message = wsc:receive()
-                  assert.is_same(message,'Hello')
+                  local wsc = client.copas()
+                  local hello = 'Hello'
+                  wsc:connect('ws://localhost:'..port,'echo')
+                  wsc:send(hello)
+                  local message,err = wsc:receive()
+                  assert.is_same(#message,#hello)
+                  assert.is_same(message,hello)
                   wsc:close()
                   done()
               end))
@@ -150,12 +145,8 @@ describe(
             copas.addthread(
               guard(
                 function()
-                  local wsc = client.copas
-                  {
-                    url = 'ws://localhost:'..port,
-                    protocol = 'echo'
-                  }
-                  wsc:connect()
+                  local wsc = client.copas()
+                  wsc:connect('ws://localhost:'..port,'echo')
                   local message = random_text(127)
                   wsc:send(message)
                   local echoed = wsc:receive()
@@ -179,12 +170,8 @@ describe(
             copas.addthread(
               guard(
                 function()
-                  local wsc = client.copas
-                  {
-                    url = 'ws://localhost:'..port,
-                    protocol = 'echo'
-                  }
-                  wsc:connect()
+                  local wsc = client.copas()
+                  wsc:connect('ws://localhost:'..port,'echo')
                   local message = random_text(0xffff-1)
                   wsc:send(message)
                   local echoed = wsc:receive()
@@ -208,12 +195,8 @@ describe(
             copas.addthread(
               guard(
                 function()
-                  local wsc = client.copas
-                  {
-                    url = 'ws://localhost:'..port,
-                    protocol = 'echo'
-                  }
-                  wsc:connect()
+                  local wsc = client.copas()
+                  wsc:connect('ws://localhost:'..port,'echo')
                   local message = random_text(0xffff+1)
                   wsc:send(message)
                   local echoed = wsc:receive()

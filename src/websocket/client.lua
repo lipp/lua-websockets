@@ -3,30 +3,33 @@ local sync = require'websocket.sync'
 local tools = require'websocket.tools'
 
 local new = function(ws)
-  local protocol,host,port,uri = tools.parse_url(ws.url)
-  if protocol ~= 'ws' then
-    error('Protocol not supported:'..protocol)
-  end
+  ws =  ws or {}
   local sock = socket.tcp()
   if ws.timeout ~= nil then
     sock:settimeout(ws.timeout)
   end
   local self = {}
-  self.sock = sock
+  
+  self.sock_connect = function(self,host,port)
+    if not sock:connect(host,port) then
+      error('Websocket client could not connect to:'..host..':'..port)
+    end
+  end
+  
+  self.sock_send = function(self,...)
+    return sock:send(...)
+  end
+  
+  self.sock_receive = function(self,...)
+    return sock:receive(...)
+  end
+  
+  self.sock_close = function(self)
+    sock:shutdown()
+    sock:close()
+  end
   
   self = sync.extend(self)
-  
-  self.connect = function(self)
-    local _,err = sock:connect(host,port)
-    if err then
-      error('Websocket could not connect to '..ws.url..'('..host..','..port..')')
-    end
-    ws.host = host
-    ws.uri = uri
-    local ok,err = self:make_handshake(ws)
-    self.connected = true
-    return ok,err
-  end
   
   return self
 end

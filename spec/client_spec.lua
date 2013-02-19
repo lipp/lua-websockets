@@ -17,18 +17,14 @@ describe(
     it(
       'can be constructed',
       function()
-        wsc = client.new
-        {
-          url = 'ws://localhost:8080',
-          protocol = 'echo-protocol'
-        }
+        wsc = client.new()
       end)
     
     it(
       'can connect (requires external websocket server @port 8080)',
       function()
         assert.is_same(type(wsc.connect),'function')
-        assert.has_no_error(function() wsc:connect() end)
+        wsc:connect('ws://localhost:8080','echo-protocol')
       end)
     
     it(
