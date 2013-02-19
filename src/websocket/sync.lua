@@ -25,7 +25,7 @@ local receive = function(self)
     end
     if decoded then
       if opcode == frame.CLOSE then
-        if not self.state == 'CLOSING' then
+        if self.state ~= 'CLOSING' then
           pcall(self.send,self,decoded,frame.CLOSE)
           self.state = 'CLOSED'
           return nil,'closed'
