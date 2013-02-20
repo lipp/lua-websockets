@@ -52,6 +52,24 @@ describe(
           end,'host not found')
       end)
     
+    it(
+      'throws when sending in non-open state',
+      function()
+        local c = client.new()
+        assert.has_error(
+          function()
+            c:send('bla')
+          end,'not open')
+        
+        local c = client.new()
+        c:connect('ws://localhost:8080','echo-protocol')
+        c:close()
+        assert.has_error(
+          function()
+            c:send('bla')
+          end,'not open')
+      end)
+    
     
     it(
       'can send (requires external websocket server @port 8080)',

@@ -61,7 +61,7 @@ end
 
 local send = function(self,data,opcode)
   if self.state ~= 'OPEN' then
-    error('Websocket not OPEN')
+    error('not open')
   end
   local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self:sock_send(encoded)
