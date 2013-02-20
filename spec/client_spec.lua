@@ -53,7 +53,7 @@ describe(
       end)
     
     it(
-      'throws when sending in non-open state',
+      'throws when sending in non-open state (requires external websocket server @port 8080)',
       function()
         local c = client.new()
         assert.has_error(
@@ -71,7 +71,7 @@ describe(
       end)
     
     it(
-      'throws when connecting twice',
+      'throws when connecting twice (requires external websocket server @port 8080)',
       function()
         local c = client.new()
         c:connect('ws://localhost:8080','echo-protocol')
