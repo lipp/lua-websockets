@@ -11,8 +11,9 @@ local new = function(ws)
   local self = {}
   
   self.sock_connect = function(self,host,port)
-    if not sock:connect(host,port) then
-      error('Websocket client could not connect to:'..host..':'..port)
+    local _,err = sock:connect(host,port)
+    if err then
+      error(err)
     end
   end
   

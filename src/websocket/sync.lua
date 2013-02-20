@@ -91,7 +91,7 @@ end
 local connect = function(self,ws_url,ws_protocol)
   local protocol,host,port,uri = tools.parse_url(ws_url)
   if protocol ~= 'ws' then
-    error('Protocol not supported:'..protocol)
+     error('bad protocol')
   end
   self:sock_connect(host,port)
   local key = tools.generate_key()

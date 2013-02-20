@@ -28,6 +28,32 @@ describe(
       end)
     
     it(
+      'throws on invalid protocol',
+      function()
+        local c = client.new()
+        assert.has_error(
+          function()
+            c:connect('wsc://localhost:8080','echo-protocol')
+          end,'bad protocol')
+      end)
+    
+    it(
+      'throws socket errors',
+      function()
+        local c = client.new()
+        assert.has_error(
+          function()
+            c:connect('ws://localhost:8009','echo-protocol')
+          end,'connection refused')
+        local c = client.new()
+        assert.has_error(
+          function()
+            c:connect('ws://horst','echo-protocol')
+          end,'host not found')
+      end)
+    
+    
+    it(
       'can send (requires external websocket server @port 8080)',
       function()
         assert.is_same(type(wsc.send),'function')
