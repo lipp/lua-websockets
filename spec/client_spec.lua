@@ -70,6 +70,16 @@ describe(
           end,'not open')
       end)
     
+    it(
+      'throws when connecting twice',
+      function()
+        local c = client.new()
+        c:connect('ws://localhost:8080','echo-protocol')
+        assert.has_error(
+          function()
+            c:connect('ws://localhost:8080','echo-protocol')
+          end,'already connected')
+      end)
     
     it(
       'can send (requires external websocket server @port 8080)',
