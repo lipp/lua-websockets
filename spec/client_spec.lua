@@ -81,4 +81,10 @@ describe(
         assert.is_same(text,echoed)
       end)
     
+    it(
+      'can close cleanly (requires external websocket server @port 8080)',
+      function()
+        assert.is_true(wsc:close())
+      end)
+    
   end)
