@@ -94,7 +94,15 @@ local sha1 = function(msg)
     h2 = h2 + c
     h3 = h3 + d
     h4 = h4 + e
+    
   end
+  
+  -- necessary on sizeof(int) == 32 machines
+  h0 = band(h0,0xffffffff)
+  h1 = band(h1,0xffffffff)
+  h2 = band(h2,0xffffffff)
+  h3 = band(h3,0xffffffff)
+  h4 = band(h4,0xffffffff)
   
   return spack('>I>I>I>I>I',h0,h1,h2,h3,h4)
 end
