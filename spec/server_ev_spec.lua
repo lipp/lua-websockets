@@ -78,11 +78,7 @@ describe(
           'handshake works',
           async,
           function(done)
-            local wsc = client.ev
-            {
-              url = 'ws://localhost:'..port,
-              protocol = 'echo'
-            }
+            local wsc = client.ev()
             on_new_echo_client = guard(
               function(client)
                 assert.is_same(type(client),'table')
@@ -91,23 +87,23 @@ describe(
                 assert.is_same(type(client.send),'function')
                 client:close()
               end)
-            wsc:connect(
-              guard(
+            wsc:connect
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo',
+              on_open = guard(
                 function()
                   wsc:close()
                   done()
-              end))
+                end)
+            }
           end)
         
         it(
           'echo works',
           async,
           function(done)
-            local wsc = client.ev
-            {
-              url = 'ws://localhost:'..port,
-              protocol = 'echo'
-            }
+            local wsc = client.ev()
             on_new_echo_client = guard(
               function(client)
                 client:on_message(
@@ -118,8 +114,11 @@ describe(
                   end))
               end)
             
-            wsc:connect(
-              guard(
+            wsc:connect
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo',
+              on_open = guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send('Hello')
@@ -130,7 +129,8 @@ describe(
                         self:close()
                         done()
                     end))
-              end))
+                end)
+            }
           end)
         
         local random_text = function(len)
@@ -146,11 +146,7 @@ describe(
           async,
           function(done)
             local message = random_text(127)
-            local wsc = client.ev
-            {
-              url = 'ws://localhost:'..port,
-              protocol = 'echo'
-            }
+            local wsc = client.ev()
             on_new_echo_client = guard(
               function(client)
                 client:on_message(
@@ -161,8 +157,11 @@ describe(
                   end))
               end)
             
-            wsc:connect(
-              guard(
+            wsc:connect
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo',
+              on_open = guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -173,7 +172,8 @@ describe(
                         self:close()
                         done()
                     end))
-              end))
+                end)
+            }
           end)
         
         it(
@@ -181,11 +181,7 @@ describe(
           async,
           function(done)
             local message = random_text(0xffff-1)
-            local wsc = client.ev
-            {
-              url = 'ws://localhost:'..port,
-              protocol = 'echo'
-            }
+            local wsc = client.ev()
             on_new_echo_client = guard(
               function(client)
                 client:on_message(
@@ -196,8 +192,11 @@ describe(
                   end))
               end)
             
-            wsc:connect(
-              guard(
+            wsc:connect
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo',
+              on_open = guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -208,7 +207,8 @@ describe(
                         self:close()
                         done()
                     end))
-              end))
+                end)
+            }
           end)
         
         it(
@@ -216,11 +216,7 @@ describe(
           async,
           function(done)
             local message = random_text(0xffff+1)
-            local wsc = client.ev
-            {
-              url = 'ws://localhost:'..port,
-              protocol = 'echo'
-            }
+            local wsc = client.ev()
             on_new_echo_client = guard(
               function(client)
                 client:on_message(
@@ -231,8 +227,11 @@ describe(
                   end))
               end)
             
-            wsc:connect(
-              guard(
+            wsc:connect
+            {
+              url = 'ws://localhost:'..port,
+              protocol = 'echo',
+              on_open = guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -243,7 +242,8 @@ describe(
                         self:close()
                         done()
                     end))
-              end))
+                end)
+            }
           end)
         
         after(

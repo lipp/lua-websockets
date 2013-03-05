@@ -7,11 +7,8 @@ local tconcat = table.concat
 local tinsert = table.insert
 
 local ev = function(ws)
+  ws = ws or {}
   local ev = require'ev'
-  local protocol,host,port,uri = tools.parse_url(ws.url)
-  if protocol ~= 'ws' then
-    error('Protocol not supported:'..protocol)
-  end
   local sock
   local loop = ws.loop or ev.Loop.default
   local fd
@@ -19,7 +16,7 @@ local ev = function(ws)
   local on_message
   local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
   local on_close = function() end
-  local on_connect = function() end
+  local on_open = function() end
   local self = {}
   
   local send_buffer
@@ -60,14 +57,18 @@ local ev = function(ws)
     send(encoded)
   end
   
-  local connect = function(_,on_connect_arg)
+  local connect = function(_,params)
+    local protocol,host,port,uri = tools.parse_url(params.url)
+    if protocol ~= 'ws' then
+      error('Protocol not supported:'..protocol)
+    end
     assert(not sock)
     sock = socket.tcp()
     fd = sock:getfd()
     -- set non blocking
     sock:settimeout(0)
     sock:setoption('tcp-nodelay',true)
-    on_connect = on_connect_arg or on_connect
+    on_open = params.on_open or on_open
     ev.IO.new(
       function(loop,connect_io)
         connect_io:stop(loop)
@@ -76,7 +77,7 @@ local ev = function(ws)
         {
           key = key,
           host = host,
-          protocols = {ws.protocol or ''},
+          protocols = {params.protocol or ''},
           origin = ws.origin,
           uri = uri
         }
@@ -112,7 +113,7 @@ local ev = function(ws)
                   on_error(self,msg)
                   return
                 end
-                on_connect(self)
+                on_open(self)
                 local last
                 local frames = {}
                 local first_opcode
@@ -170,8 +171,8 @@ local ev = function(ws)
     on_error = on_error_arg
   end
   
-  self.on_connect = function(_,on_connect_arg)
-    on_connect = on_connect_arg
+  self.on_open = function(_,on_open_arg)
+    on_open = on_open_arg
   end
   
   self.on_message = function(_,on_message_arg)
