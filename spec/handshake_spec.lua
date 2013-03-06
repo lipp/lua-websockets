@@ -90,7 +90,7 @@ describe(
       end)
     
     describe(
-      'connecting to echo server (echo-js.ws) on port 8080',
+      'connecting to echo server (echo-js.ws) on port 8081',
       function()
         local sock = socket.tcp()
         sock:settimeout(0.3)
@@ -98,11 +98,11 @@ describe(
         it(
           'can connect and upgrade to websocket protocol',
           function()
-            sock:connect('localhost',8080)
+            sock:connect('localhost',8081)
             local req = handshake.upgrade_request
             {
               key = 'dGhlIHNhbXBsZSBub25jZQ==',
-              host = 'localhost',
+              host = 'localhost:8081',
               protocols = {'echo-protocol'},
               origin = 'http://example.com',
               uri = '/'
@@ -122,7 +122,6 @@ describe(
             assert.is_same(headers['upgrade'],'websocket')
             assert.is_same(headers['connection'],'upgrade')
             assert.is_same(headers['sec-websocket-accept'],'s3pPLMBiTxaQ9kYGzzhZRbK+xOo=')
-            assert.is_truthy(headers['sec-websocket-protocol']:match('echo%-protocol'))
           end)
         
         
