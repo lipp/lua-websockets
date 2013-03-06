@@ -24,7 +24,7 @@ describe(
       end)
     
     it(
-      'can connect (requires external websocket server @port 8080)',
+      'can connect (requires external websocket server @port 8081)',
       async,
       function(done)
         wsc:on_open(
@@ -35,13 +35,13 @@ describe(
           end))
         wsc:connect
         {
-          url = 'ws://localhost:8080',
+          url = 'ws://localhost:8081',
           protocol = 'echo-protocol'
         }
       end)
     
     it(
-      'can send and receive data(requires external websocket server @port 8080)',
+      'can send and receive data(requires external websocket server @port 8081)',
       async,
       function(done)
         assert.is_same(type(wsc.send),'function')
@@ -65,7 +65,7 @@ describe(
     end
     
     it(
-      'can send and receive data 127 byte messages(requires external websocket server @port 8080)',
+      'can send and receive data 127 byte messages(requires external websocket server @port 8081)',
       async,
       function(done)
         local msg = random_text(127)
@@ -81,7 +81,7 @@ describe(
       end)
     
     it(
-      'can send and receive data 0xffff-1 byte messages(requires external websocket server @port 8080)',
+      'can send and receive data 0xffff-1 byte messages(requires external websocket server @port 8081)',
       async,
       function(done)
         local msg = random_text(0xffff-1)
@@ -97,7 +97,7 @@ describe(
       end)
     
     it(
-      'can send and receive data 0xffff+1 byte messages(requires external websocket server @port 8080)',
+      'can send and receive data 0xffff+1 byte messages(requires external websocket server @port 8081)',
       async,
       function(done)
         local msg = random_text(0xffff+1)
@@ -114,7 +114,7 @@ describe(
     
     it(
       'closes nicely',
-      function(done)        
+      function(done)
         wsc:close()
       end)
   end)

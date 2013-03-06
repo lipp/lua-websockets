@@ -103,7 +103,7 @@ local ev = function(ws)
                   function(loop,message_io)
                     while true do
                       local encoded,err,part = sock:receive(100000)
---                      print('
+                      --                      print('
                       if err then
                         if err ~= 'timeout' then
                           message_io:stop(loop)

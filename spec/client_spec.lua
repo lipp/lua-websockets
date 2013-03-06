@@ -21,10 +21,10 @@ describe(
       end)
     
     it(
-      'can connect (requires external websocket server @port 8080)',
+      'can connect (requires external websocket server @port 8081)',
       function()
         assert.is_same(type(wsc.connect),'function')
-        wsc:connect('ws://localhost:8080','echo-protocol')
+        wsc:connect('ws://localhost:8081','echo-protocol')
       end)
     
     it(
@@ -33,7 +33,7 @@ describe(
         local c = client.new()
         assert.has_error(
           function()
-            c:connect('wsc://localhost:8080','echo-protocol')
+            c:connect('wsc://localhost:8081','echo-protocol')
           end,'bad protocol')
       end)
     
@@ -53,7 +53,7 @@ describe(
       end)
     
     it(
-      'throws when sending in non-open state (requires external websocket server @port 8080)',
+      'throws when sending in non-open state (requires external websocket server @port 8081)',
       function()
         local c = client.new()
         assert.has_error(
@@ -62,7 +62,7 @@ describe(
           end,'not open')
         
         local c = client.new()
-        c:connect('ws://localhost:8080','echo-protocol')
+        c:connect('ws://localhost:8081','echo-protocol')
         c:close()
         assert.has_error(
           function()
@@ -71,25 +71,25 @@ describe(
       end)
     
     it(
-      'throws when connecting twice (requires external websocket server @port 8080)',
+      'throws when connecting twice (requires external websocket server @port 8081)',
       function()
         local c = client.new()
-        c:connect('ws://localhost:8080','echo-protocol')
+        c:connect('ws://localhost:8081','echo-protocol')
         assert.has_error(
           function()
-            c:connect('ws://localhost:8080','echo-protocol')
+            c:connect('ws://localhost:8081','echo-protocol')
           end,'already connected')
       end)
     
     it(
-      'can send (requires external websocket server @port 8080)',
+      'can send (requires external websocket server @port 8081)',
       function()
         assert.is_same(type(wsc.send),'function')
         wsc:send('Hello again')
       end)
     
     it(
-      'can receive (requires external websocket server @port 8080)',
+      'can receive (requires external websocket server @port 8081)',
       function()
         assert.is_same(type(wsc.receive),'function')
         local echoed = wsc:receive()
@@ -105,7 +105,7 @@ describe(
     end
     
     it(
-      'can send with payload 127 (requires external websocket server @port 8080)',
+      'can send with payload 127 (requires external websocket server @port 8081)',
       function()
         local text = random_text(127)
         wsc:send(text)
@@ -114,7 +114,7 @@ describe(
       end)
     
     it(
-      'can send with payload 0xffff-1 (requires external websocket server @port 8080)',
+      'can send with payload 0xffff-1 (requires external websocket server @port 8081)',
       function()
         local text = random_text(0xffff-1)
         assert.is_same(#text,0xffff-1)
@@ -125,7 +125,7 @@ describe(
       end)
     
     it(
-      'can send with payload 0xffff+1 (requires external websocket server @port 8080)',
+      'can send with payload 0xffff+1 (requires external websocket server @port 8081)',
       function()
         local text = random_text(0xffff+1)
         assert.is_same(#text,0xffff+1)
@@ -136,7 +136,7 @@ describe(
       end)
     
     it(
-      'can close cleanly (requires external websocket server @port 8080)',
+      'can close cleanly (requires external websocket server @port 8081)',
       function()
         assert.is_true(wsc:close())
       end)
