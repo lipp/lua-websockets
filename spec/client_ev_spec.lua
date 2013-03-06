@@ -3,6 +3,9 @@ package.path = package.path..'../src'
 local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
+local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
+
+local url = 'ws://localhost:'..port
 
 setloop('ev')
 
@@ -35,7 +38,7 @@ describe(
           end))
         wsc:connect
         {
-          url = 'ws://localhost:8081',
+          url = url,
           protocol = 'echo-protocol'
         }
       end)

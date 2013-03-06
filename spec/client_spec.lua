@@ -1,5 +1,8 @@
 package.path = package.path..'../src'
 
+local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
+local url = 'ws://localhost:'..port
+
 local client = require'websocket.client'
 
 describe(
@@ -21,10 +24,10 @@ describe(
       end)
     
     it(
-      'can connect (requires external websocket server @port 8081)',
+      'can connect (requires external websocket server)',
       function()
         assert.is_same(type(wsc.connect),'function')
-        wsc:connect('ws://localhost:8081','echo-protocol')
+        wsc:connect(url,'echo-protocol')
       end)
     
     it(
@@ -62,7 +65,7 @@ describe(
           end,'not open')
         
         local c = client.new()
-        c:connect('ws://localhost:8081','echo-protocol')
+        c:connect(url,'echo-protocol')
         c:close()
         assert.has_error(
           function()
@@ -74,10 +77,10 @@ describe(
       'throws when connecting twice (requires external websocket server @port 8081)',
       function()
         local c = client.new()
-        c:connect('ws://localhost:8081','echo-protocol')
+        c:connect(url,'echo-protocol')
         assert.has_error(
           function()
-            c:connect('ws://localhost:8081','echo-protocol')
+            c:connect(url,'echo-protocol')
           end,'already connected')
       end)
     

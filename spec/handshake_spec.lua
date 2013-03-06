@@ -1,5 +1,9 @@
 package.path = package.path..'../src'
 
+local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
+
+local url = 'ws://localhost:'..port
+
 local handshake = require'websocket.handshake'
 local socket = require'socket'
 require'pack'
@@ -98,11 +102,11 @@ describe(
         it(
           'can connect and upgrade to websocket protocol',
           function()
-            sock:connect('localhost',8081)
+            sock:connect('localhost',port)
             local req = handshake.upgrade_request
             {
               key = 'dGhlIHNhbXBsZSBub25jZQ==',
-              host = 'localhost:8081',
+              host = 'localhost:'..port,
               protocols = {'echo-protocol'},
               origin = 'http://example.com',
               uri = '/'

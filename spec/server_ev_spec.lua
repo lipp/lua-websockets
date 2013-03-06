@@ -3,7 +3,8 @@ package.path = package.path..'../src'
 local server = require'websocket.server'
 local client = require'websocket.client'
 local ev = require'ev'
-local port = os.getenv('LUAWS_PORT') or 8082
+local port = os.getenv('LUAWS_SERVER_EV_PORT') or 8083
+local url = 'ws://localhost:'..port
 
 setloop('ev')
 
@@ -89,7 +90,7 @@ describe(
               end)
             wsc:connect
             {
-              url = 'ws://localhost:'..port,
+              url = url,
               protocol = 'echo',
               on_open = guard(
                 function()
@@ -116,7 +117,7 @@ describe(
             
             wsc:connect
             {
-              url = 'ws://localhost:'..port,
+              url = url,
               protocol = 'echo',
               on_open = guard(
                 function(self)
@@ -159,7 +160,7 @@ describe(
             
             wsc:connect
             {
-              url = 'ws://localhost:'..port,
+              url = url,
               protocol = 'echo',
               on_open = guard(
                 function(self)
@@ -194,7 +195,7 @@ describe(
             
             wsc:connect
             {
-              url = 'ws://localhost:'..port,
+              url = url,
               protocol = 'echo',
               on_open = guard(
                 function(self)
@@ -229,7 +230,7 @@ describe(
             
             wsc:connect
             {
-              url = 'ws://localhost:'..port,
+              url = url,
               protocol = 'echo',
               on_open = guard(
                 function(self)
