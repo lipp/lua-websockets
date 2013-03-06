@@ -1,5 +1,6 @@
 #!/bin/bash
-wstest -m echoserver -w ws://localhost:8080 1>/dev/null &
+killall wstest 2>/dev/null
+wstest -m echoserver -w ws://localhost:8081 1>/dev/null &
 pid=$!
 sleep 1
 busted spec/
