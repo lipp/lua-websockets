@@ -96,51 +96,13 @@ local ev = function(ws)
                   return
                 end
                 on_open(self)
-                local last
-                local frames = {}
-                local first_opcode
-                message_io = ev.IO.new(
-                  function(loop,message_io)
-                    while true do
-                      local encoded,err,part = sock:receive(100000)
-                      --                      print('
-                      if err then
-                        if err ~= 'timeout' then
-                          message_io:stop(loop)
-                          handle_socket_err(err)
-                          return
-                        elseif #part == 0 then
-                          return
-                        end
-                      end
-                      
-                      if last then
-                        encoded = last..(encoded or part)
-                        last = nil
-                      else
-                        encoded = encoded or part
-                      end
-                      
-                      repeat
-                        local decoded,fin,opcode,rest = frame.decode(encoded)
-                        if decoded then
-                          if not first_opcode then
-                            first_opcode = opcode
-                          end
-                          tinsert(frames,decoded)
-                          encoded = rest
-                          if fin == true then
-                            on_message(self,tconcat(frames),first_opcode)
-                            frames = {}
-                            first_opcode = nil
-                          end
-                        end
-                      until not decoded
-                      if #encoded > 0 then
-                        last = encoded
-                      end
+                message_io = require'websocket.ev_common'.message_io(
+                  sock,loop,
+                  function(...)
+                    if on_message then
+                      on_message(self,...)
                     end
-                  end,fd,ev.READ)
+                  end,handle_socket_err)
                 if on_message then
                   message_io:start(loop)
                 end

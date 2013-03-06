@@ -40,46 +40,14 @@ local client = function(sock,protocol)
   local last
   local frames
   local first_opcode
-  local message_io = ev.IO.new(
-    function(loop,message_io)
-      local encoded,err,part = sock:receive(4096)
-      if encoded or #part > 0 then
-        if last then
-          encoded = last..(encoded or part)
-          last = nil
-        else
-          encoded = encoded or part
-        end
-      elseif err ~= 'timeout' then
-        message_io:stop(loop)
-        handle_sock_err(err)
-        return
+  local message_io = require'websocket.ev_common'.message_io(
+    sock,loop,
+    function(...)
+      if on_message then
+        on_message(self,...)
       end
-      
-      repeat
-        local decoded,fin,opcode,rest = frame.decode(encoded)
-        if decoded then
-          encoded = rest
-          if fin and not frames then
-            on_message(self,decoded,opcode)
-          else
-            if not frames then
-              frames = {}
-              first_opcode = opcode
-            elseif opcode ~= frame.CONTINUATION then
-              on_error('Continuation frame expected, got '..opcode)
-              self:close()
-            end
-            tinsert(frames,decoded)
-            if fin == true then
-              on_message(self,tconcat(frames),first_opcode)
-              frames = nil
-            end
-          end
-        end
-      until not decoded
-      last = encoded
-    end,fd,ev.READ)
+    end,
+  handle_sock_err)
   
   self.on_close = function(_,on_close_arg)
     on_close = on_close_arg
