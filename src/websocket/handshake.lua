@@ -57,7 +57,7 @@ local upgrade_request = function(req)
     tinsert(lines,string.format('Origin: %s',req.origin))
   end
   if req.port and req.port ~= 80 then
-     lines[2] = format('Host: %s:%d',req.host,req.port)
+    lines[2] = format('Host: %s:%d',req.host,req.port)
   end
   tinsert(lines,'\r\n')
   return table.concat(lines,'\r\n')
