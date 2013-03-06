@@ -2,7 +2,7 @@ package.path = package.path..'../src'
 
 local server = require'websocket.server'
 local client = require'websocket.client'
-local port = os.getenv('LUAWS_PORT') or 8081
+local port = os.getenv('LUAWS_PORT') or 8083
 local copas = require'copas'
 
 setloop('copas')
