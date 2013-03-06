@@ -6,7 +6,7 @@ env:
   - LUA="luajit"
 
 install:
-  - pip install autobahntestsuite
+  - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
