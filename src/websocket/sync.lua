@@ -90,11 +90,11 @@ end
 
 local connect = function(self,ws_url,ws_protocol)
   if self.state == 'OPEN' then
-     error('already connected')
+    error('already connected')
   end
   local protocol,host,port,uri = tools.parse_url(ws_url)
   if protocol ~= 'ws' then
-     error('bad protocol')
+    error('bad protocol')
   end
   self:sock_connect(host,port)
   local key = tools.generate_key()
@@ -102,6 +102,7 @@ local connect = function(self,ws_url,ws_protocol)
   {
     key = key,
     host = host,
+    port = port,
     protocols = {ws_protocol or ''},
     origin = origin,
     uri = uri
