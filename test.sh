@@ -1,5 +1,5 @@
 #!/bin/bash
-node echo-ws.js 1>/dev/null &
+wstest -m echoserver -w ws://localhost:8080 1>/dev/null &
 pid=$!
 sleep 1
 busted spec/

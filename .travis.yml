@@ -1,10 +1,12 @@
-language: node
+python:
+  - "2.7"
 
 env:
   - LUA=""
   - LUA="luajit"
 
 install:
+  - pip install autobahntestsuite
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
@@ -18,7 +20,6 @@ install:
   - cd busted
   - sudo luarocks make
   - cd ../
-  - sudo npm install websocket
 
 script: "./test.sh"
 
