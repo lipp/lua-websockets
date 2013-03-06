@@ -1,11 +1,7 @@
 python:
   - "2.7"
 
-env:
-  - LUA="" LUAWS_WSTEST_PORT=8091 LUAWS_SERVER_EV_PORT=8092 LUAWS_SERVER_COPAS_PORT=8093
-  - LUA="luajit" LUAWS_WSTEST_PORT=8081 LUAWS_SERVER_EV_PORT=8082 LUAWS_SERVER_COPAS_PORT=8083
-
-before_install:
+install:
   - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
@@ -21,5 +17,5 @@ before_install:
   - sudo luarocks make
   - cd ../
 
-script: "./test.sh"
+script: "LUA=luajit ./test.sh && LUA='' ./test.sh"
 
