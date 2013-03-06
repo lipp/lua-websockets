@@ -104,12 +104,17 @@ describe(
         wsc:on_message(
           guard(
             function(ws,message,opcode)
-              ws:close()
               assert.is_same(#msg,#message)
               assert.is_same(msg,message)
               assert.is_same(opcode,frame.TEXT)
               done()
           end))
         wsc:send(msg)
+      end)
+    
+    it(
+      'closes nicely',
+      function(done)        
+        wsc:close()
       end)
   end)

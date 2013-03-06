@@ -6,6 +6,7 @@ local handshake = require'websocket.handshake'
 local tconcat = table.concat
 local tinsert = table.insert
 local ev
+local loop
 
 local clients = {}
 
@@ -20,44 +21,20 @@ local client = function(sock,protocol)
   local send_io
   local self = {}
   
-  local send_buffer
-  local send = function(data,on_sent)
-    if send_buffer then
-      -- a write io is still running
-      send_buffer = send_buffer..data
-      return
-    else
-      send_buffer = data
-    end
-    local index
-    send_io = ev.IO.new(
-      function(loop,write_io)
-        local len = #send_buffer
-        local sent,err = sock:send(send_buffer,index)
-        if not sent then
-          write_io:stop(loop)
-          clients[protocol][self] = nil
-          if err == 'closed' then
-            on_close(self)
-          end
-          on_error(self,'Websocket write failed '..err)
-        elseif sent == len then
-          send_buffer = nil
-          write_io:stop(loop)
-          if on_sent then
-            on_sent()
-          end
-        else
-          assert(sent < len)
-          index = sent
-        end
-      end,fd,ev.WRITE)
-    send_io:start(loop)
-  end
+  local async_send = require'websocket.ev_common'.async_send(sock,loop)
   
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT)
-    send(encoded)
+    async_send(encoded)
+  end
+  
+  local handle_sock_err = function(err)
+    clients[protocol][self] = nil
+    if err == 'closed' then
+      on_close()
+    else
+      on_error(self,'Websocket message read io failed: '..err)
+    end
   end
   
   local last
@@ -75,12 +52,7 @@ local client = function(sock,protocol)
         end
       elseif err ~= 'timeout' then
         message_io:stop(loop)
-        clients[protocol][self] = nil
-        if err == 'closed' then
-          on_close()
-        else
-          on_error(self,'Websocket message read io failed: '..err)
-        end
+        handle_sock_err(err)
         return
       end
       
@@ -134,9 +106,6 @@ local client = function(sock,protocol)
     clients[protocol][self] = nil
     if message_io then
       message_io:stop(loop)
-    end
-    if send_io then
-      send_io:stop(loop)
     end
     sock:shutdown()
     sock:close()
