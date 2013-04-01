@@ -4,13 +4,16 @@
 package.path = '../src/?.lua;../src/?/?.lua;'..package.path
 local ev = require'ev'
 local loop = ev.Loop.default
-local server = require'websocket'.server.ev.listen
+local websocket = require'websocket'
+local server = websocket.server.ev.listen
 {
   protocols = {
     ['lws-mirror-protocol'] = function(ws)
       ws:on_message(
-        function(ws,data)
-          ws:broadcast(data)
+        function(ws,data,opcode)
+          if opcode == websocket.TEXT then
+            ws:broadcast(data)
+          end
         end)
     end,
     ['dumb-increment-protocol'] = function(ws)
@@ -22,9 +25,11 @@ local server = require'websocket'.server.ev.listen
         end,0.1,0.1)
       timer:start(loop)
       ws:on_message(
-        function(ws,message)
-          if message:match('reset') then
-            number = 0
+        function(ws,message,opcode)
+          if opcode == websocket.TEXT then
+            if message:match('reset') then
+              number = 0
+            end
           end
         end)
       ws:on_close(
