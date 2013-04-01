@@ -28,6 +28,9 @@ local receive = function(self)
         if self.state ~= 'CLOSING' then
           pcall(self.send,self,decoded,frame.CLOSE)
           self.state = 'CLOSED'
+          if self.on_close then
+            self:on_close()
+          end
           return nil,'closed'
         else
           return decoded,opcode
@@ -73,13 +76,16 @@ end
 
 local close = function(self,code,reason)
   if self.state ~= 'OPEN' then
-    return nil,'state'
+    return nil,'not open'
   end
   local msg = frame.encode_close(code or 1000,reason)
   pcall(self.send,self,msg,frame.CLOSE)
   self.state = 'CLOSING'
   local ok,rmsg,opcode = pcall(self.receive,self)
   self:sock_close()
+  if self.on_close then
+    self:on_close()
+  end
   if ok and rmsg then
     if rmsg:sub(1,2) == msg:sub(1,2) and opcode == frame.CLOSE then
       return true
