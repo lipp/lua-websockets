@@ -27,12 +27,15 @@ local client = function(sock,protocol)
   end
   
   self.sock_close = function(self)
-    clients[protocol][self] = nil
     sock:shutdown()
     sock:close()
   end
   
   self = sync.extend(self)
+  
+  self.on_close = function(self)
+    clients[protocol][self] = nil
+  end
   
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
