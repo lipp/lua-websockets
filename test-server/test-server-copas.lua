@@ -5,27 +5,40 @@ package.path = '../src/?.lua;../src/?/?.lua;'..package.path
 local copas = require'copas'
 local socket = require'socket'
 
+print('Open browser:')
+print('file://'..io.popen('pwd'):read()..'/index.html')
+
 local inc_clients = {}
 
-local server = require'websocket'.server.copas.listen
+local websocket = require'websocket'
+local server = websocket.server.copas.listen
 {
   protocols = {
     ['lws-mirror-protocol'] = function(ws)
       while true do
-        local msg = ws:receive()
-        ws:broadcast(msg)
+        local msg,opcode = ws:receive()
+        if not msg then
+          ws:close()
+          return
+        end
+        if opcode == websocket.TEXT then
+          ws:broadcast(msg)
+        end
       end
     end,
     ['dumb-increment-protocol'] = function(ws)
-      local inc_client = {
-        number = 0,
-        ws = ws
-      }
-      table.insert(inc_clients,inc_client)
+      inc_clients[ws] = 0
       while true do
-        local message = ws:receive()
-        if message:match('reset') then
-          inc_client.number = 0
+        local message,opcode = ws:receive()
+        if not message then
+          ws:close()
+          inc_clients[ws] = nil
+          return
+        end
+        if opcode == websocket.TEXT then
+          if message:match('reset') then
+            inc_clients[ws] = 0
+          end
         end
       end
     end
@@ -45,15 +58,12 @@ copas.addthread(
       local now = socket.gettime()
       if (now - last) >= 0.1 then
         last = now
-        for _,inc_client in pairs(inc_clients) do
-          inc_client.number = inc_client.number + 1
-          inc_client.ws:send(tostring(inc_client.number))
+        for ws,number in pairs(inc_clients) do
+          ws:send(tostring(number))
+          inc_clients[ws] = number + 1
         end
       end
     end
   end)
-
-print('Open browser:')
-print('file://'..io.popen('pwd'):read()..'/index.html')
 
 copas.loop()
