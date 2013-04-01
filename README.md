@@ -118,8 +118,7 @@ $ luarocks make rockspecs/lua-websockets-scm-1.rockspec
 Running tests requires:
 
   - [busted with async test support](https://github.com/lipp/busted)
-  - [node](http://nodejs.org/)
-  - [node-websocket](https://github.com/Worlize/WebSocket-Node)
+  - [Autobahn Testsuite](http://autobahn.ws/testsuite)
 
 ```shell
 ./test.sh
