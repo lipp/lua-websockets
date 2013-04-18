@@ -17,7 +17,8 @@ dependencies = {
   "lpack",
   "luasocket",
   "luabitop",
-  "lua-ev"
+  "lua-ev",
+  "copas"
 }
 
 build = {
