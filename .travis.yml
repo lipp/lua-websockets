@@ -6,16 +6,10 @@ install:
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
-  - sudo luarocks install luafilesystem
-  - sudo luarocks install luabitop
-  - sudo luarocks install luasocket
-  - sudo luarocks install copas
-  - sudo luarocks install lua-ev
-  - sudo luarocks install lpack
   - git clone git://github.com/lipp/busted.git
   - cd busted
   - sudo luarocks make
   - cd ../
 
-script: "LUA=luajit ./test.sh && LUA='' ./test.sh"
+script: sudo luarocks make rockspecs/lua-websockets-scm-1.rockspec && "LUA=luajit ./test.sh && LUA='' ./test.sh"
 
