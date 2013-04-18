@@ -2,20 +2,24 @@ package = "lua-websockets"
 version = "scm-1"
 
 source = {
-   url = "git://github.com/lipp/lua-websockets.git",
+  url = "git://github.com/lipp/lua-websockets.git",
 }
 
 description = {
-   summary = "Lua bindings to libwebsockets (http://git.warmcat.com/cgi-bin/cgit/libwebsockets/).",
-   homepage = "http://github.com/lipp/lua-websockets",
-   license = "MIT/X11",
+  summary = "Websockets for Lua",
+  homepage = "http://github.com/lipp/lua-websockets",
+  license = "MIT/X11",
+  detailed = "Provides sync and async clients and servers for copas and lua-ev."
 }
 
 dependencies = {
-   "lua >= 5.1",
-   "lpack",
-   "luasocket"
+  "lua >= 5.1",
+  "lpack",
+  "luasocket",
+  "luabitop",
+  "lua-ev"
 }
+
 build = {
   type = 'none',
   install = {
