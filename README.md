@@ -37,11 +37,16 @@ local server = require'websocket'.server.copas.listen
     echo = function(ws)
       while true do
         local message = ws:receive()
-        ws:send(message)
+        if message then
+           ws:send(message)
+        else
+           ws:close()
+           return
+        end
       end
     end
   }
-})
+}
 
 -- use the copas loop
 copas.loop()
@@ -66,14 +71,20 @@ local server = require'websocket'.server.ev.listen
     -- ws is a new websocket instance
     echo = function(ws)
       ws:on_message(function(ws,message)
-        ws:send(message)
-      end)
+          ws:send(message)
+        end)
+      
+      -- this is optional
+      ws:on_close(function()
+          ws:close()
+        end)
     end
   }
-})
+}
 
 -- use the lua-ev loop
 ev.Loop.default:loop()
+
 ```
 
 ## Running test-server examples

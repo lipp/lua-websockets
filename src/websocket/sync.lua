@@ -13,10 +13,17 @@ local receive = function(self)
   local frames
   local bytes = 3
   local encoded = ''
+  local on_remote_err = function(err)
+    self.state = 'CLOSED'
+    if self.on_close then
+      self:on_close(err)
+    end
+    return nil,err
+  end
   while true do
     local chunk,err = self:sock_receive(bytes)
     if err then
-      error('Websocket receive failed:'..err)
+      return on_remote_err(err)
     end
     encoded = encoded..chunk
     local decoded,fin,opcode,_,masked = frame.decode(encoded)
@@ -27,11 +34,7 @@ local receive = function(self)
       if opcode == frame.CLOSE then
         if self.state ~= 'CLOSING' then
           pcall(self.send,self,decoded,frame.CLOSE)
-          self.state = 'CLOSED'
-          if self.on_close then
-            self:on_close()
-          end
-          return nil,'closed'
+          return on_remote_err(err)
         else
           return decoded,opcode
         end
