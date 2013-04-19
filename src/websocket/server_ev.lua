@@ -86,7 +86,7 @@ local listen = function(opts)
   assert(opts and (opts.protocols or opts.default))
   ev = require'ev'
   loop = opts.loop or ev.Loop.default
-  local on_error = function(s,err) print('Websocket unhandled error',s,err) end
+  local on_error = function(s,err) print(err) end
   local protocols = {}
   if opts.protocols then
     for protocol in pairs(opts.protocols) do
@@ -94,11 +94,11 @@ local listen = function(opts)
       tinsert(protocols,protocol)
     end
   end
-  
+  local self = {}
   local listener,err = socket.bind(opts.interface or '*',opts.port or 80)
   assert(listener,err)
   listener:settimeout(0)
-  listen_io = ev.IO.new(
+  local listen_io = ev.IO.new(
     function()
       local client_sock = listener:accept()
       client_sock:settimeout(0)
@@ -116,6 +116,8 @@ local listen = function(opts)
               request[#request+1] = line
             elseif err ~= 'timeout' then
               on_error(self,'Websocket Handshake failed due to socket err:'..err)
+              read_io:stop(loop)
+              return
             else
               last = part
               return
@@ -157,7 +159,6 @@ local listen = function(opts)
             end,client_sock:getfd(),ev.WRITE):start(loop)
         end,client_sock:getfd(),ev.READ):start(loop)
     end,listener:getfd(),ev.READ)
-  local self = {}
   self.close = function(keep_clients)
     listen_io:stop(loop)
     listener:close()
