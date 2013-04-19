@@ -30,6 +30,7 @@ build = {
       ['websocket.client'] = 'src/websocket/client.lua',
       ['websocket.client_ev'] = 'src/websocket/client_ev.lua',
       ['websocket.client_copas'] = 'src/websocket/client_copas.lua',
+      ['websocket.ev_common'] = 'src/websocket/ev_common.lua',
       ['websocket.server'] = 'src/websocket/server.lua',
       ['websocket.server_ev'] = 'src/websocket/server_ev.lua',
       ['websocket.server_copas'] = 'src/websocket/server_copas.lua',
