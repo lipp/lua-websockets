@@ -10,6 +10,10 @@ install:
   - cd busted
   - sudo luarocks make
   - cd ../
+  - git clone git://github.com/lipp/luacov.git
+  - cd luacov
+  - sudo luarocks make
+  - cd ../
 
 script: "sudo luarocks make rockspecs/lua-websockets-scm-1.rockspec && LUA=luajit ./test.sh && LUA='' ./test.sh"
 
