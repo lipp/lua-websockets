@@ -145,12 +145,14 @@ local decode = function(encoded)
 end
 
 local encode_close = function(code,reason)
-  local data
-  data = spack('>H',code)
-  if reason then
-    data = data..tostring(reason)
+  if code then
+    data = spack('>H',code)
+    if reason then
+      data = data..tostring(reason)
+    end
+    return data
   end
-  return data
+  return ''
 end
 
 local decode_close = function(data)
