@@ -29,7 +29,7 @@ local client = function(sock,protocol)
     end
   end
   local user_on_close
-  local on_close = function()
+  local on_close = function(was_clean,code,reason)
     clients[protocol][self] = nil
     if close_timer then
       close_timer:stop(loop)
@@ -38,7 +38,7 @@ local client = function(sock,protocol)
     message_io:stop(loop)
     self.state = 'CLOSED'
     if user_on_close then
-      user_on_close(self)
+      user_on_close(self,was_clean,code,reason)
     end
     sock:shutdown()
     sock:close()
@@ -46,7 +46,9 @@ local client = function(sock,protocol)
   
   local handle_sock_err = function(err)
     if err == 'closed' then
-      on_close()
+      if self.state ~= 'CLOSED' then
+        on_close(false,1006,'')
+      end
     else
       on_error(err)
     end
@@ -61,12 +63,14 @@ local client = function(sock,protocol)
       if self.state ~= 'CLOSING' then
         self.state = 'CLOSING'
         local code,reason = frame.decode_close(message)
-        local encoded = frame.encode_close(code,'')
+        local encoded = frame.encode_close(code)
         encoded = frame.encode(encoded,frame.CLOSE)
-        async_send(frame.encode_close(code,''),
+        async_send(encoded,
           function()
-            on_close(code,reason)
+            on_close(true,code or 1006,reason)
           end,handle_sock_err)
+      else
+        on_close(true,code or 1006,reason)
       end
     end
   end
@@ -117,7 +121,7 @@ local client = function(sock,protocol)
       async_send(encoded)
       close_timer = ev.Timer.new(function()
           close_timer = nil
-          on_close()
+          on_close(false,1006,'timeout')
         end,timeout)
       close_timer:start(loop)
     end

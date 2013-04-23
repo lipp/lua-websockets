@@ -24,7 +24,7 @@ local ev = function(ws)
   local user_on_open
   local user_on_error
   local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
-  local on_close = function(reason)
+  local on_close = function(was_clean,code,reason)
     if close_timer then
       close_timer:stop(loop)
       close_timer = nil
@@ -32,7 +32,7 @@ local ev = function(ws)
     message_io:stop(loop)
     self.state = 'CLOSED'
     if user_on_close then
-      user_on_close(self,reason)
+      user_on_close(self,was_clean,code,reason)
     end
     sock:shutdown()
     sock:close()
@@ -44,8 +44,11 @@ local ev = function(ws)
     end
   end
   local handle_socket_err = function(err)
-    if err == 'closed' and self.state ~= 'CLOSED' then
-      on_close('closed')
+    if err == 'closed' then
+      if self.state ~= 'CLOSED' then
+        print('unclean close',self.state)
+        on_close(false,1006,'')
+      end
     else
       on_error(err)
     end
@@ -59,12 +62,14 @@ local ev = function(ws)
       if self.state ~= 'CLOSING' then
         self.state = 'CLOSING'
         local code,reason = frame.decode_close(message)
-        local encoded = frame.encode_close(code,'')
-        encoded = frame.encode(encoded,frame.CLOSE)
+        local encoded = frame.encode_close(code)
+        encoded = frame.encode(encoded,frame.CLOSE,true)
         async_send(encoded,
           function()
-            on_close(code,reason)
+            on_close(true,code or 1005,reason)
           end,handle_socket_err)
+      else
+        on_close(true,code or 1005,reason)
       end
     end
   end
@@ -183,21 +188,21 @@ local ev = function(ws)
       assert(not message_io)
       handshake_io:stop(loop)
       handshake_io = nil
-      on_close()
+      on_close(false,1006,'not open')
       return
     elseif self.state == 'OPEN' then
       assert(not handshake_io)
       assert(message_io)
       self.state = 'CLOSING'
       timeout = timeout or 3
-      local encoded = frame.encode_close(code or 1000,reason or '')
-      encoded = frame.encode(encoded,frame.CLOSE)
+      local encoded = frame.encode_close(code or 1000,reason)
+      encoded = frame.encode(encoded,frame.CLOSE,true)
       -- this should let the other peer confirm the CLOSE message
       -- by 'echoing' the message.
       async_send(encoded)
       close_timer = ev.Timer.new(function()
           close_timer = nil
-          on_close()
+          on_close(false,1006,'timeout')
         end,timeout)
       close_timer:start(loop)
     end
