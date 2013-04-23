@@ -62,7 +62,7 @@ local message_io = function(sock,loop,on_message,on_error)
       while true do
         local encoded,err,part = sock:receive(100000)
         if err then
-          if err ~= 'timeout' then
+          if err ~= 'timeout' and #part == 0 then
             message_io:stop(loop)
             on_error(err)
             return
