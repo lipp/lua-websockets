@@ -15,70 +15,118 @@ local client = function(sock,protocol)
   sock:setoption('tcp-nodelay',true)
   local fd = sock:getfd()
   local message_io
-  local on_message
-  local on_error = function(s,err) print('Websocket server unhandled error with client instance',s,err) end
-  local on_close = function() end
-  local send_io
-  local self = {}
-  
+  local close_timer
   local async_send = require'websocket.ev_common'.async_send(sock,loop)
+  local self = {}
+  self.state = 'OPEN'
+  local user_on_error
+  local on_error = function(s,err)
+    clients[protocol][self] = nil
+    if user_on_error then
+      user_on_error(self,err)
+    else
+      print('Websocket server error',err)
+    end
+  end
+  local user_on_close
+  local on_close = function(was_clean,code,reason)
+    clients[protocol][self] = nil
+    if close_timer then
+      close_timer:stop(loop)
+      close_timer = nil
+    end
+    message_io:stop(loop)
+    self.state = 'CLOSED'
+    if user_on_close then
+      user_on_close(self,was_clean,code,reason)
+    end
+    sock:shutdown()
+    sock:close()
+  end
+  
+  local handle_sock_err = function(err)
+    if err == 'closed' then
+      if self.state ~= 'CLOSED' then
+        on_close(false,1006,'')
+      end
+    else
+      on_error(err)
+    end
+  end
+  local user_on_message
+  local on_message = function(message,opcode)
+    if opcode == frame.TEXT or opcode == frame.BINARY then
+      if user_on_message then
+        user_on_message(self,message,opcode)
+      end
+    elseif opcode == frame.CLOSE then
+      if self.state ~= 'CLOSING' then
+        self.state = 'CLOSING'
+        local code,reason = frame.decode_close(message)
+        local encoded = frame.encode_close(code)
+        encoded = frame.encode(encoded,frame.CLOSE)
+        async_send(encoded,
+          function()
+            on_close(true,code or 1006,reason)
+          end,handle_sock_err)
+      else
+        on_close(true,code or 1006,reason)
+      end
+    end
+  end
+  
   
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT)
     async_send(encoded)
   end
   
-  local handle_sock_err = function(err)
-    clients[protocol][self] = nil
-    if err == 'closed' then
-      on_close()
-    else
-      on_error(self,'Websocket message read io failed: '..err)
-    end
-  end
   
-  local last
-  local frames
-  local first_opcode
-  local message_io = require'websocket.ev_common'.message_io(
+  message_io = require'websocket.ev_common'.message_io(
     sock,loop,
-    function(...)
-      if on_message then
-        on_message(self,...)
-      end
-    end,
+    on_message,
   handle_sock_err)
   
+  message_io:start(loop)
+  
   self.on_close = function(_,on_close_arg)
-    on_close = on_close_arg
+    user_on_close = on_close_arg
   end
   
   self.on_error = function(_,on_error_arg)
-    on_error = on_error_arg
+    user_on_error = on_error_arg
   end
   
   self.on_message = function(_,on_message_arg)
-    if not on_message and message_io then
-      message_io:start(loop)
-    end
+    user_on_message = on_message_arg
     on_message = on_message_arg
   end
   
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
-      client:send(...)
+      if client.state == 'OPEN' then
+        client:send(...)
+      end
     end
   end
   
-  self.close = function()
+  self.close = function(_,code,reason,timeout)
     clients[protocol][self] = nil
-    if message_io then
-      message_io:stop(loop)
+    if self.state == 'OPEN' then
+      self.state = 'CLOSING'
+      assert(message_io)
+      timeout = timeout or 3
+      local encoded = frame.encode_close(code or 1000,reason or '')
+      encoded = frame.encode(encoded,frame.CLOSE)
+      async_send(encoded)
+      close_timer = ev.Timer.new(function()
+          close_timer = nil
+          on_close(false,1006,'timeout')
+        end,timeout)
+      close_timer:start(loop)
     end
-    sock:shutdown()
-    sock:close()
-    sock = nil
   end
+  
   return self
 end
 

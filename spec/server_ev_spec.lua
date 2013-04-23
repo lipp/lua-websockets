@@ -53,7 +53,6 @@ describe(
             {
               port = port
             }
-            s:close()
           end)
       end)
     
@@ -75,6 +74,11 @@ describe(
             }
           end)
         
+        after(
+          function()
+            s:close()
+          end)
+        
         it(
           'handshake works',
           async,
@@ -86,7 +90,6 @@ describe(
                 assert.is_same(type(client.on_message),'function')
                 assert.is_same(type(client.close),'function')
                 assert.is_same(type(client.send),'function')
-                client:close()
               end)
             wsc:connect
             {
@@ -94,8 +97,8 @@ describe(
               protocol = 'echo',
               on_open = guard(
                 function()
+                  wsc:on_close(done)
                   wsc:close()
-                  done()
                 end)
             }
           end)
@@ -247,10 +250,6 @@ describe(
             }
           end)
         
-        after(
-          function()
-            s:close()
-          end)
       end)
     
   end)

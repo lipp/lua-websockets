@@ -117,7 +117,9 @@ describe(
     
     it(
       'closes nicely',
+      async,
       function(done)
+        wsc:on_close(done)
         wsc:close()
       end)
   end)
