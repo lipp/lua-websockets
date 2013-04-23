@@ -104,7 +104,7 @@ local client = function(sock,protocol)
   
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
-      if client.statet == 'OPEN' then
+      if client.state == 'OPEN' then
         client:send(...)
       end
     end
