@@ -15,27 +15,70 @@ local ev = function(ws)
   local fd
   local message_io
   local handshake_io
-  local on_message
-  local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
-  local on_close = function() end
-  local on_open = function() end
-  local self = {}
   local async_send
-  
+  local self = {}
+  self.state = 'CLOSED'
+  local close_timer
+  local user_on_message
+  local user_on_close
+  local user_on_open
+  local user_on_error
+  local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
+  local on_close = function(reason)
+    if close_timer then
+      close_timer:stop(loop)
+      close_timer = nil
+    end
+    message_io:stop(loop)
+    self.state = 'CLOSED'
+    if user_on_close then
+      user_on_close(self,reason)
+    end
+    sock:shutdown()
+    sock:close()
+  end
+  local on_open = function()
+    self.state = 'OPEN'
+    if user_on_open then
+      user_on_open(self)
+    end
+  end
   local handle_socket_err = function(err)
-    if err == 'closed' then
-      on_close(self)
+    if err == 'closed' and self.state ~= 'CLOSED' then
+      on_close('closed')
     else
-      on_error(self,err)
+      on_error(err)
+    end
+  end
+  local on_message = function(message,opcode)
+    if opcode == frame.TEXT or opcode == frame.BINARY then
+      if user_on_message then
+        user_on_message(self,message,opcode)
+      end
+    elseif opcode == frame.CLOSE then
+      if self.state ~= 'CLOSING' then
+        self.state = 'CLOSING'
+        local code,reason = frame.decode_close(message)
+        local encoded = frame.encode_close(code,'')
+        encoded = frame.encode(encoded,frame.CLOSE)
+        async_send(encoded,
+          function()
+            on_close(code,reason)
+          end,handle_socket_err)
+      end
     end
   end
   
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT,true)
-    async_send(encoded, nil, handle_socket_err)
+    async_send(encoded, nil, handle_socket_error)
   end
   
   local connect = function(_,params)
+    if self.state ~= 'CLOSED' then
+      error('wrong state')
+    end
+    self.state = 'CONNECTING'
     local protocol,host,port,uri = tools.parse_url(params.url)
     if protocol ~= 'ws' then
       error('Protocol not supported:'..protocol)
@@ -43,11 +86,13 @@ local ev = function(ws)
     assert(not sock)
     sock = socket.tcp()
     fd = sock:getfd()
+    assert(fd > -1)
     -- set non blocking
     sock:settimeout(0)
     sock:setoption('tcp-nodelay',true)
     async_send = require'websocket.ev_common'.async_send(sock,loop)
-    on_open = params.on_open or on_open
+    user_on_open = params.on_open or user_on_open
+    
     ev.IO.new(
       function(loop,connect_io)
         connect_io:stop(loop)
@@ -66,6 +111,7 @@ local ev = function(ws)
           function()
             local resp = {}
             local last
+            assert(sock:getfd() > -1)
             handshake_io = ev.IO.new(
               function(loop,read_io)
                 repeat
@@ -86,6 +132,7 @@ local ev = function(ws)
                   end
                 until line == ''
                 read_io:stop(loop)
+                handshake_io = nil
                 local response = table.concat(resp,'\r\n')
                 local headers = handshake.http_headers(response)
                 local expected_accept = handshake.sec_websocket_accept(key)
@@ -95,17 +142,12 @@ local ev = function(ws)
                   on_error(self,msg)
                   return
                 end
-                on_open(self)
                 message_io = require'websocket.ev_common'.message_io(
                   sock,loop,
-                  function(...)
-                    if on_message then
-                      on_message(self,...)
-                    end
-                  end,handle_socket_err)
-                if on_message then
-                  message_io:start(loop)
-                end
+                  on_message,
+                handle_socket_err)
+                message_io:start(loop)
+                on_open(self)
               end,fd,ev.READ)
             handshake_io:start(loop)-- handshake
           end,
@@ -119,34 +161,46 @@ local ev = function(ws)
   end
   
   self.on_close = function(_,on_close_arg)
-    on_close = on_close_arg
+    user_on_close = on_close_arg
   end
   
   self.on_error = function(_,on_error_arg)
-    on_error = on_error_arg
+    user_on_error = on_error_arg
   end
   
   self.on_open = function(_,on_open_arg)
-    on_open = on_open_arg
+    user_on_open = on_open_arg
   end
   
   self.on_message = function(_,on_message_arg)
-    if not on_message and message_io then
-      message_io:start(loop)
-    end
-    on_message = on_message_arg
+    user_on_message = on_message_arg
   end
   
-  self.close = function()
-    if handshake_io then
+  self.close = function(_,code,reason,timeout)
+    if self.state == 'CONNECTING' then
+      self.state = 'CLOSING'
+      assert(handshake_io)
+      assert(not message_io)
       handshake_io:stop(loop)
+      handshake_io = nil
+      on_close()
+      return
+    elseif self.state == 'OPEN' then
+      assert(not handshake_io)
+      assert(message_io)
+      self.state = 'CLOSING'
+      timeout = timeout or 3
+      local encoded = frame.encode_close(code or 1000,reason or '')
+      encoded = frame.encode(encoded,frame.CLOSE)
+      -- this should let the other peer confirm the CLOSE message
+      -- by 'echoing' the message.
+      async_send(encoded)
+      close_timer = ev.Timer.new(function()
+          close_timer = nil
+          on_close()
+        end,timeout)
+      close_timer:start(loop)
     end
-    if message_io then
-      message_io:stop(loop)
-    end
-    sock:shutdown()
-    sock:close()
-    --    sock = nil
   end
   self.connect = connect
   return self

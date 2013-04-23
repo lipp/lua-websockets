@@ -146,13 +146,11 @@ end
 
 local encode_close = function(code,reason)
   local data
-  if code and type(code) == 'number' then
-    data = spack('>H',code)
-    if reason then
-      data = data..tostring(reason)
-    end
+  data = spack('>H',code)
+  if reason then
+    data = data..tostring(reason)
   end
-  return data or ''
+  return data
 end
 
 local decode_close = function(data)

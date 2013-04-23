@@ -9,6 +9,7 @@ local async_send = function(sock,loop)
   local sock_send = sock.send
   local buffer
   local io
+  local callbacks = {}
   return function(data,on_sent,on_err)
     if buffer then
       -- a write io is still running
@@ -17,7 +18,10 @@ local async_send = function(sock,loop)
     else
       buffer = data
     end
+    callbacks.on_sent = on_sent
+    callbacks.on_err = on_err
     if not io then
+      assert(sock:getfd() > -1)
       local index
       io = ev.IO.new(
         function(loop,write_io)
@@ -25,14 +29,14 @@ local async_send = function(sock,loop)
           local sent,err = sock_send(sock,buffer,index)
           if not sent and err ~= 'timeout' then
             write_io:stop(loop)
-            if on_err then
-              on_err(err)
+            if callbacks.on_err then
+              callbacks.on_err(err)
             end
           elseif sent == len then
             buffer = nil
             write_io:stop(loop)
-            if on_sent then
-              on_sent()
+            if callbacks.on_sent then
+              callbacks.on_sent()
             end
           else
             assert(sent < len)
@@ -52,6 +56,7 @@ local message_io = function(sock,loop,on_message,on_error)
   local last
   local frames = {}
   local first_opcode
+  assert(sock:getfd() > -1)
   return ev.IO.new(
     function(loop,message_io)
       while true do
