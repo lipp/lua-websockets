@@ -14,12 +14,7 @@ local server = require'websocket'.server.ev.listen
     echo = function(ws)
       ws:on_message(function(ws,message)
           ws:send(message)
-        end)
-      
-      -- this is optional
-      ws:on_close(function()
-          ws:close()
-        end)
+        end)      
     end
   }
 }
