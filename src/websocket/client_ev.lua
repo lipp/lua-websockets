@@ -29,10 +29,12 @@ local ev = function(ws)
       close_timer:stop(loop)
       close_timer = nil
     end
-    message_io:stop(loop)
+    if message_io then
+      message_io:stop(loop)
+    end
     self.state = 'CLOSED'
     if user_on_close then
-      user_on_close(self,was_clean,code,reason)
+      user_on_close(self,was_clean,code,reason or '')
     end
     sock:shutdown()
     sock:close()
@@ -46,7 +48,6 @@ local ev = function(ws)
   local handle_socket_err = function(err)
     if err == 'closed' then
       if self.state ~= 'CLOSED' then
-        print('unclean close',self.state)
         on_close(false,1006,'')
       end
     else
@@ -151,7 +152,6 @@ local ev = function(ws)
                   sock,loop,
                   on_message,
                 handle_socket_err)
-                message_io:start(loop)
                 on_open(self)
               end,fd,ev.READ)
             handshake_io:start(loop)-- handshake

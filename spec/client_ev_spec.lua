@@ -16,8 +16,8 @@ describe(
     it(
       'exposes the correct interface',
       function()
-        assert.is_same(type(client),'table')
-        assert.is_same(type(client.ev),'function')
+        assert.is_table(client)
+        assert.is_function(client.ev)
       end)
     
     it(
@@ -47,7 +47,7 @@ describe(
       'can send and receive data(requires external websocket server @port 8081)',
       async,
       function(done)
-        assert.is_same(type(wsc.send),'function')
+        assert.is_function(wsc.send)
         wsc:on_message(
           guard(
             function(ws,message,opcode)
@@ -119,7 +119,12 @@ describe(
       'closes nicely',
       async,
       function(done)
-        wsc:on_close(done)
+        wsc:on_close(guard(function(_,was_clean,code,reason)
+              assert.is_true(was_clean)
+              assert.is_true(code >= 1000)
+              assert.is_string(reason)
+              done()
+          end))
         wsc:close()
       end)
   end)

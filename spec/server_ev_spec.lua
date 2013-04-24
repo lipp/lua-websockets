@@ -80,7 +80,7 @@ describe(
           end)
         
         it(
-          'handshake works',
+          'open and close handshake work (client closes)',
           async,
           function(done)
             local wsc = client.ev()
@@ -97,9 +97,42 @@ describe(
               protocol = 'echo',
               on_open = guard(
                 function()
-                  wsc:on_close(done)
+                  wsc:on_close(guard(function(_,was_clean,code,reason)
+                        assert.is_true(was_clean)
+                        assert.is_true(code >= 1000)
+                        assert.is_string(reason)
+                        done()
+                    end))
                   wsc:close()
                 end)
+            }
+          end)
+        
+        it(
+          'open and close handshake work (server closes)',
+          async,
+          function(done)
+            local wsc = client.ev()
+            on_new_echo_client = guard(
+              function(client)
+                assert.is_same(type(client),'table')
+                assert.is_same(type(client.on_message),'function')
+                assert.is_same(type(client.close),'function')
+                assert.is_same(type(client.send),'function')
+                client:on_close(guard(function(_,was_clean,code,reason)
+                      assert.is_true(was_clean)
+                      assert.is_true(code >= 1000)
+                      assert.is_string(reason)
+                      done()
+                  end))
+                client:close()
+              end)
+            wsc:connect
+            {
+              url = url,
+              protocol = 'echo',
+              on_open = function()
+              end
             }
           end)
         

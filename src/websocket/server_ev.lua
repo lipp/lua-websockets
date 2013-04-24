@@ -38,7 +38,7 @@ local client = function(sock,protocol)
     message_io:stop(loop)
     self.state = 'CLOSED'
     if user_on_close then
-      user_on_close(self,was_clean,code,reason)
+      user_on_close(self,was_clean,code,reason or '')
     end
     sock:shutdown()
     sock:close()
@@ -75,19 +75,15 @@ local client = function(sock,protocol)
     end
   end
   
-  
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT)
     async_send(encoded)
   end
   
-  
   message_io = require'websocket.ev_common'.message_io(
     sock,loop,
     on_message,
   handle_sock_err)
-  
-  message_io:start(loop)
   
   self.on_close = function(_,on_close_arg)
     user_on_close = on_close_arg
