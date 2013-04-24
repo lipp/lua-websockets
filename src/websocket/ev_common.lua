@@ -57,47 +57,54 @@ local message_io = function(sock,loop,on_message,on_error)
   local frames = {}
   local first_opcode
   assert(sock:getfd() > -1)
-  return ev.IO.new(
-    function(loop,message_io)
-      while true do
-        local encoded,err,part = sock:receive(100000)
-        if err then
-          if err ~= 'timeout' and #part == 0 then
+  local message_io
+  local dispatch = function()
+    while true do
+      local encoded,err,part = sock:receive(100000)
+      if err then
+        if err ~= 'timeout' and #part == 0 then
+          if message_io then
             message_io:stop(loop)
-            on_error(err)
-            return
-          elseif #part == 0 then
-            return
           end
-        end
-        
-        if last then
-          encoded = last..(encoded or part)
-          last = nil
-        else
-          encoded = encoded or part
-        end
-        
-        repeat
-          local decoded,fin,opcode,rest = frame.decode(encoded)
-          if decoded then
-            if not first_opcode then
-              first_opcode = opcode
-            end
-            tinsert(frames,decoded)
-            encoded = rest
-            if fin == true then
-              on_message(tconcat(frames),first_opcode)
-              frames = {}
-              first_opcode = nil
-            end
-          end
-        until not decoded
-        if #encoded > 0 then
-          last = encoded
+          on_error(err)
+          return
+        elseif #part == 0 then
+          return
         end
       end
-    end,sock:getfd(),ev.READ)
+      
+      if last then
+        encoded = last..(encoded or part)
+        last = nil
+      else
+        encoded = encoded or part
+      end
+      
+      repeat
+        local decoded,fin,opcode,rest = frame.decode(encoded)
+        if decoded then
+          if not first_opcode then
+            first_opcode = opcode
+          end
+          tinsert(frames,decoded)
+          encoded = rest
+          if fin == true then
+            on_message(tconcat(frames),first_opcode)
+            frames = {}
+            first_opcode = nil
+          end
+        end
+      until not decoded
+      if #encoded > 0 then
+        last = encoded
+      end
+    end
+  end
+  message_io = ev.IO.new(dispatch,sock:getfd(),ev.READ)
+  message_io:start(loop)
+  -- the might be already data waiting (which will not trigger the IO)
+  dispatch()
+  return message_io
 end
 
 return {
