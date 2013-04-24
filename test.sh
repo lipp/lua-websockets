@@ -6,7 +6,8 @@ sleep 3
 rm luacov.* 2>/dev/null
 busted -c spec/
 bustedcode=$?
-egrep "\s+src/" luacov.report.out
+echo "code coverage"
+egrep "\.\d{2}%" luacov.report.out
 kill ${pid}
 exit $bustedcode
 
