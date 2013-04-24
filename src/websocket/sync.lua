@@ -6,35 +6,38 @@ local tconcat = table.concat
 
 
 local receive = function(self)
-  if self.state ~= 'OPEN' and self.state ~= 'CLOSING' then
-    error('Websocket not OPEN nor CLOSING (state='..(self.state or 'nil')..')')
+  if self.state ~= 'OPEN' and not self.is_closing then
+    return nil,'wrong state'
   end
   local first_opcode
   local frames
   local bytes = 3
   local encoded = ''
-  local on_remote_err = function(err)
+  local clean = function(was_clean,code,reason)
     self.state = 'CLOSED'
     if self.on_close then
-      self:on_close(err)
+      self:on_close()
     end
-    return nil,err
+    return nil,'closed',was_clean,code,reason or ''
   end
   while true do
     local chunk,err = self:sock_receive(bytes)
     if err then
-      return on_remote_err(err)
+      return clean(err)
     end
     encoded = encoded..chunk
     local decoded,fin,opcode,_,masked = frame.decode(encoded)
     if not self.is_server and masked then
-      return nil,'Websocket receive failed: frame was not masked'
+      return clean(false,1006,'Websocket receive failed: frame was not masked')
     end
     if decoded then
       if opcode == frame.CLOSE then
-        if self.state ~= 'CLOSING' then
-          pcall(self.send,self,decoded,frame.CLOSE)
-          return on_remote_err(err)
+        if not self.is_closing then
+          local code,reason = frame.decode_close(decoded)
+          -- echo code
+          local msg = frame.encode_close(code)
+          local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
+          return clean(true,code,reason)
         else
           return decoded,opcode
         end
@@ -67,45 +70,54 @@ end
 
 local send = function(self,data,opcode)
   if self.state ~= 'OPEN' then
-    error('not open')
+    return nil,'wrong state'
   end
   local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self:sock_send(encoded)
   if n ~= #encoded then
-    error('Websocket client send failed:'..err)
+    return nil,err
   end
   return true
 end
 
 local close = function(self,code,reason)
   if self.state ~= 'OPEN' then
-    return nil,'not open'
+    return nil,'wrong state'
   end
   local msg = frame.encode_close(code or 1000,reason)
-  pcall(self.send,self,msg,frame.CLOSE)
-  self.state = 'CLOSING'
-  local ok,rmsg,opcode = pcall(self.receive,self)
+  local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
+  local n = self:sock_send(encoded)
+  local was_clean = false
+  local code = 1006
+  local reason = ''
+  if n == #encoded then
+    self.is_closing = true
+    local ok,rmsg,opcode = pcall(self.receive,self)
+    if ok and opcode == frame.CLOSE then
+      code,reason = frame.decode_close(rmsg)
+      was_clean = true
+    end
+  end
   self:sock_close()
   if self.on_close then
     self:on_close()
   end
-  if ok and rmsg then
-    if rmsg:sub(1,2) == msg:sub(1,2) and opcode == frame.CLOSE then
-      return true
-    end
-  end
-  return nil,'protocol'
+  self.state = 'CLOSED'
+  return was_clean,code,reason or ''
 end
 
 local connect = function(self,ws_url,ws_protocol)
-  if self.state == 'OPEN' then
-    error('already connected')
+  if self.state ~= 'CLOSED' then
+    return nil,'wrong state'
   end
   local protocol,host,port,uri = tools.parse_url(ws_url)
   if protocol ~= 'ws' then
-    error('bad protocol')
+    return nil,'bad protocol'
   end
-  self:sock_connect(host,port)
+  local _,err = self:sock_connect(host,port)
+  if err then
+    return nil,err
+  end
   local key = tools.generate_key()
   local req = handshake.upgrade_request
   {
@@ -118,14 +130,14 @@ local connect = function(self,ws_url,ws_protocol)
   }
   local n,err = self:sock_send(req)
   if n ~= #req then
-    error('Websocket Handshake failed due to socket send err: '..err)
+    return nil,err
   end
   local resp = {}
   repeat
     local line,err = self:sock_receive('*l')
     resp[#resp+1] = line
     if err then
-      error('Websocket Handshake failed due to socket receive err: '..err)
+      return nil,err
     end
   until line == ''
   local response = table.concat(resp,'\r\n')
@@ -133,9 +145,10 @@ local connect = function(self,ws_url,ws_protocol)
   local expected_accept = handshake.sec_websocket_accept(key)
   if headers['sec-websocket-accept'] ~= expected_accept then
     local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
-    error(msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'))
+    return nil,msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil')
   end
   self.state = 'OPEN'
+  return true
 end
 
 local extend = function(obj)

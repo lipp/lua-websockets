@@ -13,7 +13,7 @@ local new = function(ws)
   self.sock_connect = function(self,host,port)
     local _,err = sock:connect(host,port)
     if err then
-      error(err)
+      return nil,err
     end
   end
   
@@ -31,7 +31,7 @@ local new = function(ws)
   end
   
   self = sync.extend(self)
-  
+  self.state = 'CLOSED'
   return self
 end
 

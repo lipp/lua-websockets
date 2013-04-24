@@ -17,9 +17,9 @@ describe(
     it(
       'exposes the correct interface',
       function()
-        assert.is_same(type(server),'table')
-        assert.is_same(type(server.copas),'table')
-        assert.is_same(type(server.copas.listen),'function')
+        assert.is_table(server)
+        assert.is_table(server.copas)
+        assert.is_function(server.copas.listen)
       end)
     
     it(
@@ -83,10 +83,10 @@ describe(
           function(done)
             on_new_echo_client = guard(
               function(client)
-                assert.is_same(type(client),'table')
-                assert.is_same(type(client.receive),'function')
-                assert.is_same(type(client.close),'function')
-                assert.is_same(type(client.send),'function')
+                assert.is_table(client)
+                assert.is_function(client.receive)
+                assert.is_function(client.close)
+                assert.is_function(client.send)
                 client:close()
                 done()
               end)
@@ -95,8 +95,9 @@ describe(
               guard(
                 function()
                   local wsc = client.copas()
-                  wsc:connect('ws://localhost:'..port,'echo')
-                  wsc:close()
+                  local ok,err = wsc:connect('ws://localhost:'..port,'echo')
+                  assert.is_true(ok)
+                  local was_clean,code,reason = wsc:close()
               end))
           end)
         

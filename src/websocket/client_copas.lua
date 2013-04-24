@@ -15,7 +15,7 @@ local new = function(ws)
   self.sock_connect = function(self,host,port)
     local _,err = copas.connect(sock,host,port)
     if err and err ~= 'already connected' then
-      error('Websocket client could not connect to:'..host..':'..port)
+      return nil,err
     end
   end
   
@@ -33,7 +33,7 @@ local new = function(ws)
   end
   
   self = sync.extend(self)
-  
+  self.state = 'CLOSED'
   return self
 end
 

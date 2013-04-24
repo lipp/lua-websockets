@@ -31,57 +31,53 @@ describe(
       end)
     
     it(
-      'throws on invalid protocol',
+      'returns error on non-ws protocol',
       function()
         local c = client.new()
-        assert.has_error(
-          function()
-            c:connect('wsc://localhost:8081','echo-protocol')
-          end,'bad protocol')
+        local ok,err = c:connect('wsc://localhost:'..port,'echo-protocol')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'bad protocol')
       end)
     
     it(
-      'throws socket errors',
+      'forwards socket errors',
       function()
         local c = client.new()
-        assert.has_error(
-          function()
-            c:connect('ws://localhost:8009','echo-protocol')
-          end,'connection refused')
-        local c = client.new()
-        assert.has_error(
-          function()
-            c:connect('ws://horst','echo-protocol')
-          end,'host not found')
-      end)
-    
-    it(
-      'throws when sending in non-open state (requires external websocket server @port 8081)',
-      function()
-        local c = client.new()
-        assert.has_error(
-          function()
-            c:send('bla')
-          end,'not open')
+        local ok,err = c:connect('ws://localhost:8189','echo-protocol')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'connection refused')
         
+        local ok,err = c:connect('ws://notexisting:8089','echo-protocol')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'host not found')
+      end)
+    
+    it(
+      'returns error when sending in non-open state (requires external websocket server @port 8081)',
+      function()
         local c = client.new()
+        local ok,err = c:send('test')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'wrong state')
+        
         c:connect(url,'echo-protocol')
         c:close()
-        assert.has_error(
-          function()
-            c:send('bla')
-          end,'not open')
+        local ok,err = c:send('test')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'wrong state')
       end)
     
     it(
-      'throws when connecting twice (requires external websocket server @port 8081)',
+      'returns error when connecting twice (requires external websocket server @port 8081)',
       function()
         local c = client.new()
-        c:connect(url,'echo-protocol')
-        assert.has_error(
-          function()
-            c:connect(url,'echo-protocol')
-          end,'already connected')
+        local ok,err = c:connect(url,'echo-protocol')
+        assert.is_truthy(ok)
+        assert.is_nil(err)
+        
+        local ok,err = c:connect(url,'echo-protocol')
+        assert.is_falsy(ok)
+        assert.is_equal(err,'wrong state')
       end)
     
     it(
@@ -141,7 +137,10 @@ describe(
     it(
       'can close cleanly (requires external websocket server @port 8081)',
       function()
-        assert.is_true(wsc:close())
+        local was_clean,code,reason = wsc:close()
+        assert.is_true(was_clean)
+        assert.is_true(code >= 1000)
+        assert.is_string(reason)
       end)
     
   end)
