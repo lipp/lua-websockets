@@ -80,11 +80,6 @@ local client = function(sock,protocol)
     async_send(encoded)
   end
   
-  message_io = require'websocket.ev_common'.message_io(
-    sock,loop,
-    on_message,
-  handle_sock_err)
-  
   self.on_close = function(_,on_close_arg)
     user_on_close = on_close_arg
   end
@@ -107,6 +102,9 @@ local client = function(sock,protocol)
   
   self.close = function(_,code,reason,timeout)
     clients[protocol][self] = nil
+    if not message_io then
+      self:start()
+    end
     if self.state == 'OPEN' then
       self.state = 'CLOSING'
       assert(message_io)
@@ -121,6 +119,14 @@ local client = function(sock,protocol)
       close_timer:start(loop)
     end
   end
+  
+  self.start = function()
+    message_io = require'websocket.ev_common'.message_io(
+      sock,loop,
+      on_message,
+    handle_sock_err)
+  end
+  
   
   return self
 end
@@ -189,6 +195,7 @@ local listen = function(opts)
                   local new_client = client(client_sock,protocol)
                   clients[protocol][new_client] = true
                   opts.protocols[protocol](new_client)
+                  new_client:start()
                 elseif opts.default then
                   local new_client = client(client_sock)
                   opts.default(new_client)
