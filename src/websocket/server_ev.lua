@@ -95,7 +95,6 @@ local client = function(sock,protocol)
   
   self.on_message = function(_,on_message_arg)
     user_on_message = on_message_arg
-    on_message = on_message_arg
   end
   
   self.broadcast = function(_,...)
