@@ -23,27 +23,37 @@ local ev = function(ws)
   local user_on_close
   local user_on_open
   local user_on_error
-  local on_error = function(s,err)
-    if user_on_error then
-      user_on_error(s,err)
-    else
-      print('Error',err)
-    end
-  end
   local on_close = function(was_clean,code,reason)
     if close_timer then
       close_timer:stop(loop)
       close_timer = nil
     end
+    if handshake_io then
+      handshake_io:clear_pending(loop)
+      handshake_io:stop(loop)
+      handshake_io = nil
+    end
     if message_io then
+      message_io:clear_pending(loop)
       message_io:stop(loop)
+      message_io = nil
     end
     self.state = 'CLOSED'
+    if sock then
+      sock:shutdown()
+      sock:close()
+      sock = nil
+    end
     if user_on_close then
       user_on_close(self,was_clean,code,reason or '')
     end
-    sock:shutdown()
-    sock:close()
+  end
+  local on_error = function(err)
+    if user_on_error then
+      user_on_error(self,err)
+    else
+      print('Error',err)
+    end
   end
   local on_open = function()
     self.state = 'OPEN'
@@ -53,7 +63,7 @@ local ev = function(ws)
   end
   local handle_socket_err = function(err)
     if err == 'closed' then
-      if self.state ~= 'CLOSED' then
+      if self.state == 'OPEN' then
         on_close(false,1006,'')
       end
     else
@@ -88,14 +98,15 @@ local ev = function(ws)
   
   local connect = function(_,params)
     if self.state ~= 'CLOSED' then
-      on_error(self,'wrong state')
+      on_error('wrong state')
+      return
+    end
+    local protocol,host,port,uri = tools.parse_url(params.url)
+    if protocol ~= 'ws' then
+      on_error('bad protocol')
       return
     end
     self.state = 'CONNECTING'
-    local protocol,host,port,uri = tools.parse_url(params.url)
-    if protocol ~= 'ws' then
-      error('Protocol not supported:'..protocol)
-    end
     assert(not sock)
     sock = socket.tcp()
     fd = sock:getfd()
@@ -150,9 +161,7 @@ local ev = function(ws)
                 local headers = handshake.http_headers(response)
                 local expected_accept = handshake.sec_websocket_accept(key)
                 if headers['sec-websocket-accept'] ~= expected_accept then
-                  local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
-                  msg = msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil')
-                  on_error(self,msg)
+                  on_error('accept failed')
                   return
                 end
                 message_io = require'websocket.ev_common'.message_io(
@@ -191,15 +200,9 @@ local ev = function(ws)
   self.close = function(_,code,reason,timeout)
     if self.state == 'CONNECTING' then
       self.state = 'CLOSING'
-      assert(handshake_io)
-      assert(not message_io)
-      handshake_io:stop(loop)
-      handshake_io = nil
-      on_close(false,1006,'not open')
+      on_close(false,1006,'')
       return
     elseif self.state == 'OPEN' then
-      assert(not handshake_io)
-      assert(message_io)
       self.state = 'CLOSING'
       timeout = timeout or 3
       local encoded = frame.encode_close(code or 1000,reason)
