@@ -34,11 +34,7 @@ describe(
               assert.is_equal(ws,wsc)
               done()
           end))
-        wsc:connect
-        {
-          url = url,
-          protocol = 'echo-protocol'
-        }
+        wsc:connect(url,'echo-protocol')
       end)
     
     it(
@@ -52,11 +48,7 @@ describe(
               ws:on_close(done)
               ws:close()
           end))
-        wsc:connect
-        {
-          url = url,
-          protocol = 'echo-protocol'
-        }
+        wsc:connect(url,'echo-protocol')
       end)
     
     it(
@@ -69,12 +61,104 @@ describe(
               ws:on_error()
               done()
           end))
-        wsc:connect
-        {
-          url = 'ws2://localhost:'..port,
-          protocol = 'echo-protocol'
-        }
+        wsc:connect('ws2://localhost:'..port,'echo-protocol')
       end)
+    
+    it(
+      'can parse HTTP request header byte per byte',
+      async,
+      function(done)
+        local resp = {
+          'HTTP/1.1 101 Switching Protocols',
+          'Upgrade: websocket',
+          'Connection: Upgrade',
+          'Sec-Websocket-Accept: e2123as3',
+          'Sec-Websocket-Protocol: chat',
+          '\r\n'
+        }
+        resp = table.concat(resp,'\r\n')
+        assert.is_equal(resp:sub(#resp-3),'\r\n\r\n')
+        local socket = require'socket'
+        local http_serv = socket.bind('*',port + 20)
+        local http_con
+        wsc:on_error(guard(function(ws,err)
+              assert.is_equal(err,'accept failed')
+              ws:close()
+              http_serv:close()
+              http_con:close()
+              done()
+          end))
+        wsc:on_open(guard(function()
+              assert.is_nil('should never happen')
+          end))
+        wsc:connect('ws://localhost:'..(port+20),'chat')
+        http_con = http_serv:accept()
+        local i = 1
+        ev.Timer.new(function(loop,timer)
+            if i <= #resp then
+              local byte = resp:sub(i,i)
+              http_con:send(byte)
+              i = i + 1
+            else
+              timer:stop(loop)
+            end
+          end,0.0001,0.0001):start(ev.Loop.default)
+      end)
+    
+    it(
+      'properly calls on_error if socket error on handshake occurs',
+      async,
+      function(done)
+        local resp = {
+          'HTTP/1.1 101 Switching Protocols',
+          'Upgrade: websocket',
+          'Connection: Upgrade',
+        }
+        resp = table.concat(resp,'\r\n')
+        local socket = require'socket'
+        local http_serv = socket.bind('*',port + 20)
+        local http_con
+        wsc:on_error(guard(function(ws,err)
+              assert.is_equal(err,'accept failed')
+              ws:on_close(done)
+              ws:close()
+              http_serv:close()
+              http_con:close()
+          end))
+        wsc:on_open(guard(function()
+              assert.is_nil('should never happen')
+          end))
+        wsc:connect('ws://localhost:'..(port+20),'chat')
+        http_con = http_serv:accept()
+        local i = 1
+        ev.Timer.new(function(loop,timer)
+            if i <= #resp then
+              local byte = resp:sub(i,i)
+              http_con:send(byte)
+              i = i + 1
+            else
+              timer:stop(loop)
+              http_con:close()
+            end
+          end,0.0001,0.0001):start(ev.Loop.default)
+      end)
+    
+    it(
+      'can open and close immediatly (in CLOSING state)'..req_ws,
+      async,
+      function(done)
+        wsc:connect(url,'echo-protocol')
+        wsc:on_error(function(_,err)
+            assert.is_nil(err or 'should never happen')
+          end)
+        wsc:on_close(function(_,was_clean,code)
+            assert.is_false(was_clean)
+            assert.is_equal(code,1006)
+            done()
+          end)
+        wsc:close()
+      end)
+    
     
     it(
       'can send and receive data'..req_ws,
@@ -92,11 +176,7 @@ describe(
         wsc:on_open(function()
             wsc:send('Hello again')
           end)
-        wsc:connect
-        {
-          url = url,
-          protocol = 'echo-protocol'
-        }
+        wsc:connect(url,'echo-protocol')
       end)
     
     local random_text = function(len)

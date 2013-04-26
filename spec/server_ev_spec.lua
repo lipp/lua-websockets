@@ -91,11 +91,7 @@ describe(
                 assert.is_same(type(client.close),'function')
                 assert.is_same(type(client.send),'function')
               end)
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = guard(
+            wsc:on_open(guard(
                 function()
                   wsc:on_close(guard(function(_,was_clean,code,reason)
                         assert.is_true(was_clean)
@@ -104,8 +100,8 @@ describe(
                         done()
                     end))
                   wsc:close()
-                end)
-            }
+              end))
+            wsc:connect(url,'echo')
           end)
         
         it(
@@ -127,13 +123,7 @@ describe(
                   end))
                 client:close()
               end)
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = function()
-              end
-            }
+            wsc:connect(url,'echo')
           end)
         
         it(
@@ -150,12 +140,7 @@ describe(
                       self:send('Hello')
                   end))
               end)
-            
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = guard(
+            wsc:on_open(guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send('Hello')
@@ -166,8 +151,8 @@ describe(
                         self:close()
                         done()
                     end))
-                end)
-            }
+              end))
+            wsc:connect(url,'echo')
           end)
         
         local random_text = function(len)
@@ -194,11 +179,7 @@ describe(
                   end))
               end)
             
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = guard(
+            wsc:on_open(guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -209,8 +190,8 @@ describe(
                         self:close()
                         done()
                     end))
-                end)
-            }
+              end))
+            wsc:connect(url,'echo')
           end)
         
         it(
@@ -229,11 +210,7 @@ describe(
                   end))
               end)
             
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = guard(
+            wsc:on_open(guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -244,8 +221,9 @@ describe(
                         self:close()
                         done()
                     end))
-                end)
-            }
+              end))
+            
+            wsc:connect(url,'echo')
           end)
         
         it(
@@ -264,11 +242,7 @@ describe(
                   end))
               end)
             
-            wsc:connect
-            {
-              url = url,
-              protocol = 'echo',
-              on_open = guard(
+            wsc:on_open(guard(
                 function(self)
                   assert.is_equal(self,wsc)
                   self:send(message)
@@ -279,8 +253,8 @@ describe(
                         self:close()
                         done()
                     end))
-                end)
-            }
+              end))
+            wsc:connect(url,'echo')
           end)
         
       end)

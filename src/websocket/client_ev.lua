@@ -15,6 +15,7 @@ local ev = function(ws)
   local fd
   local message_io
   local handshake_io
+  local send_io_stop
   local async_send
   local self = {}
   self.state = 'CLOSED'
@@ -23,32 +24,43 @@ local ev = function(ws)
   local user_on_close
   local user_on_open
   local user_on_error
-  local on_close = function(was_clean,code,reason)
+  local cleanup = function()
     if close_timer then
       close_timer:stop(loop)
       close_timer = nil
     end
     if handshake_io then
-      handshake_io:clear_pending(loop)
       handshake_io:stop(loop)
+      handshake_io:clear_pending(loop)
       handshake_io = nil
     end
+    if send_io_stop then
+      send_io_stop()
+      send_io_stop = nil
+    end
     if message_io then
-      message_io:clear_pending(loop)
       message_io:stop(loop)
+      message_io:clear_pending(loop)
       message_io = nil
     end
-    self.state = 'CLOSED'
     if sock then
       sock:shutdown()
       sock:close()
       sock = nil
     end
+  end
+  
+  local on_close = function(was_clean,code,reason)
+    cleanup()
+    self.state = 'CLOSED'
     if user_on_close then
       user_on_close(self,was_clean,code,reason or '')
     end
   end
-  local on_error = function(err)
+  local on_error = function(err,do_cleanup)
+    if do_cleanup then
+      cleanup()
+    end
     if user_on_error then
       user_on_error(self,err)
     else
@@ -61,12 +73,10 @@ local ev = function(ws)
       user_on_open(self)
     end
   end
-  local handle_socket_err = function(err)
-    if err == 'closed' then
-      if self.state == 'OPEN' then
-        on_close(false,1006,'')
-      end
-    else
+  local handle_socket_err = function(err,io,sock)
+    if self.state == 'OPEN' then
+      on_close(false,1006,err)
+    elseif self.state ~= 'CLOSED' then
       on_error(err)
     end
   end
@@ -96,12 +106,12 @@ local ev = function(ws)
     async_send(encoded, nil, handle_socket_error)
   end
   
-  local connect = function(_,params)
+  local connect = function(_,url,ws_protocol)
     if self.state ~= 'CLOSED' then
       on_error('wrong state')
       return
     end
-    local protocol,host,port,uri = tools.parse_url(params.url)
+    local protocol,host,port,uri = tools.parse_url(url)
     if protocol ~= 'ws' then
       on_error('bad protocol')
       return
@@ -114,10 +124,8 @@ local ev = function(ws)
     -- set non blocking
     sock:settimeout(0)
     sock:setoption('tcp-nodelay',true)
-    async_send = require'websocket.ev_common'.async_send(sock,loop)
-    user_on_open = params.on_open or user_on_open
-    
-    ev.IO.new(
+    async_send,send_io_stop = require'websocket.ev_common'.async_send(sock,loop)
+    handshake_io = ev.IO.new(
       function(loop,connect_io)
         connect_io:stop(loop)
         local key = tools.generate_key()
@@ -126,7 +134,7 @@ local ev = function(ws)
           key = key,
           host = host,
           port = port,
-          protocols = {params.protocol or ''},
+          protocols = {ws_protocol or ''},
           origin = ws.origin,
           uri = uri
         }
@@ -134,46 +142,45 @@ local ev = function(ws)
           req,
           function()
             local resp = {}
-            local last
-            assert(sock:getfd() > -1)
-            handshake_io = ev.IO.new(
-              function(loop,read_io)
-                repeat
-                  local line,err,part = sock:receive('*l')
-                  if line then
-                    if last then
-                      line = last..line
-                      last = nil
-                    end
-                    resp[#resp+1] = line
-                  elseif err ~= 'timeout' then
-                    read_io:stop(loop)
-                    handle_socket_err(err)
+            --            assert(sock:getfd() > -1)
+            local response = ''
+            
+            local read_upgrade = function(loop,read_io)
+              repeat
+                local byte,err,pp = sock:receive(1)
+                if byte then
+                  response = response..byte
+                elseif err then
+                  if err == 'timeout' then
                     return
                   else
-                    last = part
+                    read_io:stop(loop)
+                    on_error('accept failed',true)
                     return
                   end
-                until line == ''
-                read_io:stop(loop)
-                handshake_io = nil
-                local response = table.concat(resp,'\r\n')
-                local headers = handshake.http_headers(response)
-                local expected_accept = handshake.sec_websocket_accept(key)
-                if headers['sec-websocket-accept'] ~= expected_accept then
-                  on_error('accept failed')
-                  return
                 end
-                message_io = require'websocket.ev_common'.message_io(
-                  sock,loop,
-                  on_message,
-                handle_socket_err)
-                on_open(self)
-              end,fd,ev.READ)
+              until response:sub(#response-3) == '\r\n\r\n'
+              read_io:stop(loop)
+              handshake_io = nil
+              local headers = handshake.http_headers(response)
+              local expected_accept = handshake.sec_websocket_accept(key)
+              if headers['sec-websocket-accept'] ~= expected_accept then
+                self.state = 'CLOSED'
+                on_error('accept failed',true)
+                return
+              end
+              message_io = require'websocket.ev_common'.message_io(
+                sock,loop,
+                on_message,
+              handle_socket_err)
+              on_open(self)
+            end
+            handshake_io = ev.IO.new(read_upgrade,fd,ev.READ)
             handshake_io:start(loop)-- handshake
           end,
         handle_socket_err)
-      end,fd,ev.WRITE):start(loop)-- connect
+      end,fd,ev.WRITE)
+    handshake_io:start(loop)-- connect
     local _,err = sock:connect(host,port)
     assert(_ == nil)
     if err ~= 'timeout' then
