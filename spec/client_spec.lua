@@ -18,9 +18,16 @@ describe(
       end)
     
     it(
-      'can be constructed',
+      'can be constructed and closed',
       function()
         wsc = client.new()
+        wsc:close()
+      end)
+
+    it(
+      'can be constructed with timeout',
+      function()
+        wsc = client.new({timeout=1})
       end)
     
     it(
