@@ -49,11 +49,29 @@ describe(
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'wrong state')
               ws:on_error()
-              done()
+              ws:on_close(done)
+              ws:close()
           end))
         wsc:connect
         {
           url = url,
+          protocol = 'echo-protocol'
+        }
+      end)
+    
+    it(
+      'calls on_error on bad protocol'..req_ws,
+      async,
+      function(done)
+        wsc:on_error(guard(function(ws,err)
+              assert.is_equal(ws,wsc)
+              assert.is_equal(err,'bad protocol')
+              ws:on_error()
+              done()
+          end))
+        wsc:connect
+        {
+          url = 'ws2://localhost:'..port,
           protocol = 'echo-protocol'
         }
       end)
@@ -71,7 +89,14 @@ describe(
               assert.is_same(opcode,frame.TEXT)
               done()
           end))
-        wsc:send('Hello again')
+        wsc:on_open(function()
+            wsc:send('Hello again')
+          end)
+        wsc:connect
+        {
+          url = url,
+          protocol = 'echo-protocol'
+        }
       end)
     
     local random_text = function(len)
