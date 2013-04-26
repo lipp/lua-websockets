@@ -23,7 +23,13 @@ local ev = function(ws)
   local user_on_close
   local user_on_open
   local user_on_error
-  local on_error = function(s,err) print('Websocket client unhandled error',s,err) end
+  local on_error = function(s,err)
+    if user_on_error then
+      user_on_error(s,err)
+    else
+      print('Error',err)
+    end
+  end
   local on_close = function(was_clean,code,reason)
     if close_timer then
       close_timer:stop(loop)
@@ -82,7 +88,8 @@ local ev = function(ws)
   
   local connect = function(_,params)
     if self.state ~= 'CLOSED' then
-      error('wrong state')
+      on_error(self,'wrong state')
+      return
     end
     self.state = 'CONNECTING'
     local protocol,host,port,uri = tools.parse_url(params.url)

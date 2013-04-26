@@ -4,7 +4,7 @@ local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
 local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
-
+local req_ws = ' (requires external websocket server @port '..port..')'
 local url = 'ws://localhost:'..port
 
 setloop('ev')
@@ -27,12 +27,10 @@ describe(
       end)
     
     it(
-      'can connect (requires external websocket server @port 8081)',
+      'can connect and calls on_open'..req_ws,
       async,
       function(done)
-        wsc:on_open(
-          guard(
-            function(ws)
+        wsc:on_open(guard(function(ws)
               assert.is_equal(ws,wsc)
               done()
           end))
@@ -44,7 +42,24 @@ describe(
       end)
     
     it(
-      'can send and receive data(requires external websocket server @port 8081)',
+      'calls on_error if already connected'..req_ws,
+      async,
+      function(done)
+        wsc:on_error(guard(function(ws,err)
+              assert.is_equal(ws,wsc)
+              assert.is_equal(err,'wrong state')
+              ws:on_error()
+              done()
+          end))
+        wsc:connect
+        {
+          url = url,
+          protocol = 'echo-protocol'
+        }
+      end)
+    
+    it(
+      'can send and receive data'..req_ws,
       async,
       function(done)
         assert.is_function(wsc.send)
@@ -68,7 +83,7 @@ describe(
     end
     
     it(
-      'can send and receive data 127 byte messages(requires external websocket server @port 8081)',
+      'can send and receive data 127 byte messages'..req_ws,
       async,
       function(done)
         local msg = random_text(127)
@@ -84,7 +99,7 @@ describe(
       end)
     
     it(
-      'can send and receive data 0xffff-1 byte messages(requires external websocket server @port 8081)',
+      'can send and receive data 0xffff-1 byte messages'..req_ws,
       async,
       function(done)
         local msg = random_text(0xffff-1)
@@ -100,7 +115,7 @@ describe(
       end)
     
     it(
-      'can send and receive data 0xffff+1 byte messages(requires external websocket server @port 8081)',
+      'can send and receive data 0xffff+1 byte messages'..req_ws,
       async,
       function(done)
         local msg = random_text(0xffff+1)
@@ -116,7 +131,7 @@ describe(
       end)
     
     it(
-      'closes nicely',
+      'closes nicely'..req_ws,
       async,
       function(done)
         wsc:on_close(guard(function(_,was_clean,code,reason)
