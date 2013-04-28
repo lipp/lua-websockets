@@ -15,10 +15,11 @@ local receive = function(self)
   local encoded = ''
   local clean = function(was_clean,code,reason)
     self.state = 'CLOSED'
+    self:sock_close()
     if self.on_close then
       self:on_close()
     end
-    return nil,'closed',was_clean,code,reason or ''
+    return nil,was_clean,code,reason or 'closed'
   end
   while true do
     local chunk,err = self:sock_receive(bytes)
@@ -37,6 +38,7 @@ local receive = function(self)
           -- echo code
           local msg = frame.encode_close(code)
           local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
+          self:sock_send(encoded)
           return clean(true,code,reason)
         else
           return decoded,opcode
@@ -49,8 +51,7 @@ local receive = function(self)
         if not frames then
           frames = {}
         elseif opcode ~= frame.CONTINUATION then
-          tinsert(frames,decoded)
-          return nil,'protocol',tconcat(frames),first_opcode,opcode
+          return clean(false,1002,'protocol error')
         end
         bytes = 3
         encoded = ''

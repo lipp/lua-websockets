@@ -78,26 +78,57 @@ describe(
           end)
         
         it(
-          'handshake works',
+          'handshake works with clean close (server inits close)',
           async,
           function(done)
-            on_new_echo_client = guard(
-              function(client)
+            on_new_echo_client = guard(function(client)
                 assert.is_table(client)
                 assert.is_function(client.receive)
                 assert.is_function(client.close)
                 assert.is_function(client.send)
-                client:close()
+                local was_clean,code,reason = client:close()
+                assert.is_true(was_clean)
+                assert.is_true(code >= 1000)
+                assert.is_string(reason)
                 done()
               end)
             
-            copas.addthread(
-              guard(
-                function()
+            copas.addthread(guard(function()
                   local wsc = client.copas()
                   local ok,err = wsc:connect('ws://localhost:'..port,'echo')
                   assert.is_true(ok)
                   local was_clean,code,reason = wsc:close()
+                  assert.is_true(was_clean)
+                  assert.is_true(code >= 1000)
+                  assert.is_string(reason)
+              end))
+          end)
+        
+        it(
+          'handshake works with clean close (client inits close)',
+          async,
+          function(done)
+            on_new_echo_client = guard(function(client)
+                assert.is_table(client)
+                assert.is_function(client.receive)
+                assert.is_function(client.close)
+                assert.is_function(client.send)
+                local message,was_clean,code,reason = client:receive()
+                assert.is_nil(message)
+                assert.is_true(was_clean)
+                assert.is_true(code >= 1000)
+                assert.is_string(reason)
+                done()
+              end)
+            
+            copas.addthread(guard(function()
+                  local wsc = client.copas()
+                  local ok,err = wsc:connect('ws://localhost:'..port,'echo')
+                  assert.is_true(ok)
+                  local was_clean,code,reason = wsc:close()
+                  assert.is_true(was_clean)
+                  assert.is_true(code >= 1000)
+                  assert.is_string(reason)
               end))
           end)
         

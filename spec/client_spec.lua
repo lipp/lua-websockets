@@ -12,8 +12,8 @@ describe(
     it(
       'exposes the correct interface',
       function()
-        assert.is_same(type(client),'table')
-        assert.is_same(type(client.new),'function')
+        assert.is_table(client)
+        assert.is_function(client.new)
         assert.is_equal(client.new,client.sync)
       end)
     
@@ -31,9 +31,21 @@ describe(
       end)
     
     it(
+      'returns error when trying to send or receive when not connected',
+      function()
+        local ok,err = wsc:send('asd')
+        assert.is_nil(ok)
+        assert.is_equal(err,'wrong state')
+        
+        local ok,err = wsc:receive()
+        assert.is_nil(ok)
+        assert.is_equal(err,'wrong state')
+      end)
+    
+    it(
       'can connect (requires external websocket server)',
       function()
-        assert.is_same(type(wsc.connect),'function')
+        assert.is_function(wsc.connect)
         wsc:connect(url,'echo-protocol')
       end)
     
