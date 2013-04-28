@@ -57,10 +57,8 @@ local ev = function(ws)
       user_on_close(self,was_clean,code,reason or '')
     end
   end
-  local on_error = function(err,do_cleanup)
-    if do_cleanup then
-      cleanup()
-    end
+  local on_error = function(err)
+    cleanup()
     if user_on_error then
       user_on_error(self,err)
     else
@@ -106,7 +104,7 @@ local ev = function(ws)
     async_send(encoded, nil, handle_socket_error)
   end
   
-  local connect = function(_,url,ws_protocol)
+  self.connect = function(_,url,ws_protocol)
     if self.state ~= 'CLOSED' then
       on_error('wrong state')
       return
@@ -155,7 +153,7 @@ local ev = function(ws)
                     return
                   else
                     read_io:stop(loop)
-                    on_error('accept failed',true)
+                    on_error('accept failed')
                     return
                   end
                 end
@@ -166,7 +164,7 @@ local ev = function(ws)
               local expected_accept = handshake.sec_websocket_accept(key)
               if headers['sec-websocket-accept'] ~= expected_accept then
                 self.state = 'CLOSED'
-                on_error('accept failed',true)
+                on_error('accept failed')
                 return
               end
               message_io = require'websocket.ev_common'.message_io(
@@ -184,7 +182,8 @@ local ev = function(ws)
     local _,err = sock:connect(host,port)
     assert(_ == nil)
     if err ~= 'timeout' then
-      error('Websocket could not connect to '..ws.url)
+      self.state = 'CLOSED'
+      on_error(err)
     end
   end
   
@@ -224,7 +223,7 @@ local ev = function(ws)
       close_timer:start(loop)
     end
   end
-  self.connect = connect
+  
   return self
 end
 

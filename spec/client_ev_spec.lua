@@ -147,16 +147,32 @@ describe(
       'can open and close immediatly (in CLOSING state)'..req_ws,
       async,
       function(done)
-        wsc:connect(url,'echo-protocol')
-        wsc:on_error(function(_,err)
-            assert.is_nil(err or 'should never happen')
-          end)
+        wsc:on_error(guard(function(_,err)
+              assert.is_nil(err or 'should never happen')
+          end))
         wsc:on_close(function(_,was_clean,code)
             assert.is_false(was_clean)
             assert.is_equal(code,1006)
             done()
           end)
+        wsc:connect(url,'echo-protocol')
         wsc:close()
+      end)
+    
+    it(
+      'socket err gets forwarded to on_error'..req_ws,
+      async,
+      function(done)
+        wsc:on_error(guard(function(ws,err)
+              assert.is_same(ws,wsc)
+              assert.is_equal(err,'host not found')
+              wsc:close()
+              done()
+          end))
+        wsc:on_close(guard(function()
+              assert.is_nil(err or 'should never happen')
+          end))
+        wsc:connect('ws://does_not_exist','echo-protocol')
       end)
     
     
@@ -236,7 +252,7 @@ describe(
       end)
     
     it(
-      'closes nicely'..req_ws,
+      'closes cleanly'..req_ws,
       async,
       function(done)
         wsc:on_close(guard(function(_,was_clean,code,reason)
