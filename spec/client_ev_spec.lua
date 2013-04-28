@@ -1,5 +1,6 @@
 package.path = package.path..'../src'
 
+local websocket = require'websocket'
 local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
@@ -262,5 +263,44 @@ describe(
               done()
           end))
         wsc:close()
+      end)
+    
+    it(
+      'playing with "ws://echo.websocket.org" works',
+      async,
+      function(done)
+        wsc:on_error(guard(function(_,err)
+              assert.is_nil(err or 'should never happen')
+          end))
+        wsc:on_close(guard(function()
+              assert.is_nil('should not happen yet')
+          end))
+        wsc:on_message(guard(function()
+              assert.is_nil('should not happen yet')
+          end))
+        wsc:on_open(guard(function(ws)
+              assert.is_same(ws,wsc)
+              local count = 0
+              local msg = 'Hello websockets'
+              wsc:on_message(guard(function(ws,message,opcode)
+                    count = count + 1
+                    assert.is_same(ws,wsc)
+                    assert.is_equal(message,msg..count)
+                    assert.is_equal(opcode,websocket.TEXT)
+                    if count == 10 then
+                      ws:on_close(guard(function(_,was_clean,opcode,reason)
+                            assert.is_true(was_clean)
+                            assert.is_true(opcode >= 1000)
+                            done()
+                        end))
+                      ws:close()
+                    end
+                end))
+              
+              for i=1,10 do
+                wsc:send(msg..i)
+              end
+          end))
+        wsc:connect('ws://echo.websocket.org')
       end)
   end)
