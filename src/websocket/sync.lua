@@ -24,7 +24,7 @@ local receive = function(self)
   while true do
     local chunk,err = self:sock_receive(bytes)
     if err then
-      return clean(err)
+      return clean(false,1006,err)
     end
     encoded = encoded..chunk
     local decoded,fin,opcode,_,masked = frame.decode(encoded)
@@ -87,6 +87,9 @@ end
 
 local close = function(self,code,reason)
   if self.state ~= 'OPEN' then
+    return nil,'wrong state'
+  end
+  if self.state == 'CLOSED' then
     return nil,'wrong state'
   end
   local msg = frame.encode_close(code or 1000,reason)
