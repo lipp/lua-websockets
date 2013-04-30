@@ -38,8 +38,12 @@ local receive = function(self)
           -- echo code
           local msg = frame.encode_close(code)
           local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
-          self:sock_send(encoded)
-          return clean(true,code,reason)
+          local n,err = self:sock_send(encoded)
+          if n == #encoded then
+            return clean(true,code,reason)
+          else
+            return clean(false,code,err)
+          end
         else
           return decoded,opcode
         end
@@ -76,7 +80,7 @@ local send = function(self,data,opcode)
   local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self:sock_send(encoded)
   if n ~= #encoded then
-    return nil,err
+    return self:close(1006,err)
   end
   return true
 end
@@ -87,13 +91,15 @@ local close = function(self,code,reason)
   end
   local msg = frame.encode_close(code or 1000,reason)
   local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
-  local n = self:sock_send(encoded)
+  local n,err = self:sock_send(encoded)
+  print('CLOSE 1',n,err)
   local was_clean = false
   local code = 1006
   local reason = ''
   if n == #encoded then
     self.is_closing = true
     local ok,rmsg,opcode = pcall(self.receive,self)
+    print('CLOSE 2',ok,rmsg,opcode)
     if ok and opcode == frame.CLOSE then
       code,reason = frame.decode_close(rmsg)
       was_clean = true
