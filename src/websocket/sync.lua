@@ -98,9 +98,9 @@ local close = function(self,code,reason)
   local reason = ''
   if n == #encoded then
     self.is_closing = true
-    local ok,rmsg,opcode = pcall(self.receive,self)
-    print('CLOSE 2',ok,rmsg,opcode)
-    if ok and opcode == frame.CLOSE then
+    local rmsg,opcode = self:receive()
+    print('CLOSE 2',rmsg,opcode)
+    if rmsg and opcode == frame.CLOSE then
       code,reason = frame.decode_close(rmsg)
       was_clean = true
     end
