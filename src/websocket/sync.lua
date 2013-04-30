@@ -92,14 +92,12 @@ local close = function(self,code,reason)
   local msg = frame.encode_close(code or 1000,reason)
   local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
   local n,err = self:sock_send(encoded)
-  print('CLOSE 1',n,err)
   local was_clean = false
   local code = 1006
   local reason = ''
   if n == #encoded then
     self.is_closing = true
     local rmsg,opcode = self:receive()
-    print('CLOSE 2',rmsg,opcode)
     if rmsg and opcode == frame.CLOSE then
       code,reason = frame.decode_close(rmsg)
       was_clean = true
