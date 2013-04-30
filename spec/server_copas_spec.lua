@@ -1,5 +1,6 @@
 package.path = package.path..'../src'
 
+local websocket = require'websocket'
 local server = require'websocket.server'
 local client = require'websocket.client'
 local port = os.getenv('LUAWS_SERVER_COPAS_PORT') or 8084
@@ -239,6 +240,43 @@ describe(
                   wsc:close()
                   done()
               end))
+          end)
+
+        it(
+          'broadcast works',
+          async,
+          function(done)
+             local clients = {}
+            on_new_echo_client = guard(
+              function(client)
+                 table.insert(clients,client)
+                 if #clients == 2 then
+                    client:broadcast('hello broadcast')
+                 end
+                 local message,was_clean = client:receive()
+                 assert.is_nil(message)
+                 assert.is_true(was_clean)
+              end)
+
+            local n_clients = 0
+            for i=1,2 do 
+               copas.addthread(
+                  guard(
+                     function()
+                        local wsc = client.copas()
+                        local ok = wsc:connect('ws://localhost:'..port,'echo')
+                        assert.is_true(ok)
+                        local message,opcode = wsc:receive()
+                        assert.is_same(message,'hello broadcast')
+                        assert.is_same(opcode,websocket.TEXT)
+                        local was_clean = wsc:close()
+                        assert.is_true(was_clean)
+                        n_clients = n_clients + 1
+                        if n_clients == 2 then
+                           done()
+                        end
+                     end))
+            end
           end)
         
         after(
