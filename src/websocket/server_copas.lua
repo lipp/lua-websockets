@@ -47,10 +47,14 @@ local client = function(sock,protocol)
 end
 
 local listen = function(opts)
+  
   local copas = require'copas'
   assert(opts and (opts.protocols or opts.default))
   local on_error = opts.on_error or function(s) print(s) end
-  local listener = socket.bind(opts.interface or '*',opts.port or 80)
+  local listener,err = socket.bind(opts.interface or '*',opts.port or 80)
+  if err then
+    error(err)
+  end
   local protocols = {}
   if opts.protocols then
     for protocol in pairs(opts.protocols) do
@@ -58,43 +62,71 @@ local listen = function(opts)
       tinsert(protocols,protocol)
     end
   end
+  -- true is the 'magic' index for the default handler
+  clients[true] = {}
   copas.addserver(
     listener,
     function(sock)
       local request = {}
       repeat
-        local line,err,part = copas.receive(sock,'*l')
+        -- no timeout used, so should either return with line or err
+        local line,err = copas.receive(sock,'*l')
         if line then
-          if last then
-            line = last..line
-            last = nil
-          end
           request[#request+1] = line
-        elseif err ~= 'timeout' then
-          on_error('Websocket server Handshake failed due to copas receive err:'..err)
-          sock:close()
-          return
         else
-          last = part
+          sock:close()
+          if on_error then
+            on_error('invalid request')
+          end
           return
         end
       until line == ''
       local upgrade_request = tconcat(request,'\r\n')
       local response,protocol = handshake.accept_upgrade(upgrade_request,protocols)
+      if not response then
+        copas.send(sock,protocol)
+        sock:close()
+        if on_error then
+          on_error('invalid request')
+        end
+        return
+      end
       copas.send(sock,response)
+      local handler
+      local new_client
+      local protocol_index
       if protocol and opts.protocols[protocol] then
-        local new_client = client(sock,protocol)
-        clients[protocol][new_client] = true
-        opts.protocols[protocol](new_client)
+        protocol_index = protocol
+        handler = opts.protocols[protocol]
       elseif opts.default then
-        local new_client = client(sock)
-        opts.default(new_client)
+        -- true is the 'magic' index for the default handler
+        protocol_index = true
+        handler = opts.default
       else
-        print('Unsupported protocol:',protocol or '"null"')
+        sock:close()
+        if on_error then
+          on_error('bad protocol')
+        end
+        return
+      end
+      new_client = client(sock,protocol_index)
+      clients[protocol_index][new_client] = true
+      handler(new_client)
+      -- this is a dirty trick for preventing
+      -- copas from automatically and prematurely closing
+      -- the socket
+      local q = {
+        insert = function()
+        end,
+        push = function()
+        end
+      }
+      while new_client.state ~= 'CLOSED' do
+        coroutine.yield(true,q)
       end
     end)
   local self = {}
-  self.close = function(keep_clients)
+  self.close = function(_,keep_clients)
     listener:close()
     listener = nil
     if not keep_clients then
