@@ -266,7 +266,7 @@ describe(
       end)
     
     it(
-      'playing with "ws://echo.websocket.org" works',
+      'echoing 10 messages works'..req_ws,
       async,
       function(done)
         wsc:on_error(guard(function(_,err)
@@ -301,6 +301,6 @@ describe(
                 wsc:send(msg..i)
               end
           end))
-        wsc:connect('ws://echo.websocket.org')
+        wsc:connect(url,'echo-protocol')
       end)
   end)
