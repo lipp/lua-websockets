@@ -17,7 +17,7 @@ end
 local http_headers = function(request)
   local headers = {}
   if not request:match('.*HTTP/1%.1') then
-    return
+    return headers
   end
   request = request:match('[^\r\n]+\r\n(.*)')
   local empty_line

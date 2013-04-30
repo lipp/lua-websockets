@@ -1,12 +1,12 @@
 package.path = package.path..'../src'
 
+local websocket = require'websocket'
 local server = require'websocket.server'
 local client = require'websocket.client'
 local port = os.getenv('LUAWS_SERVER_COPAS_PORT') or 8084
 local url = 'ws://localhost:'..port
 
 local copas = require'copas'
-
 
 setloop('copas')
 
@@ -123,7 +123,7 @@ describe(
             
             copas.addthread(guard(function()
                   local wsc = client.copas()
-                  local ok,err = wsc:connect('ws://localhost:'..port,'echo')
+                  local ok = wsc:connect('ws://localhost:'..port,'echo')
                   assert.is_true(ok)
                   local was_clean,code,reason = wsc:close()
                   assert.is_true(was_clean)
@@ -241,10 +241,169 @@ describe(
               end))
           end)
         
+        it(
+          'broadcast works',
+          async,
+          function(done)
+            local n_clients = 0
+            on_new_echo_client = guard(
+              function(client)
+                n_clients = n_clients + 1
+                if n_clients == 2 then
+                  client:broadcast('hello broadcast')
+                end
+                local message,was_clean,opcode,reason = client:receive()
+                assert.is_nil(message)
+                assert.is_true(was_clean)
+                n_clients = n_clients -1
+                if n_clients == 0 then
+                  done()
+                end
+              end)
+            
+            for i=1,2 do
+              copas.addthread(
+                guard(
+                  function()
+                    local wsc = client.copas()
+                    local ok = wsc:connect('ws://localhost:'..port,'echo')
+                    assert.is_true(ok)
+                    local message,opcode = wsc:receive()
+                    assert.is_same(message,'hello broadcast')
+                    assert.is_same(opcode,websocket.TEXT)
+                    local was_clean = wsc:close()
+                    assert.is_true(was_clean)
+                    
+                end))
+            end
+          end)
+        
         after(
           function()
             s:close()
           end)
+        
+      end)
+    
+    it(
+      'on_error is called if request is incomplete due to socket close',
+      async,
+      function(done)
+        local serv
+        serv = server.copas.listen
+        {
+          port = port,
+          protocols = {
+            echo = function(client)
+            end
+          },
+          on_error = guard(function(err)
+              assert.is_string(err)
+              serv:close()
+              done()
+            end)
+        }
+        local s = socket.tcp()
+        copas.connect(s,'localhost',port)
+        s:send('GET / HTTP/1.1')
+        s:close()
+      end)
+    
+    it(
+      'on_error is called if request is invalid',
+      async,
+      function(done)
+        local serv = server.copas.listen
+        {
+          port = port,
+          protocols = {
+            echo = function(client)
+            end,
+          },
+          on_error = function() end
+        }
+        copas.addthread(guard(function()
+              local s = socket.tcp()
+              copas.connect(s,'localhost',port)
+              copas.send(s,'GET / HTTP/1.1\r\n\r\n')
+              local resp = copas.receive(s,'*l')
+              assert.is_same(resp,'HTTP/1.1 400 Bad Request')
+              local resp = copas.receive(s,2)
+              assert.is_same(resp,'\r\n')
+              s:close()
+              serv:close()
+              done()
+          end))
+      end)
+    
+    it(
+      'default handler gets called when no protocol specified',
+      async,
+      function(done)
+        local serv
+        serv = server.copas.listen
+        {
+          port = port,
+          protocols = {
+            echo = guard(function()
+                assert.is_nil('should not happen')
+              end)
+          },
+          default = guard(function(client)
+              client:send('hello default')
+              local message,was_clean = client:receive()
+              assert.is_nil(message)
+              assert.is_true(was_clean)
+            end),
+        }
+        copas.addthread(guard(function()
+              local wsc = client.copas()
+              local ok = wsc:connect('ws://localhost:'..port)
+              assert.is_true(ok)
+              local message = wsc:receive()
+              assert.is_same(message,'hello default')
+              wsc:close()
+              serv:close()
+              done()
+          end))
+      end)
+    
+    it(
+      'closing server closes all clients',
+      async,
+      function(done)
+        local clients = 0
+        local closed = 0
+        local n = 2
+        local serv
+        serv = server.copas.listen
+        {
+          port = port,
+          protocols = {
+            echo = guard(function(client)
+                clients = clients + 1
+                if clients == n then
+                  copas.addthread(guard(function()
+                        serv:close()
+                        assert.is_equal(closed,n)
+                        done()
+                    end))
+                end
+              end)
+          }
+        }
+        
+        for i=1,n do
+          copas.addthread(guard(function()
+                local wsc = client.copas()
+                local ok = wsc:connect('ws://localhost:'..port,'echo')
+                assert.is_true(ok)
+                local message,was_clean = wsc:receive()
+                assert.is_nil(message)
+                assert.is_true(was_clean)
+                closed = closed + 1
+            end))
+        end
       end)
     
   end)

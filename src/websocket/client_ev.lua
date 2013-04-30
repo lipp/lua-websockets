@@ -57,8 +57,10 @@ local ev = function(ws)
       user_on_close(self,was_clean,code,reason or '')
     end
   end
-  local on_error = function(err)
-    cleanup()
+  local on_error = function(err,dont_cleanup)
+    if not dont_cleanup then
+       cleanup()
+    end
     if user_on_error then
       user_on_error(self,err)
     else
@@ -106,7 +108,7 @@ local ev = function(ws)
   
   self.connect = function(_,url,ws_protocol)
     if self.state ~= 'CLOSED' then
-      on_error('wrong state')
+      on_error('wrong state',true)
       return
     end
     local protocol,host,port,uri = tools.parse_url(url)
