@@ -373,7 +373,8 @@ describe(
       async,
       function(done)
         local clients = 0
-        local n = 4
+        local closed = 0
+        local n = 2
         local serv
         serv = server.copas.listen
         {
@@ -384,13 +385,14 @@ describe(
                 if clients == n then
                   copas.addthread(guard(function()
                         serv:close()
+                        assert.is_equal(closed,n)
+                        done()
                     end))
                 end
               end)
           }
         }
         
-        local closed = 0
         for i=1,n do
           copas.addthread(guard(function()
                 local wsc = client.copas()
@@ -398,12 +400,8 @@ describe(
                 assert.is_true(ok)
                 local message,was_clean = wsc:receive()
                 assert.is_nil(message)
-                -- TODO:
-                -- assert.is_true(was_clean)
+                assert.is_true(was_clean)
                 closed = closed + 1
-                if closed == n then
-                  done()
-                end
             end))
         end
       end)

@@ -92,20 +92,37 @@ local listen = function(opts)
         return
       end
       copas.send(sock,response)
+      local handler
+      local new_client
+      local protocol_index
       if protocol and opts.protocols[protocol] then
-        local new_client = client(sock,protocol)
-        clients[protocol][new_client] = true
-        opts.protocols[protocol](new_client)
+        protocol_index = protocol
+        handler = opts.protocols[protocol]
       elseif opts.default then
         -- true is the 'magic' index for the default handler
-        local new_client = client(sock,true)
-        clients[true][new_client] = true
-        opts.default(new_client)
+        protocol_index = true
+        handler = opts.default
       else
         sock:close()
         if on_error then
           on_error('bad protocol')
         end
+        return
+      end
+      new_client = client(sock,protocol_index)
+      clients[protocol_index][new_client] = true
+      handler(new_client)
+      -- this is a dirty trick for preventing
+      -- copas from automatically and prematurely closing
+      -- the socket
+      local q = {
+        insert = function()
+        end,
+        push = function()
+        end
+      }
+      while new_client.state ~= 'CLOSED' do
+        coroutine.yield(true,q)
       end
     end)
   local self = {}
