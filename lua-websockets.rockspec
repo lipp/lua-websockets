@@ -2,7 +2,8 @@ package = "lua-websockets"
 version = "@VERSION@-1"
 
 source = {
-   url = "http://github.com/lipp/lua-websockets/archive/@VERSION@.tar.gz"
+   url = "git://github.com/lipp/lua-websockets.git",     
+   tag = "@VERSION@"
 }
 
 description = {
@@ -34,6 +35,9 @@ build = {
       ['websocket.tools'] = 'src/websocket/tools.lua',
       ['websocket.frame'] = 'src/websocket/frame.lua',
       ['websocket.bit'] = 'src/websocket/bit.lua',
+      ['websocket.client_ev'] = 'src/websocket/client_ev.lua',
+      ['websocket.ev_common'] = 'src/websocket/ev_common.lua',
+      ['websocket.server_ev'] = 'src/websocket/server_ev.lua',
     }
   }
 }
