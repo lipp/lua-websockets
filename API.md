@@ -88,3 +88,73 @@ If the details about the close are not of interest, just ignore them and leave d
 ```lua
 client:close()
 ```
+
+# Server Copas
+
+For a working complete example see test-server/test-server-copas.lua and examples/echo-server-copas.lua.
+
+## websocket.server.copas.listen(config)
+
+Creates a new websocket server with copas compatible "event multi-plexing".
+All the beef is in the config table:
+
+### config.port
+
+A number specifying the port number to listen for incoming connections. Default is 80.
+
+### config.interface
+
+A string specifying the networking interfaces to listen on. Default is '*' (all).
+
+### config.protocols
+
+A table, which holds all the protocol-handlers by name. See example.
+
+### config.default
+
+The default protocol-handler. Is called if no other protocol matches or no protocol was provided. Optional.
+
+```lua
+local websocket = require'websocket'
+local config = {
+  port = 8080,
+  interface = '*',
+  protocols = {
+    ['echo'] = function(ws)
+      while true do
+        local message = ws:receive()
+        if message then
+          ws:send(message)
+        else
+          ws:close()
+          return
+        end
+      end
+    end,
+    ['echo-uppercase'] = function(ws)
+      while true do
+        local message = ws:receive()
+        if message then
+          ws:send(message:upper())
+        else
+          ws:close()
+          return
+        end
+      end
+    end,
+  }
+  default = function(ws)
+    ws:send('goodbye strange client')
+    ws:close()
+  end
+}
+local server = websocket.server.copas.listen(config)
+```
+
+## Protocol Handlers
+
+The protocol handlers are called whenever a new client connects to the server. The new client instance is passed in as argument and has the same API interface as the Copas Client (see above). As the instance is already "connected", it provides no `client:connect()` method.
+
+## server:close([keep_clients])
+
+Closes the server and - if `keep_clients` is falsy - closes all clients connected to server.
