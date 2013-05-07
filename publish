@@ -14,7 +14,7 @@ name="lua-websockets-$version"
 
 tmp="$TEMPDIR"
 if [ -z "$tmp" ]; then
-   tmp="$HOME/Desktop"
+   tmp="$HOME"
 fi
 
 src="$(cd "$(dirname $0)" && pwd)"
