@@ -63,11 +63,11 @@ describe(
       function()
         local c = client.new()
         local ok,err = c:connect('ws://localhost:8189','echo-protocol')
-        assert.is_falsy(ok)
+        assert.is_nil(ok)
         assert.is_equal(err,'connection refused')
         
         local ok,err = c:connect('ws://notexisting:8089','echo-protocol')
-        assert.is_falsy(ok)
+        assert.is_nil(ok)
         assert.is_equal(err,'host not found')
       end)
     
