@@ -33,13 +33,19 @@ describe(
     it(
       'returns error when trying to send or receive when not connected',
       function()
-        local ok,err = wsc:send('asd')
+        local ok,was_clean,code,reason = wsc:send('test')
         assert.is_nil(ok)
-        assert.is_equal(err,'wrong state')
+        assert.is_false(was_clean)
+        assert.is_equal(code,1006)
+        assert.is_equal(reason,'wrong state')
         
-        local ok,err = wsc:receive()
-        assert.is_nil(ok)
-        assert.is_equal(err,'wrong state')
+        
+        local message,opcode,was_clean,code,reason = wsc:receive()
+        assert.is_nil(message)
+        assert.is_nil(opcode)
+        assert.is_false(was_clean)
+        assert.is_equal(code,1006)
+        assert.is_equal(reason,'wrong state')
       end)
     
     it(
@@ -75,15 +81,19 @@ describe(
       'returns error when sending in non-open state (requires external websocket server @port 8081)',
       function()
         local c = client.new()
-        local ok,err = c:send('test')
-        assert.is_falsy(ok)
-        assert.is_equal(err,'wrong state')
+        local ok,was_clean,code,reason = c:send('test')
+        assert.is_nil(ok)
+        assert.is_false(was_clean)
+        assert.is_equal(code,1006)
+        assert.is_equal(reason,'wrong state')
         
         c:connect(url,'echo-protocol')
         c:close()
-        local ok,err = c:send('test')
-        assert.is_falsy(ok)
-        assert.is_equal(err,'wrong state')
+        local ok,was_clean,code,reason = c:send('test')
+        assert.is_nil(ok)
+        assert.is_false(was_clean)
+        assert.is_equal(code,1006)
+        assert.is_equal(reason,'wrong state')
       end)
     
     it(

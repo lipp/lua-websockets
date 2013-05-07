@@ -113,8 +113,9 @@ describe(
                 assert.is_function(client.receive)
                 assert.is_function(client.close)
                 assert.is_function(client.send)
-                local message,was_clean,code,reason = client:receive()
+                local message,opcode,was_clean,code,reason = client:receive()
                 assert.is_nil(message)
+                assert.is_nil(opcode)
                 assert.is_true(was_clean)
                 assert.is_true(code >= 1000)
                 assert.is_string(reason)
@@ -150,7 +151,7 @@ describe(
                   local hello = 'Hello'
                   wsc:connect('ws://localhost:'..port,'echo')
                   wsc:send(hello)
-                  local message,err = wsc:receive()
+                  local message = wsc:receive()
                   assert.is_same(#message,#hello)
                   assert.is_same(message,hello)
                   wsc:close()
@@ -252,8 +253,9 @@ describe(
                 if n_clients == 2 then
                   client:broadcast('hello broadcast')
                 end
-                local message,was_clean,opcode,reason = client:receive()
+                local message,opcode,was_clean,code,reason = client:receive()
                 assert.is_nil(message)
+                assert.is_nil(opcode)
                 assert.is_true(was_clean)
                 n_clients = n_clients -1
                 if n_clients == 0 then
@@ -273,7 +275,6 @@ describe(
                     assert.is_same(opcode,websocket.TEXT)
                     local was_clean = wsc:close()
                     assert.is_true(was_clean)
-                    
                 end))
             end
           end)
@@ -351,8 +352,9 @@ describe(
           },
           default = guard(function(client)
               client:send('hello default')
-              local message,was_clean = client:receive()
+              local message,opcode,was_clean = client:receive()
               assert.is_nil(message)
+              assert.is_nil(opcode)
               assert.is_true(was_clean)
             end),
         }
@@ -398,8 +400,9 @@ describe(
                 local wsc = client.copas()
                 local ok = wsc:connect('ws://localhost:'..port,'echo')
                 assert.is_true(ok)
-                local message,was_clean = wsc:receive()
+                local message,opcode,was_clean = wsc:receive()
                 assert.is_nil(message)
+                assert.is_nil(opcode)
                 assert.is_true(was_clean)
                 closed = closed + 1
             end))

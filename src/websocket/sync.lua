@@ -7,7 +7,7 @@ local tconcat = table.concat
 
 local receive = function(self)
   if self.state ~= 'OPEN' and not self.is_closing then
-    return nil,'wrong state'
+    return nil,nil,false,1006,'wrong state'
   end
   local first_opcode
   local frames
@@ -19,7 +19,7 @@ local receive = function(self)
     if self.on_close then
       self:on_close()
     end
-    return nil,was_clean,code,reason or 'closed'
+    return nil,nil,was_clean,code,reason or 'closed'
   end
   while true do
     local chunk,err = self:sock_receive(bytes)
@@ -71,26 +71,27 @@ local receive = function(self)
       bytes = fin
     end
   end
+  assert(false,'never reach here')
 end
 
 local send = function(self,data,opcode)
   if self.state ~= 'OPEN' then
-    return nil,'wrong state'
+    return nil,false,1006,'wrong state'
   end
   local encoded = frame.encode(data,opcode or frame.TEXT,not self.is_server)
   local n,err = self:sock_send(encoded)
   if n ~= #encoded then
-    return self:close(1006,err)
+    return nil,self:close(1006,err)
   end
   return true
 end
 
 local close = function(self,code,reason)
   if self.state ~= 'OPEN' then
-    return nil,'wrong state'
+    return false,1006,'wrong state'
   end
   if self.state == 'CLOSED' then
-    return nil,'wrong state'
+    return false,1006,'wrong state'
   end
   local msg = frame.encode_close(code or 1000,reason)
   local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
