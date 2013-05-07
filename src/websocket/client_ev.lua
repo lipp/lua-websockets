@@ -59,7 +59,7 @@ local ev = function(ws)
   end
   local on_error = function(err,dont_cleanup)
     if not dont_cleanup then
-       cleanup()
+      cleanup()
     end
     if user_on_error then
       user_on_error(self,err)
