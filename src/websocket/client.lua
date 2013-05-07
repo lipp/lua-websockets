@@ -4,30 +4,31 @@ local tools = require'websocket.tools'
 
 local new = function(ws)
   ws =  ws or {}
-  local sock = socket.tcp()
-  if ws.timeout ~= nil then
-    sock:settimeout(ws.timeout)
-  end
   local self = {}
   
   self.sock_connect = function(self,host,port)
-    local _,err = sock:connect(host,port)
+    self.sock = socket.tcp()
+    if ws.timeout ~= nil then
+      self.sock:settimeout(ws.timeout)
+    end
+    local _,err = self.sock:connect(host,port)
     if err then
+      self.sock:close()
       return nil,err
     end
   end
   
   self.sock_send = function(self,...)
-    return sock:send(...)
+    return self.sock:send(...)
   end
   
   self.sock_receive = function(self,...)
-    return sock:receive(...)
+    return self.sock:receive(...)
   end
   
   self.sock_close = function(self)
-    sock:shutdown()
-    sock:close()
+    self.sock:shutdown()
+    self.sock:close()
   end
   
   self = sync.extend(self)
