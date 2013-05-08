@@ -12,21 +12,23 @@ local async_send = function(sock,loop)
   local callbacks = {}
   local send = function(loop,write_io)
     local len = #buffer
-    local sent,err = sock_send(sock,buffer,index)
+    local sent,err,last = sock_send(sock,buffer,index)
     if not sent and err ~= 'timeout' then
       write_io:stop(loop)
       if callbacks.on_err then
         callbacks.on_err(err)
       end
-    elseif sent == len then
+    elseif sent then
+      local copy = buffer
       buffer = nil
+      index = nil
       write_io:stop(loop)
       if callbacks.on_sent then
-        callbacks.on_sent()
+        callbacks.on_sent(copy)
       end
     else
-      assert(sent < len)
-      index = sent
+      assert(last < len)
+      index = last + 1
     end
   end
   local io = ev.IO.new(send,sock:getfd(),ev.WRITE)
