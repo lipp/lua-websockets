@@ -37,10 +37,13 @@ local client = function(sock,protocol)
     clients[protocol][self] = nil
   end
   
-  self.broadcast = function(_,...)
+  self.broadcast = function(self,...)
     for client in pairs(clients[protocol]) do
-      client:send(...)
+      if client ~= self then
+        client:send(...)
+      end
     end
+    self:send(...)
   end
   
   return self
@@ -115,14 +118,12 @@ local listen = function(opts)
       -- this is a dirty trick for preventing
       -- copas from automatically and prematurely closing
       -- the socket
-      local q = {
-        insert = function()
-        end,
-        push = function()
-        end
-      }
       while new_client.state ~= 'CLOSED' do
-        coroutine.yield(true,q)
+        local dummy = {
+          send = function() end,
+          close = function() end
+        }
+        copas.send(dummy)
       end
     end)
   local self = {}
