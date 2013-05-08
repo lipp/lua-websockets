@@ -1,5 +1,3 @@
-package.path = package.path..'../src'
-
 local server = require'websocket.server'
 local client = require'websocket.client'
 local ev = require'ev'
