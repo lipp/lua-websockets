@@ -225,7 +225,8 @@ describe(
               function(client)
                 local message = client:receive()
                 client:send(message)
-                client:close()
+                local was_clean = client:close()
+                assert.is_true(was_clean)
               end)
             
             copas.addthread(
@@ -237,7 +238,9 @@ describe(
                   wsc:send(message)
                   local echoed = wsc:receive()
                   assert.is_same(message,echoed)
-                  wsc:close()
+                  local echoed,_,was_clean = wsc:receive()
+                  assert.is_nil(echoed)
+                  assert.is_true(was_clean)
                   done()
               end))
           end)
@@ -246,42 +249,50 @@ describe(
           'broadcast works',
           async,
           function(done)
+            local n = 20
             local n_clients = 0
+            local closed = 0
             on_new_echo_client = guard(
               function(client)
                 n_clients = n_clients + 1
-                if n_clients == 2 then
+                if n_clients == n then
                   client:broadcast('hello broadcast')
                 end
-                local message,opcode,was_clean,code,reason = client:receive()
+                client.id = n_clients
+                local message,opcode,was_clean = client:receive()
                 assert.is_nil(message)
                 assert.is_nil(opcode)
                 assert.is_true(was_clean)
-                n_clients = n_clients -1
-                if n_clients == 0 then
-                  done()
+                n_clients = n_clients - 1
+                if n_clients == 0 and closed == n then
+                  assert.is_nil('should not happen')
                 end
               end)
             
-            for i=1,2 do
+            for i=1,n do
               copas.addthread(
                 guard(
                   function()
                     local wsc = client.copas()
-                    local ok = wsc:connect('ws://localhost:'..port,'echo')
+                    local ok,err = wsc:connect('ws://localhost:'..port,'echo')
+                    assert.is_nil(err)
                     assert.is_true(ok)
                     local message,opcode = wsc:receive()
                     assert.is_same(message,'hello broadcast')
                     assert.is_same(opcode,websocket.TEXT)
                     local was_clean = wsc:close()
                     assert.is_true(was_clean)
+                    closed = closed + 1
+                    if n_clients == 0 and closed == n then
+                      done()
+                    end
                 end))
             end
           end)
         
         after(
           function()
-            s:close()
+            s:close(true)
           end)
         
       end)
