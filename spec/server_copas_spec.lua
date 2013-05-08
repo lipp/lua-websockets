@@ -265,7 +265,7 @@ describe(
                 assert.is_true(was_clean)
                 n_clients = n_clients - 1
                 if n_clients == 0 and closed == n then
-                  assert.is_nil('should not happen')
+                  done()
                 end
               end)
             
