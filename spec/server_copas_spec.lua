@@ -78,6 +78,15 @@ describe(
           end)
         
         it(
+          'client:connect forwards socket error',
+          function()
+            local wsc = client.copas()
+            local ok,err = wsc:connect('ws://nonexisting.foo:'..port)
+            assert.is_nil(ok)
+            assert.is_equal(err,'host not found')
+          end)
+        
+        it(
           'handshake works with clean close (server inits close)',
           async,
           function(done)
