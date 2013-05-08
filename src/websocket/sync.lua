@@ -97,7 +97,7 @@ local close = function(self,code,reason)
   local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
   local n,err = self:sock_send(encoded)
   local was_clean = false
-  local code = 1006
+  local code = 1005
   local reason = ''
   if n == #encoded then
     self.is_closing = true
@@ -106,6 +106,8 @@ local close = function(self,code,reason)
       code,reason = frame.decode_close(rmsg)
       was_clean = true
     end
+  else
+    reason = err
   end
   self:sock_close()
   if self.on_close then
