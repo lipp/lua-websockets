@@ -115,9 +115,9 @@ describe(
             local resp = {}
             repeat
               local line,err = sock:receive('*l')
+              assert.is_falsy(err)
               resp[#resp+1] = line
-            until err or line == ''
-            assert.is_falsy(err)
+            until line == ''
             local response = table.concat(resp,'\r\n')
             assert.is_truthy(response:match('^HTTP/1.1 101 Switching Protocols\r\n'))
             
