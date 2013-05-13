@@ -47,7 +47,9 @@ local async_send = function(sock,loop)
     end
     callbacks.on_sent = on_sent
     callbacks.on_err = on_err
-    io:start(loop)
+    if not io:is_active() then
+      io:start(loop)
+    end
   end
   return send_async,stop
 end
