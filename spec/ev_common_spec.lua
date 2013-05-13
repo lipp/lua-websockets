@@ -1,52 +1,112 @@
 
+local ev = require'ev'
 local ev_common = require'websocket.ev_common'
 local socket = require'socket'
 
 setloop('ev')
 
-describe('The ev_common helpr module',function()
-    it('provides message_io and async_send methods',function()
-        assert.is_function(ev_common.async_send)
-        assert.is_function(ev_common.message_io)
+describe('The ev_common helper module',function()
+    
+    local listen_io
+    before(function()
+        local listener = socket.bind('*',12345)
+        listener:settimeout(0)
+        listen_io = ev.IO.new(
+          function()
+            local client_sock = listener:accept()
+            client_sock:settimeout(0)
+            local client_io = ev.IO.new(function(loop,io)
+                repeat
+                  local _,err = client_sock:receive(1000)
+                  if err ~= 'timeout' then
+                    io:stop(loop)
+                    client_sock:close()
+                  end
+                until err
+              end,client_sock:getfd(),ev.READ)
+            client_io:start(ev.Loop.default)
+          end,listener:getfd(),ev.READ)
+        listen_io:start(ev.Loop.default)
       end)
     
-    describe('async_send',function()
-        local sock = socket.connect('www.google.com',80)
+    after(function()
+        listen_io:stop(ev.Loop.default)
+      end)
+    
+    local send,stop
+    local sock
+    before_each(async,function(done)
+        sock = socket.tcp()
         sock:settimeout(0)
-        local send,stop
-        it('returns a function',function()
+        ev.IO.new(function(loop,io)
             send,stop = ev_common.async_send(sock)
-            assert.is_function(send)
-            assert.is_function(stop)
+            io:stop(loop)
+            done()
+          end,sock:getfd(),ev.WRITE):start(ev.Loop.default)
+        sock:connect('localhost',12345)
+        send,stop = ev_common.async_send(sock)
+      end)
+    
+    after_each(function()
+        stop()
+        sock:close()
+      end)
+    
+    local chunk1 = 'some data'
+    local chunk2 = string.rep('some more data',10000)
+    
+    it('calls on_sent callback',async,function(done)
+        local on_sent = guard(function(buf)
+            assert.is_equal(buf,chunk1..chunk2)
+            done()
           end)
         
-        it('calls on_sent callback once',async,function(done)
-            local chunk1 = 'some data'
-            local chunk2 = string.rep('some more data',10000)
-            local on_sent = guard(function(buf)
-                assert.is_equal(buf,chunk1..chunk2)
-                done()
-              end)
-            
-            local on_err = guard(function(err)
-                assert.is_nil(err or 'should not happen')
-              end)
-            
-            send(chunk1,on_sent,on_err)
-            send(chunk2,on_sent,on_err)
+        local on_err = guard(function(err)
+            assert.is_nil(err or 'should not happen')
           end)
-                
-        it('calls on_error callback',async,function(done)
-            sock:close()
-            send('some data',
-              guard(function()
-                  assert.is_nil('should not happen')
-                end),
-              guard(function(err)
-                  assert.is_equal(err,'closed')
-                  done()
-              end))
+        
+        send(chunk1..chunk2,on_sent,on_err)
+      end)
+    
+    it('calls on_sent callback once',async,function(done)
+        local on_sent = guard(function(buf)
+            assert.is_equal(buf,chunk1..chunk2)
+            done()
           end)
+        
+        local on_err = guard(function(err)
+            assert.is_nil(err or 'should not happen')
+          end)
+        
+        send(chunk1,on_sent,on_err)
+        send(chunk2,on_sent,on_err)
+      end)
+    
+    it('can be stopped',async,function(done)
+        local on_sent = guard(function(buf)
+            assert.is_nil(err or 'should not happen')
+          end)
+        
+        local on_err = guard(function(err)
+            assert.is_nil(err or 'should not happen')
+          end)
+        
+        send(chunk1,on_sent,on_err)
+        send(chunk2,on_sent,on_err)
+        stop()
+        ev.Timer.new(done,0.01):start(ev.Loop.default)
+      end)
+    
+    it('calls on_error callback',async,function(done)
+        sock:close()
+        send('some data',
+          guard(function()
+              assert.is_nil('should not happen')
+            end),
+          guard(function(err)
+              assert.is_equal(err,'closed')
+              done()
+          end))
       end)
     
   end)
