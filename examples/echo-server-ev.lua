@@ -1,5 +1,13 @@
 local ev = require'ev'
 
+-- this callback is called, whenever a new client connects.
+-- ws is a new websocket instance
+local echo_handler = function(ws)
+  ws:on_message(function(ws,message)
+      ws:send(message)
+    end)
+end
+
 -- create a copas webserver and start listening
 local server = require'websocket'.server.ev.listen
 {
@@ -9,14 +17,9 @@ local server = require'websocket'.server.ev.listen
   --   key: protocol name
   --   value: callback on new connection
   protocols = {
-    -- this callback is called, whenever a new client connects.
-    -- ws is a new websocket instance
-    echo = function(ws)
-      ws:on_message(function(ws,message)
-          ws:send(message)
-        end)      
-    end
-  }
+    echo = echo_handler
+  },
+  default = echo_handler
 }
 
 -- use the lua-ev loop
