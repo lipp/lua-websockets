@@ -9,6 +9,7 @@ local ev
 local loop
 
 local clients = {}
+clients[true] = {}
 
 local client = function(sock,protocol)
   assert(sock)
@@ -191,17 +192,27 @@ local listen = function(opts)
                 print('Websocket client closed while handshake',err)
               elseif sent == len then
                 write_io:stop(loop)
+                local handler
+                local new_client
+                local protocol_index
                 if protocol and opts.protocols[protocol] then
-                  local new_client = client(client_sock,protocol)
-                  clients[protocol][new_client] = true
-                  opts.protocols[protocol](new_client)
-                  new_client:start()
+                  protocol_index = protocol
+                  handler = opts.protocols[protocol]
                 elseif opts.default then
-                  local new_client = client(client_sock)
-                  opts.default(new_client)
+                  -- true is the 'magic' index for the default handler
+                  protocol_index = true
+                  handler = opts.default
                 else
-                  print('Unsupported protocol:',protocol or '"null"')
+                  client_sock:close()
+                  if on_error then
+                    on_error('bad protocol')
+                  end
+                  return
                 end
+                new_client = client(client_sock,protocol_index)
+                clients[protocol_index][new_client] = true
+                new_client:start(loop)
+                handler(new_client)
               else
                 assert(sent < len)
                 index = sent
