@@ -191,6 +191,7 @@ describe(
         it(
           'echo works with 0xffff-1 byte messages',
           function(done)
+            settimeout(3.0)
             local message = random_text(0xffff-1)
             local wsc = client.ev()
             on_new_echo_client = async(
@@ -222,6 +223,7 @@ describe(
         it(
           'echo works with 0xffff+1 byte messages',
           function(done)
+            settimeout(3.0)
             local message = random_text(0xffff+1)
             local wsc = client.ev()
             on_new_echo_client = async(

@@ -28,7 +28,7 @@ describe(
       end)
     
     it(
-      'can connect and calls on_open'..req_ws,      
+      'can connect and calls on_open'..req_ws,
       function(done)
         wsc:on_open(async(function(ws)
               assert.is_equal(ws,wsc)
@@ -38,7 +38,7 @@ describe(
       end)
     
     it(
-      'calls on_error if already connected'..req_ws,      
+      'calls on_error if already connected'..req_ws,
       function(done)
         wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
@@ -51,7 +51,7 @@ describe(
       end)
     
     it(
-      'calls on_error on bad protocol'..req_ws,      
+      'calls on_error on bad protocol'..req_ws,
       function(done)
         wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
@@ -63,7 +63,7 @@ describe(
       end)
     
     it(
-      'can parse HTTP request header byte per byte',      
+      'can parse HTTP request header byte per byte',
       function(done)
         local resp = {
           'HTTP/1.1 101 Switching Protocols',
@@ -214,6 +214,7 @@ describe(
     it(
       'can send and receive data 0xffff-1 byte messages'..req_ws,
       function(done)
+        settimeout(3.0)
         local msg = random_text(0xffff-1)
         wsc:on_message(
           async(
@@ -229,6 +230,7 @@ describe(
     it(
       'can send and receive data 0xffff+1 byte messages'..req_ws,
       function(done)
+        settimeout(3.0)
         local msg = random_text(0xffff+1)
         wsc:on_message(
           async(
