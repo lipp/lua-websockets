@@ -28,10 +28,9 @@ describe(
       end)
     
     it(
-      'can connect and calls on_open'..req_ws,
-      async,
+      'can connect and calls on_open'..req_ws,      
       function(done)
-        wsc:on_open(guard(function(ws)
+        wsc:on_open(async(function(ws)
               assert.is_equal(ws,wsc)
               done()
           end))
@@ -39,10 +38,9 @@ describe(
       end)
     
     it(
-      'calls on_error if already connected'..req_ws,
-      async,
+      'calls on_error if already connected'..req_ws,      
       function(done)
-        wsc:on_error(guard(function(ws,err)
+        wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'wrong state')
               ws:on_error()
@@ -53,10 +51,9 @@ describe(
       end)
     
     it(
-      'calls on_error on bad protocol'..req_ws,
-      async,
+      'calls on_error on bad protocol'..req_ws,      
       function(done)
-        wsc:on_error(guard(function(ws,err)
+        wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'bad protocol')
               ws:on_error()
@@ -66,8 +63,7 @@ describe(
       end)
     
     it(
-      'can parse HTTP request header byte per byte',
-      async,
+      'can parse HTTP request header byte per byte',      
       function(done)
         local resp = {
           'HTTP/1.1 101 Switching Protocols',
@@ -82,14 +78,14 @@ describe(
         local socket = require'socket'
         local http_serv = socket.bind('*',port + 20)
         local http_con
-        wsc:on_error(guard(function(ws,err)
+        wsc:on_error(async(function(ws,err)
               assert.is_equal(err,'accept failed')
               ws:close()
               http_serv:close()
               http_con:close()
               done()
           end))
-        wsc:on_open(guard(function()
+        wsc:on_open(async(function()
               assert.is_nil('should never happen')
           end))
         wsc:connect('ws://localhost:'..(port+20),'chat')
@@ -108,7 +104,6 @@ describe(
     
     it(
       'properly calls on_error if socket error on handshake occurs',
-      async,
       function(done)
         local resp = {
           'HTTP/1.1 101 Switching Protocols',
@@ -119,14 +114,14 @@ describe(
         local socket = require'socket'
         local http_serv = socket.bind('*',port + 20)
         local http_con
-        wsc:on_error(guard(function(ws,err)
+        wsc:on_error(async(function(ws,err)
               assert.is_equal(err,'accept failed')
               ws:on_close(done)
               ws:close()
               http_serv:close()
               http_con:close()
           end))
-        wsc:on_open(guard(function()
+        wsc:on_open(async(function()
               assert.is_nil('should never happen')
           end))
         wsc:connect('ws://localhost:'..(port+20),'chat')
@@ -146,9 +141,8 @@ describe(
     
     it(
       'can open and close immediatly (in CLOSING state)'..req_ws,
-      async,
       function(done)
-        wsc:on_error(guard(function(_,err)
+        wsc:on_error(async(function(_,err)
               assert.is_nil(err or 'should never happen')
           end))
         wsc:on_close(function(_,was_clean,code)
@@ -162,15 +156,14 @@ describe(
     
     it(
       'socket err gets forwarded to on_error'..req_ws,
-      async,
       function(done)
-        wsc:on_error(guard(function(ws,err)
+        wsc:on_error(async(function(ws,err)
               assert.is_same(ws,wsc)
               assert.is_equal(err,'host not found')
               wsc:close()
               done()
           end))
-        wsc:on_close(guard(function()
+        wsc:on_close(async(function()
               assert.is_nil(err or 'should never happen')
           end))
         wsc:connect('ws://does_not_exist','echo-protocol')
@@ -179,11 +172,10 @@ describe(
     
     it(
       'can send and receive data'..req_ws,
-      async,
       function(done)
         assert.is_function(wsc.send)
         wsc:on_message(
-          guard(
+          async(
             function(ws,message,opcode)
               assert.is_equal(ws,wsc)
               assert.is_same(message,'Hello again')
@@ -206,11 +198,10 @@ describe(
     
     it(
       'can send and receive data 127 byte messages'..req_ws,
-      async,
       function(done)
         local msg = random_text(127)
         wsc:on_message(
-          guard(
+          async(
             function(ws,message,opcode)
               assert.is_same(#msg,#message)
               assert.is_same(msg,message)
@@ -222,11 +213,10 @@ describe(
     
     it(
       'can send and receive data 0xffff-1 byte messages'..req_ws,
-      async,
       function(done)
         local msg = random_text(0xffff-1)
         wsc:on_message(
-          guard(
+          async(
             function(ws,message,opcode)
               assert.is_same(#msg,#message)
               assert.is_same(msg,message)
@@ -238,11 +228,10 @@ describe(
     
     it(
       'can send and receive data 0xffff+1 byte messages'..req_ws,
-      async,
       function(done)
         local msg = random_text(0xffff+1)
         wsc:on_message(
-          guard(
+          async(
             function(ws,message,opcode)
               assert.is_same(#msg,#message)
               assert.is_same(msg,message)
@@ -254,9 +243,8 @@ describe(
     
     it(
       'closes cleanly'..req_ws,
-      async,
       function(done)
-        wsc:on_close(guard(function(_,was_clean,code,reason)
+        wsc:on_close(async(function(_,was_clean,code,reason)
               assert.is_true(was_clean)
               assert.is_true(code >= 1000)
               assert.is_string(reason)
@@ -267,28 +255,27 @@ describe(
     
     it(
       'echoing 10 messages works'..req_ws,
-      async,
       function(done)
-        wsc:on_error(guard(function(_,err)
+        wsc:on_error(async(function(_,err)
               assert.is_nil(err or 'should never happen')
           end))
-        wsc:on_close(guard(function()
+        wsc:on_close(async(function()
               assert.is_nil('should not happen yet')
           end))
-        wsc:on_message(guard(function()
+        wsc:on_message(async(function()
               assert.is_nil('should not happen yet')
           end))
-        wsc:on_open(guard(function(ws)
+        wsc:on_open(async(function(ws)
               assert.is_same(ws,wsc)
               local count = 0
               local msg = 'Hello websockets'
-              wsc:on_message(guard(function(ws,message,opcode)
+              wsc:on_message(async(function(ws,message,opcode)
                     count = count + 1
                     assert.is_same(ws,wsc)
                     assert.is_equal(message,msg..count)
                     assert.is_equal(opcode,websocket.TEXT)
                     if count == 10 then
-                      ws:on_close(guard(function(_,was_clean,opcode,reason)
+                      ws:on_close(async(function(_,was_clean,opcode,reason)
                             assert.is_true(was_clean)
                             assert.is_true(opcode >= 1000)
                             done()
