@@ -211,8 +211,8 @@ local listen = function(opts)
                 end
                 new_client = client(client_sock,protocol_index)
                 clients[protocol_index][new_client] = true
-                new_client:start(loop)
                 handler(new_client)
+                new_client:start(loop)
               else
                 assert(sent < len)
                 index = sent
