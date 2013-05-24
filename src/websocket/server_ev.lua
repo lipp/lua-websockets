@@ -133,7 +133,28 @@ local client = function(sock,protocol)
 end
 
 local listen = function(opts)
-  assert(opts and (opts.protocols or opts.default))
+  assert(opts and (opts.protocols or opts.default))  
+  print(opts.sec,'sec')
+  local ssl_ctx
+  if opts.sec ~= false then
+  print(opts.sec,'sec')
+     opts.sec = opts.sec or {}
+     require'ssl'
+     local default_sec_params = {
+        mode = 'server',
+        protocol = "sslv3",
+        key = "../certs/key.pem",
+        certificate = "../certs/cert.pem",
+--        cafile = "../certs/cert.pem",
+--        verify = {"peer", "fail_if_no_peer_cert"},
+--        options = {"all", "no_sslv2"},
+--        options  = 'all',
+--        verify   = 'none',
+--        cipher = ''
+     }
+     opts.sec.params = opts.sec.params or default_sec_params                                          
+     ssl_ctx = assert(ssl.newcontext(opts.sec.params))
+  end
   ev = require'ev'
   loop = opts.loop or ev.Loop.default
   local on_error = function(s,err) print(err) end
@@ -153,11 +174,17 @@ local listen = function(opts)
       local client_sock = listener:accept()
       client_sock:settimeout(0)
       assert(client_sock)
+      print('CSOCK',client_sock)
+
+      local dispatch_handshake = function()      
+         print('dispatch')
+      print('CSOCK 2',client_sock)
       local request = {}
       ev.IO.new(
         function(loop,read_io)
           repeat
             local line,err,part = client_sock:receive('*l')
+            print(line,err,part)
             if line then
               if last then
                 line = last..line
@@ -219,6 +246,41 @@ local listen = function(opts)
               end
             end,client_sock:getfd(),ev.WRITE):start(loop)
         end,client_sock:getfd(),ev.READ):start(loop)
+      end
+      
+      client_sock = assert( ssl.wrap(client_sock, ssl_ctx) )
+      client_sock:settimeout(0)
+      local retry
+
+      local try_handshake = function(loop,watcher)
+         print('try handshake')
+         watcher:stop(loop)
+         local ok,err,bla = client_sock:dohandshake()
+         print(ok,err,bla)
+         if ok then
+            dispatch_handshake()
+         elseif err ~= 'closed' then            
+            retry()
+         else
+            client_sock:close()
+         end
+      end
+
+      retry = function()
+         local want = client_sock:want()
+         print('want',want)
+         if want == 'read' then
+            ev.IO.new(try_handshake,client_sock:getfd(),ev.READ):start(ev.Loop.default)
+         elseif want == 'write' then
+            ev.IO.new(try_handshake,client_sock:getfd(),ev.WRITE):start(ev.Loop.default)
+         elseif want == 'nothing' then
+            dispatch_handshake()   
+         else
+            assert(false,'should not happen '..want)
+         end
+      end
+      ev.Timer.new(try_handshake,0.0000001):start(ev.Loop.default)
+      
     end,listener:getfd(),ev.READ)
   self.close = function(keep_clients)
     listen_io:stop(loop)
