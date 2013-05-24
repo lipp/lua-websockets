@@ -44,7 +44,7 @@ describe(
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'wrong state')
               ws:on_error()
-              ws:on_close(done)
+              ws:on_close(function() done() end)
               ws:close()
           end))
         wsc:connect(url,'echo-protocol')
@@ -116,7 +116,7 @@ describe(
         local http_con
         wsc:on_error(async(function(ws,err)
               assert.is_equal(err,'accept failed')
-              ws:on_close(done)
+              ws:on_close(function() done() end)
               ws:close()
               http_serv:close()
               http_con:close()

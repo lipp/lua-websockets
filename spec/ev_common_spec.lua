@@ -94,7 +94,7 @@ describe('The ev_common helper module',function()
         send(chunk1,on_sent,on_err)
         send(chunk2,on_sent,on_err)
         stop()
-        ev.Timer.new(done,0.01):start(ev.Loop.default)
+        ev.Timer.new(function() done() end,0.01):start(ev.Loop.default)
       end)
     
     it('calls on_error callback',function(done)
