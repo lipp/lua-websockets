@@ -6,10 +6,7 @@ install:
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
-  - git clone git://github.com/Olivine-Labs/busted.git
-  - cd busted
-  - sudo luarocks make
-  - cd ../
+  - sudo luarocks install busted
   - git clone git://github.com/lipp/luacov.git
   - cd luacov
   - sudo luarocks make
