@@ -59,7 +59,7 @@ describe(
       function()
         local s
         local on_new_echo_client
-        before(
+        setup(
           function()
             s = server.ev.listen
             {
@@ -72,7 +72,7 @@ describe(
             }
           end)
         
-        after(
+        teardown(
           function()
             s:close()
           end)

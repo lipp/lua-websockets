@@ -8,7 +8,7 @@ setloop('ev')
 describe('The ev_common helper module',function()
     
     local listen_io
-    before(function()
+    setup(function()
         local listener = socket.bind('*',12345)
         listener:settimeout(0)
         listen_io = ev.IO.new(
@@ -29,7 +29,7 @@ describe('The ev_common helper module',function()
         listen_io:start(ev.Loop.default)
       end)
     
-    after(function()
+    teardown(function()
         listen_io:stop(ev.Loop.default)
       end)
     

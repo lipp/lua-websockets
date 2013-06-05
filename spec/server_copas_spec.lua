@@ -64,7 +64,7 @@ describe(
       function()
         local s
         local on_new_echo_client
-        before(
+        setup(
           function()
             s = server.copas.listen
             {
@@ -292,7 +292,7 @@ describe(
             end
           end)
         
-        after(
+        teardown(
           function()
             s:close(true)
           end)
