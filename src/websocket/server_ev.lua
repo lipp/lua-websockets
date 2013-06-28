@@ -22,7 +22,9 @@ local client = function(sock,protocol)
   self.state = 'OPEN'
   local user_on_error
   local on_error = function(s,err)
-    clients[protocol][self] = nil
+    if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
+      clients[protocol][self] = nil
+    end
     if user_on_error then
       user_on_error(self,err)
     else
@@ -31,7 +33,9 @@ local client = function(sock,protocol)
   end
   local user_on_close
   local on_close = function(was_clean,code,reason)
-    clients[protocol][self] = nil
+    if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
+      clients[protocol][self] = nil
+    end
     if close_timer then
       close_timer:stop(loop)
       close_timer = nil
@@ -102,7 +106,9 @@ local client = function(sock,protocol)
   end
   
   self.close = function(_,code,reason,timeout)
-    clients[protocol][self] = nil
+    if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
+      clients[protocol][self] = nil
+    end
     if not message_io then
       self:start()
     end
