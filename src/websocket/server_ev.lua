@@ -48,7 +48,7 @@ local client = function(sock,protocol)
     sock:shutdown()
     sock:close()
   end
-  
+
   local handle_sock_err = function(err)
     if err == 'closed' then
       if self.state ~= 'CLOSED' then
@@ -79,24 +79,24 @@ local client = function(sock,protocol)
       end
     end
   end
-  
+
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT)
     async_send(encoded)
   end
-  
+
   self.on_close = function(_,on_close_arg)
     user_on_close = on_close_arg
   end
-  
+
   self.on_error = function(_,on_error_arg)
     user_on_error = on_error_arg
   end
-  
+
   self.on_message = function(_,on_message_arg)
     user_on_message = on_message_arg
   end
-  
+
   self.broadcast = function(_,...)
     for client in pairs(clients[protocol]) do
       if client.state == 'OPEN' then
@@ -104,7 +104,7 @@ local client = function(sock,protocol)
       end
     end
   end
-  
+
   self.close = function(_,code,reason,timeout)
     if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
       clients[protocol][self] = nil
@@ -126,15 +126,15 @@ local client = function(sock,protocol)
       close_timer:start(loop)
     end
   end
-  
+
   self.start = function()
     message_io = require'websocket.ev_common'.message_io(
       sock,loop,
       on_message,
     handle_sock_err)
   end
-  
-  
+
+
   return self
 end
 
