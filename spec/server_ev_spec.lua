@@ -1,6 +1,8 @@
 local server = require'websocket.server'
 local client = require'websocket.client'
+local socket = require'socket'
 local ev = require'ev'
+local loop = ev.Loop.default
 local port = os.getenv('LUAWS_SERVER_EV_PORT') or 8083
 local url = 'ws://localhost:'..port
 
@@ -75,6 +77,27 @@ describe(
         teardown(
           function()
             s:close()
+          end)
+        
+        it(
+          'accepts socket connection and does not die when abruptly closing',
+          function(done)
+            local sock = socket.tcp()
+            s:on_error(async(function()
+                  s:on_error(nil)
+                  done()
+              end))
+            sock:settimeout(0)
+            local connected,err = sock:connect('localhost',port)
+            local connect_io = ev.IO.new(async(function(loop,io)
+                  io:stop(loop)
+                  sock:close()
+              end),sock:getfd(),ev.WRITE)
+            if connected then
+              connect_io:callback(loop,connect_io)
+            else
+              connect_io:start(loop)
+            end
           end)
         
         it(
