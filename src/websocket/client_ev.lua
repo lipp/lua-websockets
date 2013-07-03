@@ -180,10 +180,12 @@ local ev = function(ws)
           end,
         handle_socket_err)
       end,fd,ev.WRITE)
-    handshake_io:start(loop)-- connect
-    local _,err = sock:connect(host,port)
-    assert(_ == nil)
-    if err ~= 'timeout' then
+    local connected,err = sock:connect(host,port)
+    if connected then
+      handshake_io:callback(loop,handshake_io)
+    elseif err == 'timeout' then
+      handshake_io:start(loop)-- connect
+    else
       self.state = 'CLOSED'
       on_error(err)
     end
