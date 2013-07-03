@@ -112,6 +112,10 @@ describe(
                 assert.is_same(type(client.close),'function')
                 assert.is_same(type(client.send),'function')
                 client:on_close(async(function(_,was_clean,code,reason)
+                      -- this is for hunting down some rare bug
+                      if not was_clean then
+                        print(debug.traceback('',2))
+                      end
                       assert.is_true(was_clean)
                       assert.is_true(code >= 1000)
                       assert.is_string(reason)
