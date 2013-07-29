@@ -1,6 +1,5 @@
-package.path = package.path..'../src'
-
 local websocket = require'websocket'
+local socket = require'socket'
 local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
@@ -159,7 +158,11 @@ describe(
       function(done)
         wsc:on_error(async(function(ws,err)
               assert.is_same(ws,wsc)
-              assert.is_equal(err,'host not found')
+              if socket.tcp6 then
+                assert.is_equal(err,'No address associated with hostname')
+              else
+                assert.is_equal(err,'host not found')
+              end
               wsc:close()
               done()
           end))

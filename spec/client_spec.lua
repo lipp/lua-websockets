@@ -1,5 +1,4 @@
-package.path = package.path..'../src'
-
+local socket = require'socket'
 local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
 local url = 'ws://localhost:'..port
 
@@ -74,7 +73,11 @@ describe(
         
         local ok,err = c:connect('ws://notexisting:8089','echo-protocol')
         assert.is_nil(ok)
-        assert.is_equal(err,'host not found')
+        if socket.tcp6 then
+          assert.is_equal(err,'No address associated with hostname')
+        else
+          assert.is_equal(err,'host not found')
+        end
       end)
     
     it(

@@ -1,4 +1,5 @@
 require'pack'
+local socket = require'socket'
 local bit = require'websocket.bit'
 local rol = bit.rol
 local bxor = bit.bxor
@@ -165,6 +166,18 @@ local generate_key = function()
   local key = spack('IIII',r1,r2,r3,r4)
   assert(#key==16,#key)
   return base64_encode(key)
+end
+
+local bind = function(host,port)
+  if socket.tcp6 then
+    local server = socket.tcp6()
+    assert(server:setoption('ipv6-v6only',false))
+    assert(server:bind(host,port))
+    assert(listener:listen())
+    return server
+  else
+    return socket.bind(host,port)
+  end
 end
 
 return {

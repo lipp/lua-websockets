@@ -1,10 +1,9 @@
-package.path = package.path..'../src'
-
 local websocket = require'websocket'
 local server = require'websocket.server'
 local client = require'websocket.client'
 local port = os.getenv('LUAWS_SERVER_COPAS_PORT') or 8084
 local url = 'ws://localhost:'..port
+local socket = require'socket'
 
 local copas = require'copas'
 
@@ -83,7 +82,11 @@ describe(
             local wsc = client.copas()
             local ok,err = wsc:connect('ws://nonexisting.foo:'..port)
             assert.is_nil(ok)
-            assert.is_equal(err,'host not found')
+            if socket.tcp6 then
+              assert.is_equal(err,'No address associated with hostname')
+            else
+              assert.is_equal(err,'host not found')
+            end
           end)
         
         it(
