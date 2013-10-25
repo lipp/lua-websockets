@@ -83,7 +83,7 @@ describe(
             local ok,err = wsc:connect('ws://nonexisting.foo:'..port)
             assert.is_nil(ok)
             if socket.tcp6 then
-              assert.is_equal(err,'No address associated with hostname')
+              assert.is_equal(err,'host or service not provided, or not known')
             else
               assert.is_equal(err,'host not found')
             end
