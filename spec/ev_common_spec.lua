@@ -68,20 +68,6 @@ describe('The ev_common helper module',function()
         send(chunk1..chunk2,on_sent,on_err)
       end)
     
-    it('calls on_sent callback once',function(done)
-        local on_sent = async(function(buf)
-            assert.is_equal(buf,chunk1..chunk2)
-            done()
-          end)
-        
-        local on_err = async(function(err)
-            assert.is_nil(err or 'should not happen')
-          end)
-        
-        send(chunk1,on_sent,on_err)
-        send(chunk2,on_sent,on_err)
-      end)
-    
     it('can be stopped',function(done)
         local on_sent = async(function(buf)
             assert.is_nil(err or 'should not happen')
@@ -91,15 +77,14 @@ describe('The ev_common helper module',function()
             assert.is_nil(err or 'should not happen')
           end)
         
-        send(chunk1,on_sent,on_err)
-        send(chunk2,on_sent,on_err)
+        send(string.rep('foo',3000000),on_sent,on_err)
         stop()
         ev.Timer.new(function() done() end,0.01):start(ev.Loop.default)
       end)
     
     it('calls on_error callback',function(done)
         sock:close()
-        send('some data',
+        send('some data closing',
           async(function()
               assert.is_nil('should not happen')
             end),
