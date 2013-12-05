@@ -11,7 +11,7 @@ local new = function(ws)
   self.sock_connect = function(self,host,port)
     self.sock = socket.tcp()
     if ws.timeout ~= nil then
-      sock:settimeout(ws.timeout)
+      self.sock:settimeout(ws.timeout)
     end
     local _,err = copas.connect(self.sock,host,port)
     if err and err ~= 'already connected' then

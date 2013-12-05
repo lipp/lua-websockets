@@ -96,14 +96,14 @@ local ev = function(ws)
             on_close(true,code or 1005,reason)
           end,handle_socket_err)
       else
-        on_close(true,code or 1005,reason)
+        on_close(true,1005,'')
       end
     end
   end
   
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT,true)
-    async_send(encoded, nil, handle_socket_error)
+    async_send(encoded, nil, handle_socket_err)
   end
   
   self.connect = function(_,url,ws_protocol)

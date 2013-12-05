@@ -89,6 +89,7 @@ local decode = function(encoded)
     return nil,2
   end
   local pos,header,payload = sunpack(encoded,'bb')
+  local high,low
   encoded = ssub(encoded,pos)
   local bytes = 2
   local fin = band(header,bit_7) > 0
@@ -146,7 +147,7 @@ end
 
 local encode_close = function(code,reason)
   if code then
-    data = spack('>H',code)
+    local data = spack('>H',code)
     if reason then
       data = data..tostring(reason)
     end

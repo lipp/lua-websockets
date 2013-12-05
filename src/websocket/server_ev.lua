@@ -58,12 +58,12 @@ local client = function(sock,protocol)
       on_error(err)
     end
   end
-  local user_on_message
+  local user_on_message = function() end
+  local TEXT = frame.TEXT
+  local BINARY = frame.BINARY
   local on_message = function(message,opcode)
-    if opcode == frame.TEXT or opcode == frame.BINARY then
-      if user_on_message then
-        user_on_message(self,message,opcode)
-      end
+    if opcode == TEXT or opcode == BINARY then
+      user_on_message(self,message,opcode)
     elseif opcode == frame.CLOSE then
       if self.state ~= 'CLOSING' then
         self.state = 'CLOSING'
@@ -75,7 +75,7 @@ local client = function(sock,protocol)
             on_close(true,code or 1006,reason)
           end,handle_sock_err)
       else
-        on_close(true,code or 1006,reason)
+        on_close(true,1006,'')
       end
     end
   end
@@ -172,6 +172,7 @@ local listen = function(opts)
       client_sock:settimeout(0)
       assert(client_sock)
       local request = {}
+      local last
       ev.IO.new(
         function(loop,read_io)
           repeat
