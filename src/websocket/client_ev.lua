@@ -144,6 +144,12 @@ local ev = function(ws)
             local resp = {}
             local response = ''
             local read_upgrade = function(loop,read_io)
+              -- this seems to be possible, i don't understand why though :(
+              if not sock then
+                read_io:stop(loop)
+                handshake_io = nil
+                return
+              end
               repeat
                 local byte,err,pp = sock:receive(1)
                 if byte then
