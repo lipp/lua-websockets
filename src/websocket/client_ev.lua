@@ -142,9 +142,7 @@ local ev = function(ws)
           req,
           function()
             local resp = {}
-            --            assert(sock:getfd() > -1)
             local response = ''
-            
             local read_upgrade = function(loop,read_io)
               repeat
                 local byte,err,pp = sock:receive(1)
@@ -208,6 +206,10 @@ local ev = function(ws)
   end
   
   self.close = function(_,code,reason,timeout)
+    if handshake_io then
+      handshake_io:stop(loop)
+      handshake_io:clear_pending(loop)
+    end
     if self.state == 'CONNECTING' then
       self.state = 'CLOSING'
       on_close(false,1006,'')
