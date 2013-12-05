@@ -182,7 +182,7 @@ local ev = function(ws)
       end,fd,ev.WRITE)
     local connected,err = sock:connect(host,port)
     if connected then
-      handshake_io:callback(loop,handshake_io)
+      handshake_io:callback()(loop,handshake_io)
     elseif err == 'timeout' then
       handshake_io:start(loop)-- connect
     else
