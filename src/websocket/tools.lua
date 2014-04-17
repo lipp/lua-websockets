@@ -105,7 +105,7 @@ local sha1 = function(msg)
   h3 = band(h3,0xffffffff)
   h4 = band(h4,0xffffffff)
   
-  return spack('>I>I>I>I>I',h0,h1,h2,h3,h4)
+  return spack('>i>i>i>i>i',h0,h1,h2,h3,h4)
 end
 
 local base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
