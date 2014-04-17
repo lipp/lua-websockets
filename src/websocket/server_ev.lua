@@ -166,6 +166,11 @@ local listen = function(opts)
     error(err)
   end
   listener:settimeout(0)
+  
+  self.sock = function()
+    return listener
+  end
+  
   local listen_io = ev.IO.new(
     function()
       local client_sock = listener:accept()

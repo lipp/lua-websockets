@@ -32,6 +32,19 @@ describe(
       end)
     
     it(
+      's:sock() provides access to the listening socket',
+      function()
+        local s = server.ev.listen
+        {
+          default = function() end,
+          port = port
+        }
+        assert.is_truthy(tostring(s:sock()):match('tcp'))
+        s:close()
+      end)
+    
+    
+    it(
       'call listen with protocol handlers',
       function()
         local s = server.ev.listen
