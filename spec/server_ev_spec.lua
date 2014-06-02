@@ -4,7 +4,7 @@ local socket = require'socket'
 local ev = require'ev'
 local loop = ev.Loop.default
 local port = os.getenv('LUAWS_SERVER_EV_PORT') or 8083
-local url = 'ws://localhost:'..port
+local url = 'ws://127.0.0.1:'..port
 
 setloop('ev')
 
@@ -101,7 +101,7 @@ describe(
                   done()
               end))
             sock:settimeout(0)
-            local connected,err = sock:connect('localhost',port)
+            local connected,err = sock:connect('127.0.0.1',port)
             local connect_io = ev.IO.new(async(function(loop,io)
                   io:stop(loop)
                   sock:close()

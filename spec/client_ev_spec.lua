@@ -58,7 +58,7 @@ describe(
               ws:on_error()
               done()
           end))
-        wsc:connect('ws2://localhost:'..port,'echo-protocol')
+        wsc:connect('ws2://127.0.0.1:'..port,'echo-protocol')
       end)
     
     it(
@@ -87,7 +87,7 @@ describe(
         wsc:on_open(async(function()
               assert.is_nil('should never happen')
           end))
-        wsc:connect('ws://localhost:'..(port+20),'chat')
+        wsc:connect('ws://127.0.0.1:'..(port+20),'chat')
         http_con = http_serv:accept()
         local i = 1
         ev.Timer.new(function(loop,timer)
@@ -123,7 +123,7 @@ describe(
         wsc:on_open(async(function()
               assert.is_nil('should never happen')
           end))
-        wsc:connect('ws://localhost:'..(port+20),'chat')
+        wsc:connect('ws://127.0.0.1:'..(port+20),'chat')
         http_con = http_serv:accept()
         local i = 1
         ev.Timer.new(function(loop,timer)
