@@ -1,6 +1,6 @@
 local socket = require'socket'
-local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
-local url = 'ws://localhost:'..port
+local port = os.getenv('LUAWS_WSTEST_PORT') or 11000
+local url = 'ws://127.0.0.1:'..port
 
 local client = require'websocket.client'
 
@@ -58,7 +58,7 @@ describe(
       'returns error on non-ws protocol',
       function()
         local c = client.new()
-        local ok,err = c:connect('wsc://localhost:'..port,'echo-protocol')
+        local ok,err = c:connect('wsc://127.0.0.1:'..port,'echo-protocol')
         assert.is_falsy(ok)
         assert.is_equal(err,'bad protocol')
       end)
@@ -67,7 +67,7 @@ describe(
       'forwards socket errors',
       function()
         local c = client.new()
-        local ok,err = c:connect('ws://localhost:1','echo-protocol')
+        local ok,err = c:connect('ws://127.0.0.1:1','echo-protocol')
         assert.is_nil(ok)
         assert.is_equal(err,'connection refused')
         
