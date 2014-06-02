@@ -160,16 +160,11 @@ describe(
         wsc:on_error(async(function(ws,err)
               assert.is_same(ws,wsc)
               if socket.tcp6 then
-		 print('err',err)
-                local expected = {
-                  ['host or service not provided, or not known'] = true,
-                  ['accept failed'] = true
-                }
-                assert.is_true(expected[err])
+                assert.is_equal(err, 'host or service not provided, or not known')
               else
                 assert.is_equal(err,'host not found')
               end
---              wsc:close()
+              --              wsc:close()
               done()
           end))
         wsc:on_close(async(function()
