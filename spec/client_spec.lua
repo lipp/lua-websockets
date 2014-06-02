@@ -67,7 +67,7 @@ describe(
       'forwards socket errors',
       function()
         local c = client.new()
-        local ok,err = c:connect('ws://localhost:8189','echo-protocol')
+        local ok,err = c:connect('ws://localhost:1','echo-protocol')
         assert.is_nil(ok)
         assert.is_equal(err,'connection refused')
         
