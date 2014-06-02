@@ -3,7 +3,7 @@ local socket = require'socket'
 local client = require'websocket.client'
 local ev = require'ev'
 local frame = require'websocket.frame'
-local port = os.getenv('LUAWS_WSTEST_PORT') or 8081
+local port = os.getenv('LUAWS_WSTEST_PORT') or 11000
 local req_ws = ' (requires external websocket server @port '..port..')'
 local url = 'ws://localhost:'..port
 
@@ -156,10 +156,11 @@ describe(
     it(
       'socket err gets forwarded to on_error',
       function(done)
-        settimeout(3.0)
+        settimeout(6.0)
         wsc:on_error(async(function(ws,err)
               assert.is_same(ws,wsc)
               if socket.tcp6 then
+		 print('err',err)
                 local expected = {
                   ['host or service not provided, or not known'] = true,
                   ['accept failed'] = true
@@ -168,7 +169,7 @@ describe(
               else
                 assert.is_equal(err,'host not found')
               end
-              wsc:close()
+--              wsc:close()
               done()
           end))
         wsc:on_close(async(function()
@@ -181,7 +182,7 @@ describe(
     it(
       'can send and receive data'..req_ws,
       function(done)
-        settimeout(3.0)
+        settimeout(6.0)
         assert.is_function(wsc.send)
         wsc:on_message(
           async(
@@ -208,7 +209,7 @@ describe(
     it(
       'can send and receive data 127 byte messages'..req_ws,
       function(done)
-        settimeout(3.0)
+        settimeout(6.0)
         local msg = random_text(127)
         wsc:on_message(
           async(
@@ -256,7 +257,7 @@ describe(
     it(
       'closes cleanly'..req_ws,
       function(done)
-        settimeout(3.0)
+        settimeout(6.0)
         wsc:on_close(async(function(_,was_clean,code,reason)
               assert.is_true(was_clean)
               assert.is_true(code >= 1000)

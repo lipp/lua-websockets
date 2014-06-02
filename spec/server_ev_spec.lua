@@ -107,7 +107,7 @@ describe(
                   sock:close()
               end),sock:getfd(),ev.WRITE)
             if connected then
-              connect_io:callback(connect_io)
+	       connect_io:callback()(loop,connect_io)
             else
               connect_io:start(loop)
             end
