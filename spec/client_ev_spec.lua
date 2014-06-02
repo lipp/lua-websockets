@@ -5,7 +5,7 @@ local ev = require'ev'
 local frame = require'websocket.frame'
 local port = os.getenv('LUAWS_WSTEST_PORT') or 11000
 local req_ws = ' (requires external websocket server @port '..port..')'
-local url = 'ws://localhost:'..port
+local url = 'ws://127.0.0.1:'..port
 
 setloop('ev')
 
