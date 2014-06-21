@@ -6,7 +6,6 @@ local url = 'ws://127.0.0.1:'..port
 
 local handshake = require'websocket.handshake'
 local socket = require'socket'
-require'pack'
 
 local request_lines = {
   'GET /chat HTTP/1.1',

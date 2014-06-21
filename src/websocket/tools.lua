@@ -1,4 +1,4 @@
-require'pack'
+local struct = require'struct'
 local socket = require'socket'
 local bit = require'websocket.bit'
 local rol = bit.rol
@@ -8,7 +8,6 @@ local band = bit.band
 local bnot = bit.bnot
 local lshift = bit.lshift
 local rshift = bit.rshift
-local spack = string.pack
 local sunpack = string.unpack
 local srep = string.rep
 local schar = string.char
@@ -45,16 +44,16 @@ local sha1 = function(msg)
   -- append 64 big endian length
   local high = math.floor(bits/2^32)
   local low = bits - high*2^32
-  msg = msg..spack('>I>I',high,low)
+  msg = msg..struct.pack('>I>I',high,low)
   
   assert(#msg % 64 == 0,#msg % 64)
   
   for j=1,#msg,64 do
     local chunk = msg:sub(j,j+63)
     assert(#chunk==64,#chunk)
-    local words = {sunpack(chunk,srep('>I',16))}
-    -- index 1 contains fragment from unpack
-    tremove(words,1)
+    local words = {struct.unpack(srep('>I',16),chunk)}
+    -- last item contains the index in chunk where it stopped reading
+    tremove(words,17)
     assert(#words==16)
     for i=17,80 do
       words[i] = bxor(words[i-3],words[i-8],words[i-14],words[i-16])
@@ -105,7 +104,7 @@ local sha1 = function(msg)
   h3 = band(h3,0xffffffff)
   h4 = band(h4,0xffffffff)
   
-  return spack('>i>i>i>i>i',h0,h1,h2,h3,h4)
+  return struct.pack('>i>i>i>i>i',h0,h1,h2,h3,h4)
 end
 
 local base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -163,7 +162,7 @@ local generate_key = function()
   local r2 = mrandom(0,0xfffffff)
   local r3 = mrandom(0,0xfffffff)
   local r4 = mrandom(0,0xfffffff)
-  local key = spack('IIII',r1,r2,r3,r4)
+  local key = struct.pack('IIII',r1,r2,r3,r4)
   assert(#key==16,#key)
   return base64_encode(key)
 end

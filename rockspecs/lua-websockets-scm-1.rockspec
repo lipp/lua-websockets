@@ -14,7 +14,7 @@ description = {
 
 dependencies = {
   "lua >= 5.1",
-  "lpack",
+  "struct",
   "luasocket",
   "luabitop",
   "lua-ev",

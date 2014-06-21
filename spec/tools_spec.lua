@@ -1,7 +1,6 @@
 package.path = package.path..'../src'
 
 local tools = require'websocket.tools'
-require'pack'
 
 local bytes = string.char
 
