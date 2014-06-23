@@ -187,7 +187,7 @@ local ev = function(ws)
     local connected,err = sock:connect(host,port)
     if connected then
       handshake_io:callback()(loop,handshake_io)
-    elseif err == 'timeout' then
+    elseif err == 'timeout' or err == 'Operation already in progress' then
       handshake_io:start(loop)-- connect
     else
       self.state = 'CLOSED'
