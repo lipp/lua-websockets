@@ -1,6 +1,3 @@
-
-require'pack'
-
 local sha1 = require'websocket.tools'.sha1
 local base64 = require'websocket.tools'.base64
 local tinsert = table.insert
