@@ -168,35 +168,6 @@ local generate_key = function()
   return base64_encode(key)
 end
 
-local bind = function(host,port)
-  if socket.tcp6 then
-    local server = socket.tcp6()
-    local _,err = server:setoption('ipv6-v6only',false)
-    if err then
-      server:close()
-      return nil,err
-    end
-    _,err = server:setoption("reuseaddr", true)
-    if err then
-      server:close()
-      return nil,err
-    end
-    _,err = server:bind(host,port)
-    if err then
-      server:close()
-      return nil,err
-    end
-    _,err = server:listen()
-    if err then
-      server:close()
-      return nil,err
-    end
-    return server
-  else
-    return socket.bind(host,port)
-  end
-end
-
 return {
   sha1 = sha1,
   base64 = {
@@ -204,5 +175,4 @@ return {
   },
   parse_url = parse_url,
   generate_key = generate_key,
-  bind = bind,
 }

@@ -54,7 +54,7 @@ local listen = function(opts)
   local copas = require'copas'
   assert(opts and (opts.protocols or opts.default))
   local on_error = opts.on_error or function(s) print(s) end
-  local listener,err = tools.bind(opts.interface or '*',opts.port or 80)
+  local listener,err = socket.bind(opts.interface or '*',opts.port or 80)
   if err then
     error(err)
   end

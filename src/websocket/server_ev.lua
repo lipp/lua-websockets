@@ -161,7 +161,7 @@ local listen = function(opts)
   self.on_error = function(self,on_error)
     user_on_error = on_error
   end
-  local listener,err = tools.bind(opts.interface or '*',opts.port or 80)
+  local listener,err = socket.bind(opts.interface or '*',opts.port or 80)
   if not listener then
     error(err)
   end
