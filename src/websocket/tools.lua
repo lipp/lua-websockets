@@ -107,37 +107,9 @@ local sha1 = function(msg)
   return struct.pack('>i>i>i>i>i',h0,h1,h2,h3,h4)
 end
 
-local base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
--- from wiki article, not particularly clever impl
 local base64_encode = function(data)
-  local result = ''
-  local padding = ''
-  local count = #data % 3
-  
-  if count > 0 then
-    for i=count,2 do
-      padding = padding..'='
-      data = data..'\0'
-    end
-  end
-  assert(#data % 3 == 0,#data % 3)
-  local bytes = 0
-  for i=1,#data,3 do
-    local chars = {data:sub(i,i+2):byte(1,3)}
-    assert(#chars==3,#chars)
-    local n = lshift(chars[1],16) + lshift(chars[2],8) + chars[3]
-    local narr = {}
-    narr[1] = band(rshift(n,18),63)+1
-    narr[2] = band(rshift(n,12),63)+1
-    narr[3] = band(rshift(n,6),63)+1
-    narr[4] = band(n,63)+1
-    result = result..base64chars:sub(narr[1],narr[1])
-    result = result..base64chars:sub(narr[2],narr[2])
-    result = result..base64chars:sub(narr[3],narr[3])
-    result = result..base64chars:sub(narr[4],narr[4])
-  end
-  return result:sub(1,#result-#padding)..padding
+  local mime = require'mime'
+  return (mime.b64(data))
 end
 
 local parse_url = function(url)
