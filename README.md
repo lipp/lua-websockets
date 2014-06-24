@@ -1,10 +1,11 @@
 # About
 
 This project provides Lua modules for [Websocket Version 13](http://tools.ietf.org/html/rfc6455) conformant clients and servers. [![Build Status](https://travis-ci.org/lipp/lua-websockets.png)](https://travis-ci.org/lipp/lua-websockets)
+The minified version is only ~10k bytes in size.
 
 Clients are available in three different flavours:
 
-  - synchronous 
+  - synchronous
   - coroutine based ([copas](http://keplerproject.github.com/copas))
   - asynchronous ([lua-ev](https://github.com/brimworks/lua-ev))
 
@@ -73,7 +74,7 @@ local server = require'websocket'.server.ev.listen
       ws:on_message(function(ws,message)
           ws:send(message)
         end)
-      
+
       -- this is optional
       ws:on_close(function()
           ws:close()
@@ -118,11 +119,23 @@ The client and server modules depend on:
 
 # Install
 
-```shell 
+```shell
 $ git clone git://github.com/lipp/lua-websockets.git
 $ cd lua-websockets
-$ luarocks make rockspecs/lua-websockets-scm-1.rockspec 
+$ luarocks make rockspecs/lua-websockets-scm-1.rockspec
 ```
+
+# Minify
+
+A `squishy` file for [squish](http://matthewwild.co.uk/projects/squish/home) is
+provided. Creating the minified version (~10k) can be created with:
+
+```sh
+$ squish --gzip
+```
+
+The minifed version has be to be installed manually though.
+
 
 # Tests
 
