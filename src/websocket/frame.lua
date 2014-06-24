@@ -12,6 +12,10 @@ local schar = string.char
 local tinsert = table.insert
 local tconcat = table.concat
 local mmin = math.min
+local strpack = struct.pack
+local strunpack = struct.unpack
+local mfloor = math.floor
+local mrandom = math.random
 
 local bits = function(...)
   local n = 0
@@ -57,26 +61,29 @@ local encode = function(data,opcode,masked,fin)
   local len = #data
   if len < 126 then
     payload = bor(payload,len)
-    encoded = struct.pack('bb',header,payload)
+    encoded = strpack('bb',header,payload)
   elseif len < 0xffff then
     payload = bor(payload,126)
-    encoded = struct.pack('bb>H',header,payload,len)
+    encoded = strpack('bb>H',header,payload,len)
   elseif len < 2^53 then
-    local high = math.floor(len/2^32)
+    local high = mfloor(len/2^32)
     local low = len - high*2^32
     payload = bor(payload,127)
-    encoded = struct.pack('bb>I>I',header,payload,high,low)
+    encoded = strpack('bb>I>I',header,payload,high,low)
   end
   if not masked then
     encoded = encoded..data
   else
-    local m1 = math.random(0,0xff)
-    local m2 = math.random(0,0xff)
-    local m3 = math.random(0,0xff)
-    local m4 = math.random(0,0xff)
+    local m1 = mrandom(0,0xff)
+    local m2 = mrandom(0,0xff)
+    local m3 = mrandom(0,0xff)
+    local m4 = mrandom(0,0xff)
     local mask = {m1,m2,m3,m4}
-    encoded = encoded..struct.pack('bbbb',m1,m2,m3,m4)
-    encoded = encoded..xor_mask(data,mask,#data)
+    encoded = tconcat({
+        encoded,
+        strpack('bbbb',m1,m2,m3,m4),
+        xor_mask(data,mask,#data)
+    })
   end
   return encoded
 end
