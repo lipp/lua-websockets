@@ -14,7 +14,7 @@ for name,do_xor in pairs(tests) do
   print(name)
   local n = 1000000
   local t1 = socket.gettime()
-  for i=1,100000 do
+  for i=1,n do
     encode(s,TEXT,do_xor)
   end
   local dt = socket.gettime() - t1
