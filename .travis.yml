@@ -6,7 +6,6 @@ install:
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
-  - sudo luarocks install busted
+  - sudo luarocks install busted 1.11.1-1
 
 script: "sudo luarocks make rockspecs/lua-websockets-scm-1.rockspec && LUA=luajit ./test.sh"
-
