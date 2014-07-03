@@ -19,9 +19,17 @@ local mrandom = math.random
 -- used for generate key random ops
 math.randomseed(os.time())
 
+-- SHA1 hashing from luacrypto, if available
+local sha1_crypto
+local done,crypto = pcall(require,'crypto')
+if done then
+  sha1_crypto = function(msg)
+    return crypto.digest('sha1',msg,true)
+  end
+end
+
 -- from wiki article, not particularly clever impl
-local sha1 = function(msg)
-  
+local sha1_wiki = function(msg)
   local h0 = 0x67452301
   local h1 = 0xEFCDAB89
   local h2 = 0x98BADCFE
@@ -140,7 +148,7 @@ local generate_key = function()
 end
 
 return {
-  sha1 = sha1,
+  sha1 = sha1_crypto or sha1_wiki,
   base64 = {
     encode = base64_encode
   },
