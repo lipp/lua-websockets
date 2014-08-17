@@ -87,10 +87,10 @@ local accept_upgrade = function(request,protocols)
     'HTTP/1.1 101 Switching Protocols',
     'Upgrade: websocket',
     'Connection: '..headers['connection'],
-    string.format('Sec-Websocket-Accept: %s',sec_websocket_accept(headers['sec-websocket-key'])),
+    string.format('Sec-WebSocket-Accept: %s',sec_websocket_accept(headers['sec-websocket-key'])),
   }
   if prot then
-    tinsert(lines,string.format('Sec-Websocket-Protocol: %s',prot))
+    tinsert(lines,string.format('Sec-WebSocket-Protocol: %s',prot))
   end
   tinsert(lines,'\r\n')
   return table.concat(lines,'\r\n'),prot
