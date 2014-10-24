@@ -53,8 +53,13 @@ local async_send = function(sock,loop)
           
           callbacks.on_sent(copy)
         else
+          -- on_sent is only defined when responding to "on message for close op"
+          -- so this can happen only once per lifetime of a websocket instance.
+          -- callbacks.on_sent may be overwritten by a new call to send_async
+          -- (e.g. due to calling ws:close(...) or ws:send(...))
+          local on_sent = callbacks.on_sent
           detach(function()
-              callbacks.on_sent(copy)
+              on_sent(copy)
             end,loop)
         end
       end
