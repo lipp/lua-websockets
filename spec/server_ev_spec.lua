@@ -291,7 +291,32 @@ describe(
             wsc:connect(url,'echo')
           end)
         
+        it(
+          'can close immediatly',
+          function(done)
+            on_new_echo_client = async(
+              function(client)
+                client:on_close(function()
+                    done()
+                  end)
+                client:close()
+              end)
+            client.ev():connect(url,'echo')
+          end)
+        
+        it(
+          'provides access to underlying luasocket socket instance',
+          function(done)
+            on_new_echo_client = async(
+              function(client)
+                assert.is_truthy(tostring(client.sock):match('tcp{client}'))
+                done()
+                client:close()
+              end)
+            client.ev():connect(url,'echo')
+          end)
+        
+        
       end)
     
   end)
-
