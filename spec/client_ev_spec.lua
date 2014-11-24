@@ -29,6 +29,7 @@ describe(
     it(
       'can connect and calls on_open'..req_ws,
       function(done)
+        settimeout(3)
         wsc:on_open(async(function(ws)
               assert.is_equal(ws,wsc)
               done()
@@ -39,6 +40,7 @@ describe(
     it(
       'calls on_error if already connected'..req_ws,
       function(done)
+        settimeout(3)
         wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'wrong state')
@@ -52,6 +54,7 @@ describe(
     it(
       'calls on_error on bad protocol'..req_ws,
       function(done)
+        settimeout(3)
         wsc:on_error(async(function(ws,err)
               assert.is_equal(ws,wsc)
               assert.is_equal(err,'bad protocol')
