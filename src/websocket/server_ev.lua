@@ -20,6 +20,7 @@ local client = function(sock,protocol)
   local async_send = require'websocket.ev_common'.async_send(sock,loop)
   local self = {}
   self.state = 'OPEN'
+  self.sock = sock
   local user_on_error
   local on_error = function(s,err)
     if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
@@ -82,7 +83,7 @@ local client = function(sock,protocol)
   
   self.send = function(_,message,opcode)
     local encoded = frame.encode(message,opcode or frame.TEXT)
-    async_send(encoded)
+    return async_send(encoded)
   end
   
   self.on_close = function(_,on_close_arg)
@@ -216,16 +217,16 @@ local listen = function(opts)
                 print('Websocket client closed while handshake',err)
               elseif sent == len then
                 write_io:stop(loop)
-                local handler
+                local protocol_handler
                 local new_client
                 local protocol_index
                 if protocol and opts.protocols[protocol] then
                   protocol_index = protocol
-                  handler = opts.protocols[protocol]
+                  protocol_handler = opts.protocols[protocol]
                 elseif opts.default then
                   -- true is the 'magic' index for the default handler
                   protocol_index = true
-                  handler = opts.default
+                  protocol_handler = opts.default
                 else
                   client_sock:close()
                   if on_error then
@@ -235,7 +236,7 @@ local listen = function(opts)
                 end
                 new_client = client(client_sock,protocol_index)
                 clients[protocol_index][new_client] = true
-                handler(new_client)
+                protocol_handler(new_client)
                 new_client:start(loop)
               else
                 assert(sent < len)

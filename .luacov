@@ -9,16 +9,16 @@ return {
   ["configfile"] = ".luacov",
 
   -- filename to store stats collected
-  ["statsfile"] = "luacov.stats.out",
+  ["statsfile"] = "lcov.stats.out",
 
   -- filename to store report
-  ["reportfile"] = "luacov.report.out",
+  ["reportfile"] = "lcov.report.out",
 
   -- Run reporter on completion? (won't work for ticks)
   runreport = true,
 
   -- Delete stats file after reporting?
-  deletestats = true,
+  deletestats = false,
 
   -- Patterns for files to include when reporting
   -- all will be included if nothing is listed

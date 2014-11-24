@@ -78,7 +78,7 @@ local async_send = function(sock,loop)
     if buffer then
       -- a write io is still running
       buffer = buffer..data
-      return
+      return #buffer
     else
       buffer = data
     end
@@ -90,6 +90,8 @@ local async_send = function(sock,loop)
         io:start(loop)
       end
     end
+    local buffered = (buffer and #buffer - (index or 0)) or 0
+    return buffered
   end
   return send_async,stop
 end

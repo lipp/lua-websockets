@@ -19,7 +19,7 @@ describe(
         assert.is_same(type(server.ev),'table')
         assert.is_same(type(server.ev.listen),'function')
       end)
-    
+
     it(
       'call listen with default handler',
       function()
@@ -30,7 +30,7 @@ describe(
         }
         s:close()
       end)
-    
+
     it(
       's:sock() provides access to the listening socket',
       function()
@@ -42,8 +42,8 @@ describe(
         assert.is_truthy(tostring(s:sock()):match('tcp'))
         s:close()
       end)
-    
-    
+
+
     it(
       'call listen with protocol handlers',
       function()
@@ -56,7 +56,7 @@ describe(
         }
         s:close()
       end)
-    
+
     it(
       'call listen without default nor protocol handlers has errors',
       function()
@@ -68,7 +68,7 @@ describe(
             }
           end)
       end)
-    
+
     describe(
       'communicating with clients',
       function()
@@ -86,15 +86,16 @@ describe(
               }
             }
           end)
-        
+
         teardown(
           function()
             s:close()
           end)
-        
+
         it(
           'accepts socket connection and does not die when abruptly closing',
           function(done)
+            settimeout(10)
             local sock = socket.tcp()
             s:on_error(async(function()
                   s:on_error(nil)
@@ -112,7 +113,7 @@ describe(
               connect_io:start(loop)
             end
           end)
-        
+
         it(
           'open and close handshake work (client closes)',
           function(done)
@@ -136,7 +137,7 @@ describe(
               end))
             wsc:connect(url,'echo')
           end)
-        
+
         it(
           'open and close handshake work (server closes)',
           function(done)
@@ -161,7 +162,7 @@ describe(
               end)
             wsc:connect(url,'echo')
           end)
-        
+
         it(
           'echo works',
           function(done)
@@ -189,7 +190,7 @@ describe(
               end))
             wsc:connect(url,'echo')
           end)
-        
+
         local random_text = function(len)
           local chars = {}
           for i=1,len do
@@ -197,7 +198,7 @@ describe(
           end
           return table.concat(chars)
         end
-        
+
         it(
           'echo works with 127 byte messages',
           function(done)
@@ -212,7 +213,7 @@ describe(
                       self:send(message)
                   end))
               end)
-            
+
             wsc:on_open(async(
                 function(self)
                   assert.is_equal(self,wsc)
@@ -227,7 +228,7 @@ describe(
               end))
             wsc:connect(url,'echo')
           end)
-        
+
         it(
           'echo works with 0xffff-1 byte messages',
           function(done)
@@ -243,7 +244,7 @@ describe(
                       self:send(message)
                   end))
               end)
-            
+
             wsc:on_open(async(
                 function(self)
                   assert.is_equal(self,wsc)
@@ -256,10 +257,10 @@ describe(
                         done()
                     end))
               end))
-            
+
             wsc:connect(url,'echo')
           end)
-        
+
         it(
           'echo works with 0xffff+1 byte messages',
           function(done)
@@ -275,7 +276,7 @@ describe(
                       self:send(message)
                   end))
               end)
-            
+
             wsc:on_open(async(
                 function(self)
                   assert.is_equal(self,wsc)
@@ -290,8 +291,33 @@ describe(
               end))
             wsc:connect(url,'echo')
           end)
-        
-      end)
-    
-  end)
 
+        it(
+          'can close immediatly',
+          function(done)
+            on_new_echo_client = async(
+              function(client)
+                client:on_close(function()
+                    done()
+                  end)
+                client:close()
+              end)
+            client.ev():connect(url,'echo')
+          end)
+
+        it(
+          'provides access to underlying luasocket socket instance',
+          function(done)
+            on_new_echo_client = async(
+              function(client)
+                assert.is_truthy(tostring(client.sock):match('tcp{client}'))
+                done()
+                client:close()
+              end)
+            client.ev():connect(url,'echo')
+          end)
+
+
+      end)
+
+  end)
