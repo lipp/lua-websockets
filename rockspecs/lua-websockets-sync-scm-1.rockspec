@@ -22,7 +22,6 @@ build = {
   type = 'none',
   install = {
     lua = {
-      ['websocket.sync']        = 'src/websocket/sync.lua',
       ['websocket.client_sync'] = 'src/websocket/client_sync.lua',
     }
   }

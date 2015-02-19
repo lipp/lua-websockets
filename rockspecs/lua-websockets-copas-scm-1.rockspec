@@ -23,7 +23,6 @@ build = {
   type = 'none',
   install = {
     lua = {
-      ['websocket.sync']         = 'src/websocket/sync.lua',
       ['websocket.client_copas'] = 'src/websocket/client_copas.lua',
       ['websocket.server_copas'] = 'src/websocket/server_copas.lua',
     }

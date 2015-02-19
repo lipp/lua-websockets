@@ -23,6 +23,7 @@ build = {
   install = {
     lua = {
       ['websocket']           = 'src/websocket.lua',
+      ['websocket.sync']      = 'src/websocket/sync.lua',
       ['websocket.client']    = 'src/websocket/client.lua',
       ['websocket.server']    = 'src/websocket/server.lua',
       ['websocket.handshake'] = 'src/websocket/handshake.lua',
