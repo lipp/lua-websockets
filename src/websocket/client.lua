@@ -36,10 +36,11 @@ local new = function(ws)
   return self
 end
 
-
-return {
-  new = new,
+return setmetatable({
+  new  = new,
   sync = new,
-  ev = require'websocket.client_ev',
-  copas = require'websocket.client_copas'
-}
+},{__index = function(self, name)
+  local backend = require("websocket.client_" .. name)
+  self[name] = backend
+  return backend
+end})
