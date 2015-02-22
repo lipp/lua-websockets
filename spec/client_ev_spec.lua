@@ -268,6 +268,7 @@ describe(
     it(
       'echoing 10 messages works'..req_ws,
       function(done)
+        settimeout(3.0)
         wsc:on_error(async(function(_,err)
               assert.is_nil(err or 'should never happen')
           end))
