@@ -13,11 +13,11 @@ before_install:
   - sudo luarocks install busted 1.11.1-1
 
 install:
-  - sudo luarocks make lua-websockets-core-scm-1.rockspec
-  - sudo luarocks make lua-websockets-sync-scm-1.rockspec
-  - sudo luarocks make lua-websockets-copas-scm-1.rockspec
-  - sudo luarocks make lua-websockets-ev-scm-1.rockspec
-  - sudo luarocks make lua-websockets-scm-1.rockspec
+  - sudo luarocks make rockspecs/lua-websockets-core-scm-1.rockspec
+  - sudo luarocks make rockspecs/lua-websockets-sync-scm-1.rockspec
+  - sudo luarocks make rockspecs/lua-websockets-copas-scm-1.rockspec
+  - sudo luarocks make rockspecs/lua-websockets-ev-scm-1.rockspec
+  - sudo luarocks make rockspecs/lua-websockets-scm-1.rockspec
 
 script:
   - ./test.sh
