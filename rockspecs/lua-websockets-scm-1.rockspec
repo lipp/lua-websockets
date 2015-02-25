@@ -18,3 +18,5 @@ dependencies = {
   "lua-websockets-copas",
   "lua-websockets-ev",
 }
+
+build = {type = "builtin", modules = {}}
