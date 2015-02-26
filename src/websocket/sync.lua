@@ -162,15 +162,24 @@ local connect = function(self,ws_url,ws_protocol)
 end
 
 local extend = function(obj)
-  assert(obj.sock_connect)
   assert(obj.sock_send)
   assert(obj.sock_receive)
   assert(obj.sock_close)
-  assert(not obj.is_server)
-  assert(not obj.is_closing)
-  assert(not obj.state)
 
-  obj.state = 'CLOSED'
+  assert(obj.is_closing == nil)
+  assert(obj.receive    == nil)
+  assert(obj.send       == nil)
+  assert(obj.close      == nil)
+  assert(obj.connect    == nil)
+
+  if not obj.is_server then
+    assert(obj.sock_connect)
+  end
+
+  if not obj.state then
+    obj.state = 'CLOSED'
+  end
+
   obj.receive = receive
   obj.send = send
   obj.close = close
