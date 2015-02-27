@@ -62,7 +62,7 @@ local encode = function(data,opcode,masked,fin)
   if len < 126 then
     payload = bor(payload,len)
     encoded = strpack('bb',header,payload)
-  elseif len < 0xffff then
+  elseif len <= 0xffff then
     payload = bor(payload,126)
     encoded = strpack('bb>H',header,payload,len)
   elseif len < 2^53 then
