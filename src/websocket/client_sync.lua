@@ -32,7 +32,6 @@ local new = function(ws)
   end
   
   self = sync.extend(self)
-  self.state = 'CLOSED'
   return self
 end
 
