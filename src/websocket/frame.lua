@@ -25,7 +25,10 @@ local bits = function(...)
   return n
 end
 
-local bit_7 = bits(7)
+local bit_7   = bits(7)
+local bit_6   = bits(6)
+local bit_5   = bits(5)
+local bit_4   = bits(4)
 local bit_0_3 = bits(0,1,2,3)
 local bit_0_6 = bits(0,1,2,3,4,5,6)
 
@@ -97,7 +100,7 @@ local decode = function(encoded)
   local high,low
   encoded = ssub(encoded,pos)
   local bytes = 2
-  local fin = band(header,bit_7) > 0
+  local fin    = band(header,bit_7) > 0
   local opcode = band(header,bit_0_3)
   local mask = band(payload,bit_7) > 0
   payload = band(payload,bit_0_6)
@@ -147,7 +150,10 @@ local decode = function(encoded)
     end
     bytes = bytes + payload
   end
-  return decoded,fin,opcode,encoded_bak:sub(bytes+1),mask
+  local rsv1 = band(header,bit_6) ~= 0
+  local rsv2 = band(header,bit_5) ~= 0
+  local rsv3 = band(header,bit_4) ~= 0
+  return decoded,fin,opcode,encoded_bak:sub(bytes+1),mask,rsv1,rsv2,rsv3
 end
 
 local encode_close = function(code,reason)
