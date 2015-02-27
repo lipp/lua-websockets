@@ -1,5 +1,4 @@
 local struct = require'struct'
-local socket = require'socket'
 local bit = require'websocket.bit'
 local rol = bit.rol
 local bxor = bit.bxor
