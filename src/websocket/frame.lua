@@ -100,7 +100,7 @@ local decode = function(encoded)
   local high,low
   encoded = ssub(encoded,pos)
   local bytes = 2
-  local fin    = band(header,bit_7) > 0
+  local fin = band(header,bit_7) > 0
   local opcode = band(header,bit_0_3)
   local mask = band(payload,bit_7) > 0
   payload = band(payload,bit_0_6)
