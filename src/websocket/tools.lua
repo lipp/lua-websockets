@@ -119,21 +119,19 @@ local base64_encode = function(data)
   return (mime.b64(data))
 end
 
+local DEFAULT_PORTS = {ws = "80", wss = "443"}
+
 local parse_url = function(url)
-  local protocol,host = url:match('^(%w+)://([^:/]+)')
-  local port,uri = url:match('.+//[^:/]+:?(%d*)(.*)')
-  if port and port ~= '' then
-    port = tonumber(port)
-  elseif protocol == 'ws' then
-    port = 80
+  local protocol, address, uri = url:match('^(%w+)://([^/]+)(.*)$')
+  if not protocol then error('Invalid URL:'..url) end
+  protocol = protocol:lower()
+  local host, port = address:match("^(.+):(%d+)$")
+  if not host then
+    host = address
+    port = DEFAULT_PORTS[protocol]
   end
-  if not uri or uri == '' then
-    uri = '/'
-  end
-  if not protocol or not host or not port or not uri then
-    error('Invalid URL:'..url)
-  end
-  return protocol,host,port,uri
+  if not uri or uri == '' then uri = '/' end
+  return protocol, host, port, uri
 end
 
 local generate_key = function()

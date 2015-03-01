@@ -89,4 +89,40 @@ describe(
         
       end)
     
+    it(
+      'URL parser works with IPv6 and WSS',
+      function()
+        local URLS = {
+          [ "WS://[::1]"                          ] = { "ws",  "[::1]",               "80",   "/"      };
+          [ "ws://[::1]"                          ] = { "ws",  "[::1]",               "80",   "/"      };
+          ["wss://[0:0:0:0:0:0:0:1]"              ] = { "wss", "[0:0:0:0:0:0:0:1]",   "443",  "/"      };
+          ["wss://[0:0:0:0:0:0:0:1]:8080"         ] = { "wss", "[0:0:0:0:0:0:0:1]",   "8080", "/"      };
+          [ "ws://[0:0:0:0:0:0:0:1]"              ] = { "ws",  "[0:0:0:0:0:0:0:1]",   "80",   "/"      };
+          [ "ws://[0:0:0:0:0:0:0:1]:8080"         ] = { "ws",  "[0:0:0:0:0:0:0:1]",   "8080", "/"      };
+          [ "ws://[0:0:0:0:0:0:0:1]:8080/query"   ] = { "ws",  "[0:0:0:0:0:0:0:1]",   "8080", "/query" };
+          ["wss://127.0.0.1"                      ] = { "wss", "127.0.0.1",           "443",  "/"      };
+          ["wss://127.0.0.1:8080"                 ] = { "wss", "127.0.0.1",           "8080", "/"      };
+          [ "ws://127.0.0.1"                      ] = { "ws",  "127.0.0.1",           "80",   "/"      };
+          [ "ws://127.0.0.1:8080"                 ] = { "ws",  "127.0.0.1",           "8080", "/"      };
+          [ "ws://127.0.0.1:8080/query"           ] = { "ws",  "127.0.0.1",           "8080", "/query" };
+          ["wss://echo.websockets.org"            ] = { "wss", "echo.websockets.org", "443",  "/"      };
+          ["wss://echo.websockets.org:8080"       ] = { "wss", "echo.websockets.org", "8080", "/"      };
+          [ "ws://echo.websockets.org"            ] = { "ws",  "echo.websockets.org", "80",   "/"      };
+          [ "ws://echo.websockets.org:8080"       ] = { "ws",  "echo.websockets.org", "8080", "/"      };
+          [ "ws://echo.websockets.org:8080/query" ] = { "ws",  "echo.websockets.org", "8080", "/query" };
+          -- unknown protocol
+          ["w2s://echo.websockets.org/query"      ] = { "w2s", "echo.websockets.org", nil,    "/query" };
+        }
+
+        for url, res in pairs(URLS) do
+          local a,b,c,d = parse_url(url)
+          assert.is_same(a, res[1])
+          assert.is_same(b, res[2])
+          assert.is_same(c, res[3])
+          assert.is_same(d, res[4])
+        end
+
+      end
+    )
+
   end)
