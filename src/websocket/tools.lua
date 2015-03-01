@@ -15,20 +15,43 @@ local tinsert = table.insert
 local tconcat = table.concat
 local mrandom = math.random
 
--- used for generate key random ops
-math.randomseed(os.time())
+local function prequire(m)
+  local ok, err = pcall(require, m)
+  if ok then return err, m end
+  return nil, err
+end
 
--- SHA1 hashing from luacrypto, if available
-local sha1_crypto
-local done,crypto = pcall(require,'crypto')
-if done then
-  sha1_crypto = function(msg)
-    return crypto.digest('sha1',msg,true)
+local function orequire(...)
+  for _, name in ipairs{...} do
+    local mod = prequire(name)
+    if mod then return mod, name end
   end
 end
 
+local function vrequire(...)
+  local m, n = orequire(...)
+  if m then return m, n end
+  error("Can not fine any of this modules: " .. table.concat({...}, "/"), 2)
+end
+
+-- used for generate key random ops
+math.randomseed(os.time())
+
+-- SHA1 hashing from luacrypto, ldigest if available
+local shalib, name = orequire('crypto', 'sha1', 'digest')
+local sha1_digest if name == 'sha1' then
+  sha1_digest = function(str) return shalib.digest(str, true) end
+elseif name == 'crypto' then
+  sha1_digest = function(str) return shalib.digest('sha1', str, true) end
+elseif name == 'digest' then
+  if _G.sha1 and _G.sha1.digest then
+    shalib = _G.sha1
+    sha1_digest = function(str) return shalib.digest(str, true) end
+  end
+end
+if not sha1_digest then
 -- from wiki article, not particularly clever impl
-local sha1_wiki = function(msg)
+sha1_digest = function(msg)
   local h0 = 0x67452301
   local h1 = 0xEFCDAB89
   local h2 = 0x98BADCFE
@@ -113,10 +136,19 @@ local sha1_wiki = function(msg)
   
   return struct.pack('>i>i>i>i>i',h0,h1,h2,h3,h4)
 end
+end
 
-local base64_encode = function(data)
-  local mime = require'mime'
-  return (mime.b64(data))
+local base, name = vrequire("base64", "mime", "basexx")
+
+local base64 = {} if name == 'basexx' then
+  base64.encode = function(str) return base.to_base64(str)   end
+  base64.decode = function(str) return base.from_base64(str) end
+elseif name == 'mime' then
+  base64.encode = function(str) return base.b64(str)  end
+  base64.decode = function(str) return base.ub64(str) end
+elseif name == 'base64' then
+  base64.encode = function(str) return base.encode(str)  end
+  base64.decode = function(str) return base.decode(str) end
 end
 
 local parse_url = function(url)
@@ -147,10 +179,8 @@ local generate_key = function()
 end
 
 return {
-  sha1 = sha1_crypto or sha1_wiki,
-  base64 = {
-    encode = base64_encode
-  },
+  sha1 = sha1_digest,
+  base64 = base64,
   parse_url = parse_url,
   generate_key = generate_key,
 }

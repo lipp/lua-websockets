@@ -16,6 +16,7 @@ dependencies = {
   "lua >= 5.1",
   "struct",
   "bit32",
+  "basexx",
 }
 
 build = {
