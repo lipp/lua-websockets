@@ -91,7 +91,7 @@ end
 local decode = function(encoded)
   local encoded_bak = encoded
   if #encoded < 2 then
-    return nil,2
+    return nil,2-#encoded
   end
   local header,payload,pos = struct.unpack('bb',encoded)
   local high,low
@@ -104,12 +104,12 @@ local decode = function(encoded)
   if payload > 125 then
     if payload == 126 then
       if #encoded < 2 then
-        return nil,2
+        return nil,2-#encoded
       end
       payload,pos = struct.unpack('>H',encoded)
     elseif payload == 127 then
       if #encoded < 8 then
-        return nil,8
+        return nil,8-#encoded
       end
       high,low,pos = struct.unpack('>I>I',encoded)
       payload = high*2^32 + low
