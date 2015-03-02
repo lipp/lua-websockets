@@ -175,7 +175,7 @@ local generate_key = function()
   local r4 = mrandom(0,0xfffffff)
   local key = struct.pack('IIII',r1,r2,r3,r4)
   assert(#key==16,#key)
-  return base64_encode(key)
+  return base64.encode(key)
 end
 
 return {
