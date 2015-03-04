@@ -16,6 +16,7 @@ local strpack = struct.pack
 local strunpack = struct.unpack
 local mfloor = math.floor
 local mrandom = math.random
+local unpack = unpack or table.unpack
 
 local bits = function(...)
   local n = 0
@@ -30,19 +31,18 @@ local bit_0_3 = bits(0,1,2,3)
 local bit_0_6 = bits(0,1,2,3,4,5,6)
 
 local xor_mask = function(encoded,mask,payload)
-  local transformed_arr = {}
+  local transformed,transformed_arr = {},{}
   -- xor chunk-wise to prevent stack overflow.
   -- sbyte and schar multiple in/out values
   -- which require stack
   for p=1,payload,2000 do
-    local transformed = {}
     local last = mmin(p+1999,payload)
     local original = {sbyte(encoded,p,last)}
     for i=1,#original do
       local j = (i-1) % 4 + 1
-      transformed[i] = band(bxor(original[i],mask[j]), 0xFF)
+      transformed[i] = bxor(original[i],mask[j])
     end
-    local xored = schar(unpack(transformed))
+    local xored = schar(unpack(transformed,1,#original))
     tinsert(transformed_arr,xored)
   end
   return tconcat(transformed_arr)
@@ -93,7 +93,7 @@ local decode = function(encoded)
   if #encoded < 2 then
     return nil,2
   end
-  local header,payload,pos = struct.unpack('bb',encoded)
+  local header,payload,pos = strunpack('bb',encoded)
   local high,low
   encoded = ssub(encoded,pos)
   local bytes = 2
@@ -106,12 +106,12 @@ local decode = function(encoded)
       if #encoded < 2 then
         return nil,2
       end
-      payload,pos = struct.unpack('>H',encoded)
+      payload,pos = strunpack('>H',encoded)
     elseif payload == 127 then
       if #encoded < 8 then
         return nil,8
       end
-      high,low,pos = struct.unpack('>I>I',encoded)
+      high,low,pos = strunpack('>I>I',encoded)
       payload = high*2^32 + low
       if payload < 0xffff or payload > 2^53 then
         assert(false,'INVALID PAYLOAD '..payload)
@@ -128,7 +128,7 @@ local decode = function(encoded)
     if bytes_short > 0 then
       return nil,bytes_short
     end
-    local m1,m2,m3,m4,pos = struct.unpack('bbbb',encoded)
+    local m1,m2,m3,m4,pos = strunpack('bbbb',encoded)
     encoded = ssub(encoded,pos)
     local mask = {
       m1,m2,m3,m4
@@ -152,7 +152,7 @@ end
 
 local encode_close = function(code,reason)
   if code then
-    local data = struct.pack('>H',code)
+    local data = strpack('>H',code)
     if reason then
       data = data..tostring(reason)
     end
@@ -165,7 +165,7 @@ local decode_close = function(data)
   local _,code,reason
   if data then
     if #data > 1 then
-      code = struct.unpack('>H',data)
+      code = strunpack('>H',data)
     end
     if #data > 2 then
       reason = data:sub(3)
