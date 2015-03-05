@@ -129,13 +129,19 @@ local connect = function(self,ws_url,ws_protocol)
   if err then
     return nil,err
   end
+  local ws_protocols_tbl = {''}
+  if type(ws_protocol) == 'string' then
+      ws_protocols_tbl = {ws_protocol}
+  elseif type(ws_protocol) == 'table' then
+      ws_protocols_tbl = ws_protocol
+  end
   local key = tools.generate_key()
   local req = handshake.upgrade_request
   {
     key = key,
     host = host,
     port = port,
-    protocols = {ws_protocol or ''},
+    protocols = ws_protocols_tbl,
     uri = uri
   }
   local n,err = self:sock_send(req)
