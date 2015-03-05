@@ -40,7 +40,7 @@ local xor_mask = function(encoded,mask,payload)
     local original = {sbyte(encoded,p,last)}
     for i=1,#original do
       local j = (i-1) % 4 + 1
-      transformed[i] = bxor(original[i],mask[j])
+      transformed[i] = band(bxor(original[i],mask[j]), 0xFF)
     end
     local xored = schar(unpack(transformed,1,#original))
     tinsert(transformed_arr,xored)
