@@ -81,7 +81,7 @@ local encode = function(data,opcode,masked,fin)
     local mask = {m1,m2,m3,m4}
     encoded = tconcat({
         encoded,
-        strpack('bbbb',m1,m2,m3,m4),
+        strpack('BBBB',m1,m2,m3,m4),
         xor_mask(data,mask,#data)
     })
   end
@@ -128,7 +128,7 @@ local decode = function(encoded)
     if bytes_short > 0 then
       return nil,bytes_short
     end
-    local m1,m2,m3,m4,pos = strunpack('bbbb',encoded)
+    local m1,m2,m3,m4,pos = strunpack('BBBB',encoded)
     encoded = ssub(encoded,pos)
     local mask = {
       m1,m2,m3,m4
