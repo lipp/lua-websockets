@@ -40,7 +40,7 @@ local xor_mask = function(encoded,mask,payload)
     local original = {sbyte(encoded,p,last)}
     for i=1,#original do
       local j = (i-1) % 4 + 1
-      transformed[i] = band(bxor(original[i],mask[j]), 0xFF)
+      transformed[i] = bxor(original[i],mask[j])
     end
     local xored = schar(unpack(transformed,1,#original))
     tinsert(transformed_arr,xored)
@@ -81,7 +81,7 @@ local encode = function(data,opcode,masked,fin)
     local mask = {m1,m2,m3,m4}
     encoded = tconcat({
         encoded,
-        strpack('bbbb',m1,m2,m3,m4),
+        strpack('BBBB',m1,m2,m3,m4),
         xor_mask(data,mask,#data)
     })
   end
@@ -128,7 +128,7 @@ local decode = function(encoded)
     if bytes_short > 0 then
       return nil,bytes_short
     end
-    local m1,m2,m3,m4,pos = strunpack('bbbb',encoded)
+    local m1,m2,m3,m4,pos = strunpack('BBBB',encoded)
     encoded = ssub(encoded,pos)
     local mask = {
       m1,m2,m3,m4
