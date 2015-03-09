@@ -67,10 +67,10 @@ local ev = function(ws)
       print('Error',err)
     end
   end
-  local on_open = function()
+  local on_open = function(_,headers)
     self.state = 'OPEN'
     if user_on_open then
-      user_on_open(self)
+      user_on_open(self,headers['sec-websocket-protocol'],headers)
     end
   end
   local handle_socket_err = function(err,io,sock)
@@ -183,7 +183,7 @@ local ev = function(ws)
                 sock,loop,
                 on_message,
               handle_socket_err)
-              on_open(self)
+              on_open(self, headers)
             end
             handshake_io = ev.IO.new(read_upgrade,fd,ev.READ)
             handshake_io:start(loop)-- handshake
