@@ -13,6 +13,11 @@ install:
   - cd luarocks-2.2.1
   - ./configure; sudo make bootstrap
   - cd ..
+  - git clone http://github.com/lipp/busted
+  - cd busted
+  - git checkout 1.11.1-uvll-support
+  - ./try
+  - cd ..
   - sudo luarocks install luacov-coveralls
   - sudo luarocks install busted 1.11.1-1
 
