@@ -8,7 +8,10 @@ install:
   - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
   - sudo apt-get install luajit
-  - sudo apt-get install luarocks
+  - wget http://luarocks.org/releases/luarocks-2.2.1.tar.gz
+  - tar zxpf luarocks-2.2.1.tar.gz
+  - cd luarocks-2.2.1
+  - ./configure; sudo make bootstrap
   - sudo luarocks install luacov-coveralls
   - sudo luarocks install busted 1.11.1-1
 
