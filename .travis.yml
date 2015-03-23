@@ -7,7 +7,7 @@ env:
 install:
   - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
-  - sudo apt-get install luajit
+  - sudo apt-get install lua5.2
   - wget http://luarocks.org/releases/luarocks-2.2.1.tar.gz
   - tar zxpf luarocks-2.2.1.tar.gz
   - cd luarocks-2.2.1
