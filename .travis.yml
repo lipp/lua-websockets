@@ -12,6 +12,7 @@ install:
   - tar zxpf luarocks-2.2.1.tar.gz
   - cd luarocks-2.2.1
   - ./configure; sudo make bootstrap
+  - cd ..
   - sudo luarocks install luacov-coveralls
   - sudo luarocks install busted 1.11.1-1
 
