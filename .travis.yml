@@ -29,6 +29,8 @@ before_install:
 install:
   - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
+  - git clone http://github.com/brimworks/lua-ev
+  - cd lua-ev && sudo luarock make rockspec/lua-ev-scm-1.rockspec && cd ..
   - sudo luarocks install luacov-coveralls
   - sudo -E luarocks install busted 1.11.1-1
 
