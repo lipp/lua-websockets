@@ -2,7 +2,8 @@ language: python
 
 env:
   global:
-    - LUAROCKS_BASE=luarocks-2.0.13
+    - LUAROCKS_VERSION=2.0.13
+    - LUAROCKS_BASE=luarocks-$LUAROCKS_VERSION
   matrix:
     - LUA=lua5.1 LUA_DEV=liblua5.1-dev LUA_VER=5.1 LUA_SFX=5.1 LUA_INCDIR=/usr/include/lua5.1
     - LUA=lua5.2 LUA_DEV=liblua5.2-dev LUA_VER=5.2 LUA_SFX=5.2 LUA_INCDIR=/usr/include/lua5.2
@@ -16,7 +17,7 @@ before_install:
   - sudo apt-get install $LUA_DEV
   - lua$LUA_SFX -v
   # Install a recent luarocks release
-  - wget http://keplerproject.github.io/luarocks/archives/$LUAROCKS_BASE.tar.gz
+  - wget https://github.com/keplerproject/luarocks/archive/$LUAROCKS_VERSION.tar.gz -O $LUAROCKS_BASE.tar.gz
   - tar zxvpf $LUAROCKS_BASE.tar.gz
   - cd $LUAROCKS_BASE
   - ./configure
