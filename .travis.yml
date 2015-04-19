@@ -17,7 +17,7 @@ before_install:
   - sudo apt-get install $LUA_DEV
   - lua$LUA_SFX -v
   # Install a recent luarocks release
-  - wget https://github.com/keplerproject/luarocks/archive/$LUAROCKS_VERSION.tar.gz -O $LUAROCKS_BASE.tar.gz
+  - wget https://github.com/keplerproject/luarocks/archive/v$LUAROCKS_VERSION.tar.gz -O $LUAROCKS_BASE.tar.gz
   - tar zxvpf $LUAROCKS_BASE.tar.gz
   - cd $LUAROCKS_BASE
   - ./configure
