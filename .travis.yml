@@ -32,7 +32,7 @@ install:
   - git clone http://github.com/brimworks/lua-ev
   - cd lua-ev && sudo luarocks make rockspec/lua-ev-scm-1.rockspec && cd ..
   - sudo luarocks install luacov-coveralls
-  - sudo -E luarocks install busted 1.11.1-1
+  - sudo -E luarocks install busted-stable
 
 
 script: "sudo luarocks make rockspecs/lua-websockets-scm-1.rockspec && ./test.sh"
