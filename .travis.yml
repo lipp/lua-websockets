@@ -28,6 +28,7 @@ before_install:
 
 install:
   - sudo pip install autobahntestsuite
+  - sudo apt-get install libev-dev
   - sudo luarocks install luacov-coveralls
   - sudo -E luarocks install busted 1.11.1-1
 
