@@ -4,7 +4,7 @@ wstest -m echoserver -w ws://localhost:${LUAWS_WSTEST_PORT:=11000}  &
 pid=$!
 echo "Waiting for wstest to start..."
 sleep 5
-/usr/local/bin/busted_bootstrap -c spec/
+busted -c spec/
 bustedcode=$?
 kill ${pid}
 exit $bustedcode
