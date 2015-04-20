@@ -119,7 +119,7 @@ local base64_encode = function(data)
   return (mime.b64(data))
 end
 
-local DEFAULT_PORTS = {ws = "80", wss = "443"}
+local DEFAULT_PORTS = {ws = 80, wss = 443}
 
 local parse_url = function(url)
   local protocol, address, uri = url:match('^(%w+)://([^/]+)(.*)$')
@@ -131,7 +131,7 @@ local parse_url = function(url)
     port = DEFAULT_PORTS[protocol]
   end
   if not uri or uri == '' then uri = '/' end
-  return protocol, host, port, uri
+  return protocol, host, tonumber(port), uri
 end
 
 local generate_key = function()
