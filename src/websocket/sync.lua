@@ -119,11 +119,11 @@ end
 
 local connect = function(self,ws_url,ws_protocol)
   if self.state ~= 'CLOSED' then
-    return nil,'wrong state'
+    return nil,'wrong state',nil
   end
   local protocol,host,port,uri = tools.parse_url(ws_url)
   if protocol ~= 'ws' then
-    return nil,'bad protocol'
+    return nil,'bad protocol',nil
   end
   local _,err = self:sock_connect(host,port)
   if err then
@@ -146,14 +146,14 @@ local connect = function(self,ws_url,ws_protocol)
   }
   local n,err = self:sock_send(req)
   if n ~= #req then
-    return nil,err
+    return nil,err,nil
   end
   local resp = {}
   repeat
     local line,err = self:sock_receive('*l')
     resp[#resp+1] = line
     if err then
-      return nil,err
+      return nil,err,nil
     end
   until line == ''
   local response = table.concat(resp,'\r\n')
@@ -161,10 +161,10 @@ local connect = function(self,ws_url,ws_protocol)
   local expected_accept = handshake.sec_websocket_accept(key)
   if headers['sec-websocket-accept'] ~= expected_accept then
     local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
-    return nil,msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil')
+    return nil,msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'),headers
   end
   self.state = 'OPEN'
-  return true
+  return true,headers['sec-websocket-protocol'],headers
 end
 
 local extend = function(obj)

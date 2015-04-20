@@ -19,24 +19,27 @@ describe(
         assert.is_table(client)
         assert.is_function(client.ev)
       end)
-    
+
     it(
       'can be constructed',
       function()
         wsc = client.ev()
       end)
-    
+
     it(
       'can connect and calls on_open'..req_ws,
       function(done)
         settimeout(10)
-        wsc:on_open(async(function(ws)
+        wsc:on_open(async(function(ws,protocol,headers)
               assert.is_equal(ws,wsc)
+              assert.is_equal(protocol,'echo-protocol')
+              assert.is.truthy(headers['sec-websocket-accept'])
+              assert.is.truthy(headers['sec-websocket-protocol'])
               done()
           end))
         wsc:connect(url,'echo-protocol')
       end)
-    
+
     it(
       'calls on_error if already connected'..req_ws,
       function(done)
@@ -50,7 +53,7 @@ describe(
           end))
         wsc:connect(url,'echo-protocol')
       end)
-    
+
     it(
       'calls on_error on bad protocol'..req_ws,
       function(done)
@@ -63,7 +66,7 @@ describe(
           end))
         wsc:connect('ws2://127.0.0.1:'..port,'echo-protocol')
       end)
-    
+
     it(
       'can parse HTTP request header byte per byte',
       function(done)
@@ -103,7 +106,7 @@ describe(
             end
           end,0.0001,0.0001):start(ev.Loop.default)
       end)
-    
+
     it(
       'properly calls on_error if socket error on handshake occurs',
       function(done)
@@ -140,7 +143,7 @@ describe(
             end
           end,0.0001,0.0001):start(ev.Loop.default)
       end)
-    
+
     it(
       'can open and close immediatly (in CLOSING state)'..req_ws,
       function(done)
@@ -155,7 +158,7 @@ describe(
         wsc:connect(url,'echo-protocol')
         wsc:close()
       end)
-    
+
     it(
       'socket err gets forwarded to on_error',
       function(done)
@@ -175,8 +178,8 @@ describe(
           end))
         wsc:connect('ws://does_not_exist','echo-protocol')
       end)
-    
-    
+
+
     it(
       'can send and receive data'..req_ws,
       function(done)
@@ -195,7 +198,7 @@ describe(
           end)
         wsc:connect(url,'echo-protocol')
       end)
-    
+
     local random_text = function(len)
       local chars = {}
       for i=1,len do
@@ -203,7 +206,7 @@ describe(
       end
       return table.concat(chars)
     end
-    
+
     it(
       'can send and receive data 127 byte messages'..req_ws,
       function(done)
@@ -219,7 +222,7 @@ describe(
           end))
         wsc:send(msg)
       end)
-    
+
     it(
       'can send and receive data 0xffff-1 byte messages'..req_ws,
       function(done)
@@ -235,7 +238,7 @@ describe(
           end))
         wsc:send(msg)
       end)
-    
+
     it(
       'can send and receive data 0xffff+1 byte messages'..req_ws,
       function(done)
@@ -251,7 +254,7 @@ describe(
           end))
         wsc:send(msg)
       end)
-    
+
     it(
       'closes cleanly'..req_ws,
       function(done)
@@ -264,7 +267,7 @@ describe(
           end))
         wsc:close()
       end)
-    
+
     it(
       'echoing 10 messages works'..req_ws,
       function(done)
@@ -296,7 +299,7 @@ describe(
                       ws:close()
                     end
                 end))
-              
+
               for i=1,10 do
                 wsc:send(msg..i)
               end
