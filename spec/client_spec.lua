@@ -54,34 +54,37 @@ describe(
         local ok, protocol, headers = wsc:connect(url,'echo-protocol')
         assert.is_truthy(ok)
         assert.is_equal(protocol,'echo-protocol')
-        assert.is.truthy(headers['sec-websocket-accept'])
-        assert.is.truthy(headers['sec-websocket-protocol'])
+        assert.is_truthy(headers['sec-websocket-accept'])
+        assert.is_truthy(headers['sec-websocket-protocol'])
       end)
 
     it(
       'returns error on non-ws protocol',
       function()
         local c = client.new()
-        local ok,err = c:connect('wsc://127.0.0.1:'..port,'echo-protocol')
+        local ok,err,h = c:connect('wsc://127.0.0.1:'..port,'echo-protocol')
         assert.is_falsy(ok)
         assert.is_equal(err,'bad protocol')
+        assert.is_nil(h)
       end)
 
     it(
       'forwards socket errors',
       function()
         local c = client.new()
-        local ok,err = c:connect('ws://127.0.0.1:1','echo-protocol')
+        local ok,err,h = c:connect('ws://127.0.0.1:1','echo-protocol')
         assert.is_nil(ok)
         assert.is_equal(err,'connection refused')
+        assert.is_nil(h)
 
-        local ok,err = c:connect('ws://notexisting:8089','echo-protocol')
+        local ok,err,h = c:connect('ws://notexisting:8089','echo-protocol')
         assert.is_nil(ok)
         if socket.tcp6 then
           assert.is_equal(err,'host or service not provided, or not known')
         else
           assert.is_equal(err,'host not found')
         end
+        assert.is_nil(h)
       end)
 
     it(
@@ -107,13 +110,15 @@ describe(
       'returns error when connecting twice (requires external websocket server @port 8081)',
       function()
         local c = client.new()
-        local ok,err = c:connect(url,'echo-protocol')
+        local ok,err,h = c:connect(url,'echo-protocol')
         assert.is_truthy(ok)
-        assert.is_nil(err)
+        assert.is_truthy(err)
+        assert.is_truthy(h)
 
-        local ok,err = c:connect(url,'echo-protocol')
+        local ok,err,h = c:connect(url,'echo-protocol')
         assert.is_falsy(ok)
         assert.is_equal(err,'wrong state')
+        assert.is_nil(h)
       end)
 
     it(

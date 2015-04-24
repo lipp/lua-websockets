@@ -127,7 +127,7 @@ local connect = function(self,ws_url,ws_protocol)
   end
   local _,err = self:sock_connect(host,port)
   if err then
-    return nil,err
+    return nil,err,nil
   end
   local ws_protocols_tbl = {''}
   if type(ws_protocol) == 'string' then
