@@ -80,13 +80,14 @@ describe(
           'client:connect forwards socket error',
           function()
             local wsc = client.copas()
-            local ok,err = wsc:connect('ws://nonexisting.foo:'..port)
+            local ok,err,h = wsc:connect('ws://nonexisting.foo:'..port)
             assert.is_nil(ok)
             if socket.tcp6 then
               assert.is_equal(err,'host or service not provided, or not known')
             else
               assert.is_equal(err,'host not found')
             end
+            assert.is_nil(h)
           end)
 
         it(
@@ -106,7 +107,7 @@ describe(
 
             copas.addthread(async(function()
                   local wsc = client.copas()
-                  local ok,err = wsc:connect('ws://localhost:'..port,'echo')
+                  local ok,err,h = wsc:connect('ws://localhost:'..port,'echo')
                   assert.is_true(ok)
                   local was_clean,code,reason = wsc:close()
                   assert.is_true(was_clean)
@@ -281,9 +282,11 @@ describe(
                 async(
                   function()
                     local wsc = client.copas()
-                    local ok,err = wsc:connect('ws://localhost:'..port,'echo')
-                    assert.is_nil(err)
+                    local ok,err,h = wsc:connect('ws://localhost:'..port,'echo')
                     assert.is_true(ok)
+                    assert.is_truthy(err)
+                    assert.is_truthy(h)
+
                     local message,opcode = wsc:receive()
                     assert.is_same(message,'hello broadcast')
                     assert.is_same(opcode,websocket.TEXT)
