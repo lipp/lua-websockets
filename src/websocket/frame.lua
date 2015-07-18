@@ -10,14 +10,13 @@ local function read_n_bytes(str, pos, n)
 end
 
 local function read_int16(str, pos)
-  local a, b pos,a,b = read_n_bytes(str, pos, 2)
-  return pos, bit.lshift(a, 8) + b
+  local new_pos,a,b = read_n_bytes(str, pos, 2)
+  return new_pos, bit.lshift(a, 8) + b
 end
 
 local function read_int32(str, pos)
-  local a, b, c, d
-  pos, a, b, c, d = read_n_bytes(str, pos, 4)
-  return pos,
+  local new_pos, a, b, c, d = read_n_bytes(str, pos, 4)
+  return new_pos,
   bit.lshift(a, 24) +
   bit.lshift(b, 16) +
   bit.lshift(c, 8 ) +
