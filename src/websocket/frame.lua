@@ -1,5 +1,4 @@
 -- Following Websocket RFC: http://tools.ietf.org/html/rfc6455
-local struct = require'struct'
 local bit = require'websocket.bit'
 local band = bit.band
 local bxor = bit.bxor
@@ -12,11 +11,16 @@ local schar = string.char
 local tinsert = table.insert
 local tconcat = table.concat
 local mmin = math.min
-local strpack = struct.pack
-local strunpack = struct.unpack
 local mfloor = math.floor
 local mrandom = math.random
 local unpack = unpack or table.unpack
+local tools = require'websocket.tools'
+local write_int8 = tools.write_int8
+local write_int16 = tools.write_int16
+local write_int32 = tools.write_int32
+local read_int8 = tools.read_int8
+local read_int16 = tools.read_int16
+local read_int32 = tools.read_int32
 
 local bits = function(...)
   local n = 0
@@ -30,6 +34,7 @@ local bit_7 = bits(7)
 local bit_0_3 = bits(0,1,2,3)
 local bit_0_6 = bits(0,1,2,3,4,5,6)
 
+-- TODO: improve performance
 local xor_mask = function(encoded,mask,payload)
   local transformed,transformed_arr = {},{}
   -- xor chunk-wise to prevent stack overflow.
@@ -49,7 +54,6 @@ local xor_mask = function(encoded,mask,payload)
 end
 
 local encode = function(data,opcode,masked,fin)
-  local encoded
   local header = opcode or 1-- TEXT is default opcode
   if fin == nil or fin == true then
     header = bor(header,bit_7)
@@ -59,33 +63,34 @@ local encode = function(data,opcode,masked,fin)
     payload = bor(payload,bit_7)
   end
   local len = #data
+  local chunks = {}
   if len < 126 then
     payload = bor(payload,len)
-    encoded = strpack('bb',header,payload)
+    tinsert(chunks,write_int8(header,payload))
   elseif len <= 0xffff then
     payload = bor(payload,126)
-    encoded = strpack('bb>H',header,payload,len)
+    tinsert(chunks,write_int8(header,payload))
+    tinsert(chunks,write_int16(len))
   elseif len < 2^53 then
     local high = mfloor(len/2^32)
     local low = len - high*2^32
     payload = bor(payload,127)
-    encoded = strpack('bb>I>I',header,payload,high,low)
+    tinsert(chunks,write_int8(header,payload))
+    tinsert(chunks,write_int32(high))
+    tinsert(chunks,write_int32(low))
   end
   if not masked then
-    encoded = encoded..data
+    tinsert(chunks,data)
   else
     local m1 = mrandom(0,0xff)
     local m2 = mrandom(0,0xff)
     local m3 = mrandom(0,0xff)
     local m4 = mrandom(0,0xff)
     local mask = {m1,m2,m3,m4}
-    encoded = tconcat({
-        encoded,
-        strpack('BBBB',m1,m2,m3,m4),
-        xor_mask(data,mask,#data)
-    })
+    tinsert(chunks,write_int8(m1,m2,m3,m4))
+    tinsert(chunks,xor_mask(data,mask,#data))
   end
-  return encoded
+  return tconcat(chunks)
 end
 
 local decode = function(encoded)
@@ -93,7 +98,9 @@ local decode = function(encoded)
   if #encoded < 2 then
     return nil,2-#encoded
   end
-  local header,payload,pos = strunpack('bb',encoded)
+  local pos,header,payload
+  pos,header = read_int8(encoded,1)
+  pos,payload = read_int8(encoded,pos)
   local high,low
   encoded = ssub(encoded,pos)
   local bytes = 2
@@ -106,12 +113,13 @@ local decode = function(encoded)
       if #encoded < 2 then
         return nil,2-#encoded
       end
-      payload,pos = strunpack('>H',encoded)
+      pos,payload = read_int16(encoded,1)
     elseif payload == 127 then
       if #encoded < 8 then
         return nil,8-#encoded
       end
-      high,low,pos = strunpack('>I>I',encoded)
+      pos,high = read_int32(encoded,1)
+      pos,low = read_int32(encoded,pos)
       payload = high*2^32 + low
       if payload < 0xffff or payload > 2^53 then
         assert(false,'INVALID PAYLOAD '..payload)
@@ -128,7 +136,11 @@ local decode = function(encoded)
     if bytes_short > 0 then
       return nil,bytes_short
     end
-    local m1,m2,m3,m4,pos = strunpack('BBBB',encoded)
+    local m1,m2,m3,m4
+    pos,m1 = read_int8(encoded,1)
+    pos,m2 = read_int8(encoded,pos)
+    pos,m3 = read_int8(encoded,pos)
+    pos,m4 = read_int8(encoded,pos)
     encoded = ssub(encoded,pos)
     local mask = {
       m1,m2,m3,m4
@@ -152,7 +164,7 @@ end
 
 local encode_close = function(code,reason)
   if code then
-    local data = strpack('>H',code)
+    local data = write_int16(code)
     if reason then
       data = data..tostring(reason)
     end
@@ -165,7 +177,7 @@ local decode_close = function(data)
   local _,code,reason
   if data then
     if #data > 1 then
-      code = strunpack('>H',data)
+      _,code = read_int16(data,1)
     end
     if #data > 2 then
       reason = data:sub(3)

@@ -115,9 +115,7 @@ var echoWs = new WebSocket('ws://127.0.0.1:8002','echo');
 The client and server modules depend on:
 
   - luasocket
-  - struct
   - luabitop (if not using Lua 5.2 nor luajit)
-  - luacrypto (optionally)
   - copas (optionally)
   - lua-ev (optionally)
 
