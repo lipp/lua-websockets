@@ -166,7 +166,7 @@ local listen = function(opts)
   if not listener then
     error(err)
   end
-  listener:settimeout(1)
+  listener:settimeout(opts.timeout or 1)
   
   self.sock = function()
     return listener
@@ -175,7 +175,7 @@ local listen = function(opts)
   local listen_io = ev.IO.new(
     function()
       local client_sock = listener:accept()
-      client_sock:settimeout(1)
+      client_sock:settimeout(opts.timeout or 1)
       assert(client_sock)
       local request = {}
       local last
