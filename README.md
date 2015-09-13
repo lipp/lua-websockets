@@ -144,8 +144,10 @@ The minifed version has be to be installed manually though.
 Running tests requires:
 
   - [busted with async test support](https://github.com/lipp/busted)
-  - [Autobahn Testsuite](http://autobahn.ws/testsuite)
+  - [Docker](http://www.docker.com)
 
 ```shell
-./test.sh
+docker build .
 ```
+
+The first run will take A WHILE.
