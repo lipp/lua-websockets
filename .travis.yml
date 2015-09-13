@@ -1,4 +1,4 @@
-language: python
+language: node_js
 
 env:
   global:
@@ -27,7 +27,6 @@ before_install:
   - cd $TRAVIS_BUILD_DIR
 
 install:
-  - sudo pip install autobahntestsuite
   - sudo apt-get install libev-dev
   - git clone http://github.com/brimworks/lua-ev
   - cd lua-ev && sudo luarocks make rockspec/lua-ev-scm-1.rockspec && cd ..
