@@ -8,6 +8,8 @@ local srep = string.rep
 local ssub = string.sub
 local sbyte = string.byte
 local schar = string.char
+local band = bit.band
+local rshift = bit.rshift
 local tinsert = table.insert
 local tconcat = table.concat
 local mmin = math.min
@@ -53,6 +55,18 @@ local xor_mask = function(encoded,mask,payload)
   return tconcat(transformed_arr)
 end
 
+local encode_header_small = function(header, payload)
+  return schar(header, payload)
+end
+
+local encode_header_medium = function(header, payload, len)
+  return schar(header, payload, band(rshift(len, 8), 0xFF), band(len, 0xFF))
+end
+
+local encode_header_big = function(header, payload, high, low)
+  return schar(header, payload)..write_int32(high)..write_int32(low)
+end
+
 local encode = function(data,opcode,masked,fin)
   local header = opcode or 1-- TEXT is default opcode
   if fin == nil or fin == true then
@@ -66,18 +80,15 @@ local encode = function(data,opcode,masked,fin)
   local chunks = {}
   if len < 126 then
     payload = bor(payload,len)
-    tinsert(chunks,write_int8(header,payload))
+    tinsert(chunks,encode_header_small(header,payload))
   elseif len <= 0xffff then
     payload = bor(payload,126)
-    tinsert(chunks,write_int8(header,payload))
-    tinsert(chunks,write_int16(len))
+    tinsert(chunks,encode_header_medium(header,payload,len))
   elseif len < 2^53 then
     local high = mfloor(len/2^32)
     local low = len - high*2^32
     payload = bor(payload,127)
-    tinsert(chunks,write_int8(header,payload))
-    tinsert(chunks,write_int32(high))
-    tinsert(chunks,write_int32(low))
+    tinsert(chunks,encode_header_big(header,payload,high,low))
   end
   if not masked then
     tinsert(chunks,data)
@@ -191,6 +202,9 @@ return {
   decode = decode,
   encode_close = encode_close,
   decode_close = decode_close,
+  encode_header_small = encode_header_small,
+  encode_header_medium = encode_header_medium,
+  encode_header_big = encode_header_big,
   CONTINUATION = 0,
   TEXT = 1,
   BINARY = 2,
