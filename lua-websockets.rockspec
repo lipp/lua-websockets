@@ -10,12 +10,11 @@ description = {
   summary = "Websockets for Lua",
   homepage = "http://github.com/lipp/lua-websockets",
   license = "MIT/X11",
-  detailed = "Provides sync and async clients and servers for copas."
+  detailed = "Provides sync and async clients and servers for copas and lua-ev."
 }
 
 dependencies = {
   "lua >= 5.1",
-  "struct",
   "luasocket",
   "luabitop",
   "copas"
