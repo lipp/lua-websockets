@@ -128,7 +128,7 @@ local listen = function(opts)
     end)
   local self = {}
   self.close = function(_,keep_clients)
-    listener:close()
+    copas.removeserver(listener)
     listener = nil
     if not keep_clients then
       for protocol,clients in pairs(clients) do

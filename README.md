@@ -115,9 +115,7 @@ var echoWs = new WebSocket('ws://127.0.0.1:8002','echo');
 The client and server modules depend on:
 
   - luasocket
-  - struct
   - luabitop (if not using Lua 5.2 nor luajit)
-  - luacrypto (optionally)
   - copas (optionally)
   - lua-ev (optionally)
 
@@ -146,8 +144,10 @@ The minifed version has be to be installed manually though.
 Running tests requires:
 
   - [busted with async test support](https://github.com/lipp/busted)
-  - [Autobahn Testsuite](http://autobahn.ws/testsuite)
+  - [Docker](http://www.docker.com)
 
 ```shell
-./test.sh
+docker build .
 ```
+
+The first run will take A WHILE.

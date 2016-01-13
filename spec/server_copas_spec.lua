@@ -257,6 +257,7 @@ describe(
         it(
           'broadcast works',
           function(done)
+            settimeout(6)
             local n = 20
             local n_clients = 0
             local closed = 0

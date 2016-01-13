@@ -1,6 +1,7 @@
 package.path = package.path..'../src'
 
 local frame = require'websocket.frame'
+local tools = require'websocket.tools'
 
 local bytes = string.char
 
@@ -18,7 +19,7 @@ describe(
       function()
         assert.is_same(type(frame),'table')
       end)
-    
+
     it(
       'provides a decode and a encode function',
       function()
@@ -27,7 +28,7 @@ describe(
         assert.is.same(type(frame.encode_close),'function')
         assert.is.same(type(frame.decode_close),'function')
       end)
-    
+
     it(
       'provides correct OPCODES',
       function()
@@ -38,8 +39,29 @@ describe(
         assert.is.same(frame.PING,9)
         assert.is.same(frame.PONG,10)
       end)
-    
-    
+
+    it('.encode_header_small is correct',
+      function()
+        local enc = frame.encode_header_small(123,33)
+        local enc_ref = tools.write_int8(123)..tools.write_int8(33)
+        assert.is_same(enc, enc_ref)
+      end)
+
+    it('.encode_header_medium is correct',
+      function()
+        local enc = frame.encode_header_medium(123,33,555)
+        local enc_ref = tools.write_int8(123)..tools.write_int8(33)..tools.write_int16(555)
+        assert.is_same(enc, enc_ref)
+      end)
+
+    it('.encode_header_big is correct',
+      function()
+        local enc = frame.encode_header_big(123,33,555,12987)
+        local enc_ref = tools.write_int8(123)..tools.write_int8(33)..tools.write_int32(555)..tools.write_int32(12987)
+        assert.is_same(enc, enc_ref)
+      end)
+
+
     it(
       'RFC: decode a single-frame unmasked text message',
       function()
@@ -50,7 +72,7 @@ describe(
         assert.is_same(rest,'foo')
         assert.is_false(masked)
       end)
-    
+
     it(
       'RFC: decode a single-frame unmasked text message bytewise and check min length',
       function()
@@ -70,7 +92,7 @@ describe(
           end
         end
       end)
-    
+
     it(
       'RFC: decode a single-frame masked text message',
       function()
@@ -81,7 +103,7 @@ describe(
         assert.is_same(rest,'foo')
         assert.is_truthy(masked)
       end)
-    
+
     it(
       'RFC: decode a fragmented test message',
       function()
@@ -91,7 +113,7 @@ describe(
         assert.is.same(decoded,'Hel')
         assert.is_same(rest,'')
         assert.is_falsy(masked)
-        
+
         decoded,fin,opcode,rest,masked = frame.decode(lo)
         assert.is_true(fin)
         assert.is_same(opcode,0x0)
@@ -99,7 +121,7 @@ describe(
         assert.is_same(rest,'')
         assert.is_falsy(masked)
       end)
-    
+
     it(
       'refuse incomplete unmasked frame',
       function()
@@ -108,7 +130,7 @@ describe(
         assert.is_same(fin,#hello_unmasked-4)
         assert.is_falsy(opcode)
       end)
-    
+
     it(
       'refuse incomplete masked frame',
       function()
@@ -117,7 +139,7 @@ describe(
         assert.is_same(fin,#hello_masked-4)
         assert.is_falsy(opcode)
       end)
-    
+
     it(
       'encode single-frame unmasked text',
       function()
@@ -135,7 +157,7 @@ describe(
         assert.is_same(opcode,frame.TEXT)
         assert.is_falsy(masked)
       end)
-    
+
     local random_text = function(len)
       local chars = {}
       for i=1,len do
@@ -143,7 +165,7 @@ describe(
       end
       return table.concat(chars)
     end
-    
+
     it(
       'encode and decode single-frame of length 127 unmasked text',
       function()
@@ -159,7 +181,7 @@ describe(
         assert.is_same(rest,'')
         assert.is_falsy(masked)
       end)
-    
+
     it(
       'encode and decode single-frame of length 0xffff-1 unmasked text',
       function()
@@ -175,7 +197,7 @@ describe(
         assert.is_same(rest,'')
         assert.is_falsy(masked)
       end)
-    
+
     it(
       'encode and decode single-frame of length 0xffff+1 unmasked text',
       function()
@@ -189,7 +211,7 @@ describe(
         assert.is_true(fin)
         assert.is_same(opcode,frame.TEXT)
       end)
-    
+
     it(
       'encode single-frame masked text',
       function()
@@ -201,7 +223,7 @@ describe(
         assert.is_same(rest,'')
         assert.is_truthy(masked)
       end)
-    
+
     it(
       'encode fragmented unmasked text',
       function()
@@ -210,14 +232,14 @@ describe(
         assert.is_falsy(fin)
         assert.is_same(opcode,0x1)
         assert.is.same(decoded,'Hel')
-        
+
         local lo = frame.encode('lo',frame.CONTINUATION,false)
         decoded,fin,opcode = frame.decode(lo)
         assert.is_true(fin)
         assert.is_same(opcode,0x0)
         assert.is.same(decoded,'lo')
       end)
-    
+
     it(
       'encodes and decodes close packet correctly',
       function()
@@ -229,5 +251,5 @@ describe(
         assert.is_same(dcode,code)
         assert.is_same(dreason,reason)
       end)
-    
+
   end)
