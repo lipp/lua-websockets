@@ -1,6 +1,7 @@
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 local tools = require'websocket.tools'
+local ssl = require'ssl'
 local tinsert = table.insert
 local tconcat = table.concat
 
@@ -122,12 +123,22 @@ local connect = function(self,ws_url,ws_protocol)
     return nil,'wrong state'
   end
   local protocol,host,port,uri = tools.parse_url(ws_url)
-  if protocol ~= 'ws' then
-    return nil,'bad protocol'
-  end
+  -- Preconnect (for SSL if needed)
   local _,err = self:sock_connect(host,port)
   if err then
     return nil,err
+  end
+  if protocol == 'wss' then
+    local params = {
+      mode = "client",
+      protocol = "sslv23",
+      verify = "none",
+      options = {"all"}
+    }
+    self.sock = ssl.wrap(self.sock, params)
+    self.sock:dohandshake()
+  elseif protocol ~= "ws" then
+    return nil, 'bad protocol'
   end
   local ws_protocols_tbl = {''}
   if type(ws_protocol) == 'string' then
