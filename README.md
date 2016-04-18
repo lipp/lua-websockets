@@ -116,6 +116,7 @@ The client and server modules depend on:
 
   - luasocket
   - luabitop (if not using Lua 5.2 nor luajit)
+  - luasec
   - copas (optionally)
   - lua-ev (optionally)
 
