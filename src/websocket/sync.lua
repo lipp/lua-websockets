@@ -118,7 +118,7 @@ local close = function(self,code,reason)
   return was_clean,code,reason or ''
 end
 
-local connect = function(self,ws_url,ws_protocol)
+local connect = function(self,ws_url,ws_protocol,ssl_params)
   if self.state ~= 'CLOSED' then
     return nil,'wrong state'
   end
@@ -129,13 +129,7 @@ local connect = function(self,ws_url,ws_protocol)
     return nil,err
   end
   if protocol == 'wss' then
-    local params = {
-      mode = "client",
-      protocol = "sslv23",
-      verify = "none",
-      options = {"all"}
-    }
-    self.sock = ssl.wrap(self.sock, params)
+    self.sock = ssl.wrap(self.sock, ssl_params)
     self.sock:dohandshake()
   elseif protocol ~= "ws" then
     return nil, 'bad protocol'
