@@ -5,7 +5,6 @@ local ssl = require'ssl'
 local tinsert = table.insert
 local tconcat = table.concat
 
-
 local receive = function(self)
   if self.state ~= 'OPEN' and not self.is_closing then
     return nil,nil,false,1006,'wrong state'
@@ -118,7 +117,7 @@ local close = function(self,code,reason)
   return was_clean,code,reason or ''
 end
 
-local connect = function(self,ws_url,ws_protocol)
+local connect = function(self,ws_url,ssl_params,ws_protocol)
   if self.state ~= 'CLOSED' then
     return nil,'wrong state'
   end
@@ -129,13 +128,7 @@ local connect = function(self,ws_url,ws_protocol)
     return nil,err
   end
   if protocol == 'wss' then
-    local params = {
-      mode = "client",
-      protocol = "sslv23",
-      verify = "none",
-      options = {"all"}
-    }
-    self.sock = ssl.wrap(self.sock, params)
+    self.sock = ssl.wrap(self.sock, ssl_params)
     self.sock:dohandshake()
   elseif protocol ~= "ws" then
     return nil, 'bad protocol'
