@@ -117,7 +117,7 @@ local close = function(self,code,reason)
   return was_clean,code,reason or ''
 end
 
-local connect = function(self,ws_url,ssl_params,ws_protocol)
+local connect = function(self,ws_url,ws_protocol,ssl_params)
   if self.state ~= 'CLOSED' then
     return nil,'wrong state'
   end
