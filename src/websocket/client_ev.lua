@@ -3,6 +3,7 @@ local socket = require'socket'
 local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
+local ssl = require'ssl'
 local debug = require'debug'
 local tconcat = table.concat
 local tinsert = table.insert
@@ -44,7 +45,7 @@ local ev = function(ws)
       message_io = nil
     end
     if sock then
-      sock:shutdown()
+      --sock:shutdown()
       sock:close()
       sock = nil
     end
@@ -106,16 +107,12 @@ local ev = function(ws)
     async_send(encoded, nil, handle_socket_err)
   end
 
-  self.connect = function(_,url,ws_protocol)
+  self.connect = function(_,url,ws_protocol,ssl_params)
     if self.state ~= 'CLOSED' then
       on_error('wrong state',true)
       return
     end
     local protocol,host,port,uri = tools.parse_url(url)
-    if protocol ~= 'ws' then
-      on_error('bad protocol')
-      return
-    end
     local ws_protocols_tbl = {''}
     if type(ws_protocol) == 'string' then
         ws_protocols_tbl = {ws_protocol}
@@ -128,8 +125,19 @@ local ev = function(ws)
     fd = sock:getfd()
     assert(fd > -1)
     -- set non blocking
-    sock:settimeout(0)
+    sock:settimeout(1) -- WSS connection doesn't seem to happen if settimeout = 0
     sock:setoption('tcp-nodelay',true)
+    -- Preconnect for SSL
+    local connected,err = sock:connect(host,port)
+    if protocol == 'wss' then
+      sock = ssl.wrap(sock, ssl_params)
+      sock:dohandshake()
+      -- Reinit
+      sock:settimeout(0)
+    elseif protocol ~= "ws" then
+      on_error('bad protocol')
+      return
+    end
     async_send,send_io_stop = require'websocket.ev_common'.async_send(sock,loop)
     handshake_io = ev.IO.new(
       function(loop,connect_io)
@@ -190,7 +198,6 @@ local ev = function(ws)
           end,
         handle_socket_err)
       end,fd,ev.WRITE)
-    local connected,err = sock:connect(host,port)
     if connected then
       handshake_io:callback()(loop,handshake_io)
     elseif err == 'timeout' or err == 'Operation already in progress' then

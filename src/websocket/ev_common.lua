@@ -113,6 +113,10 @@ local message_io = function(sock,loop,on_message,on_error)
       if err then
         if err == 'timeout' and #part == 0 then
           return
+        elseif err == 'wantread' and #part == 0 then
+          return
+        elseif err == 'wantwrite' and #part == 0 then
+          return
         elseif #part == 0 then
           if message_io then
             message_io:stop(loop)
