@@ -130,7 +130,8 @@ local ev = function(ws)
       -- We have to re-initialize values that were set previously because it's a new socket
       sock:settimeout(0)
     elseif protocol ~= "ws" then
-      return nil, 'bad protocol'
+      on_error('bad protocol')
+      return
     end
     local ws_protocols_tbl = {''}
     if type(ws_protocol) == 'string' then
