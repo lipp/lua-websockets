@@ -28,6 +28,7 @@ build = {
       ['websocket'] = 'src/websocket.lua',
       ['websocket.sync'] = 'src/websocket/sync.lua',
       ['websocket.client'] = 'src/websocket/client.lua',
+      ['websocket.client_sync'] = 'src/websocket/client_sync.lua',
       ['websocket.client_copas'] = 'src/websocket/client_copas.lua',
       ['websocket.server'] = 'src/websocket/server.lua',
       ['websocket.server_copas'] = 'src/websocket/server_copas.lua',
@@ -41,4 +42,3 @@ build = {
     }
   }
 }
-
