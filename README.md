@@ -12,10 +12,11 @@ Clients are available in three different flavours:
   - coroutine based ([copas](http://keplerproject.github.com/copas))
   - asynchronous ([lua-ev](https://github.com/brimworks/lua-ev))
 
-Servers are available as two different flavours:
+Servers are available as three different flavours:
 
   - coroutine based ([copas](http://keplerproject.github.com/copas))
   - asynchronous ([lua-ev](https://github.com/brimworks/lua-ev))
+  - asynchronous ([libubox-lua](https://wiki.openwrt.org/doc/techref/libubox))
 
 
 A webserver is NOT part of lua-websockets. If you are looking for a feature rich webserver framework, have a look at [orbit](http://keplerproject.github.com/orbit/) or others. It is no problem to work with a "normal" webserver and lua-websockets side by side (two processes, different ports), since websockets are not subject of the 'Same origin policy'.
@@ -91,6 +92,38 @@ ev.Loop.default:loop()
 
 ```
 
+
+## libubox-lua echo server
+This implements a basic echo server via Websockets protocol. Once you are connected with the server, all messages you send will be returned ('echoed') by the server immediately.
+
+```lua
+require'uloop'
+
+uloop.init()
+
+local server = require'websocket'.server.uloop
+server.listen
+{
+  port = 8080,
+  protocols = {
+    echo = function(ws)
+      local message = ws:receive()
+      if message then
+        ws:send(message)
+      else
+        ws:close()
+        return
+      end
+	end
+  },
+  default = echo_handler
+}
+
+uloop.run()
+
+```
+
+
 ## Running test-server examples
 
 The folder test-server contains two re-implementations of the [libwebsocket](http://git.warmcat.com/cgi-bin/cgit/libwebsockets/) test-server.c example.
@@ -119,6 +152,7 @@ The client and server modules depend on:
   - luasec
   - copas (optionally)
   - lua-ev (optionally)
+  - libubox-lua (optionally)
 
 # Install
 

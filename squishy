@@ -10,6 +10,7 @@ Module "websocket.bit"  "src/websocket/bit.lua"
 Module "websocket.client_ev"  "src/websocket/client_ev.lua"
 Module "websocket.ev_common"  "src/websocket/ev_common.lua"
 Module "websocket.server_ev"  "src/websocket/server_ev.lua"
+Module "websocket.server_uloop"  "src/websocket/server_uloop.lua"
 
 Main "src/websocket.lua"
 Output "websocket.lua"
