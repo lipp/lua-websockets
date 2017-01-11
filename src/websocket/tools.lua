@@ -1,4 +1,5 @@
 local bit = require'websocket.bit'
+local mime = require'mime'
 local rol = bit.rol
 local bxor = bit.bxor
 local bor = bit.bor
@@ -158,7 +159,6 @@ local sha1_wiki = function(msg)
 end
 
 local base64_encode = function(data)
-  local mime = require'mime'
   return (mime.b64(data))
 end
 

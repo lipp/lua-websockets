@@ -27,7 +27,7 @@ local new = function(ws)
   end
   
   self.sock_close = function(self)
-    self.sock:shutdown()
+    --self.sock:shutdown() Causes errors?
     self.sock:close()
   end
   
