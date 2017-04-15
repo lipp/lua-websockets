@@ -19,6 +19,7 @@ local client = function(sock,protocol)
   local close_timer
   local async_send = require'websocket.ev_common'.async_send(sock,loop)
   local self = {}
+  self.sock = sock
   self.state = 'OPEN'
   self.sock = sock
   local user_on_error
@@ -41,7 +42,9 @@ local client = function(sock,protocol)
       close_timer:stop(loop)
       close_timer = nil
     end
-    message_io:stop(loop)
+    if message_io then
+      message_io:stop(loop)
+    end
     self.state = 'CLOSED'
     if user_on_close then
       user_on_close(self,was_clean,code,reason or '')
@@ -110,7 +113,8 @@ local client = function(sock,protocol)
     if clients[protocol] ~= nil and clients[protocol][self] ~= nil then
       clients[protocol][self] = nil
     end
-    if not message_io then
+    -- TODO: clarify close state machine
+    if not message_io and self.state ~= 'CLOSED' then
       self:start()
     end
     if self.state == 'OPEN' then
