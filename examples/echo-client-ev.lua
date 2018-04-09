@@ -1,5 +1,5 @@
 -- connects to a echo websocket server running a localhost:8080
--- sends a strong every second and prints the echoed messages
+-- sends a string every second and prints the echoed messages
 -- to stdout
 
 local ev = require'ev'
