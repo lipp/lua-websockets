@@ -1,3 +1,7 @@
+# Not maintained / maintainer wanted !!!!
+
+If someone wants to maintain / take ownership of this project, reach out to me (issue, email). I like Lua very much, but I don't have enough time / resources to stay engaged with it.
+
 # About
 
 This project provides Lua modules for [Websocket Version 13](http://tools.ietf.org/html/rfc6455) conformant clients and servers. 
