@@ -15,6 +15,7 @@ local new = function(ws)
       self.sock:close()
       return nil,err
     end
+    self.sock:settimeout(0)
   end
   
   self.sock_send = function(self,...)
