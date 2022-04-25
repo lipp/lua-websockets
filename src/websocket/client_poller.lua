@@ -1,6 +1,5 @@
 local socket = require'socket'
-local sync = require'websocket.sync'
-local tools = require'websocket.tools'
+local poller = require 'websocket.poller'
 
 local new = function(ws)
   ws =  ws or {}
@@ -31,7 +30,7 @@ local new = function(ws)
     self.sock:close()
   end
   
-  self = sync.extend(self)
+  self = poller.extend(self)
   return self
 end
 
