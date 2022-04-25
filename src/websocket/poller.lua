@@ -4,74 +4,83 @@ local tools = require'websocket.tools'
 local tinsert = table.insert
 local tconcat = table.concat
 
+local clean = function(self, was_clean,code,reason)
+  self.state = 'CLOSED'
+  self:sock_close()
+  if self.on_close then
+    self:on_close()
+  end
+  return nil,nil,was_clean,code,reason or 'closed'
+end
 
-local receive = function(self)
+local receive_init = function(self)
+  self.first_opcode = nil
+  self.frames = nil
+  self.bytes = 3
+  self.encoded = ''
+end
+
+local poll = function(self)
   if self.state ~= 'OPEN' and not self.is_closing then
+    receive_init(self)
     return nil,nil,false,1006,'wrong state'
   end
-  local first_opcode
-  local frames
-  local bytes = 3
-  local encoded = ''
-  local clean = function(was_clean,code,reason)
-    self.state = 'CLOSED'
-    self:sock_close()
-    if self.on_close then
-      self:on_close()
-    end
-    return nil,nil,was_clean,code,reason or 'closed'
+
+  local chunk,err = self:sock_receive(self.bytes)
+  if err and err ~= 'timeout' then
+    receive_init(self)
+    return clean(self, false,1006,err)
   end
-  while true do
-    local chunk,err = self:sock_receive(bytes)
-    if err then
-      return clean(false,1006,err)
-    end
-    encoded = encoded..chunk
-    local decoded,fin,opcode,_,masked = frame.decode(encoded)
-    if not self.is_server and masked then
-      return clean(false,1006,'Websocket receive failed: frame was not masked')
-    end
-    if decoded then
-      if opcode == frame.CLOSE then
-        if not self.is_closing then
-          local code,reason = frame.decode_close(decoded)
-          -- echo code
-          local msg = frame.encode_close(code)
-          local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
-          local n,err = self:sock_send(encoded)
-          if n == #encoded then
-            return clean(true,code,reason)
-          else
-            return clean(false,code,err)
-          end
+  self.encoded = self.encoded..(chunk or '')
+  local decoded,fin,opcode,_,masked = frame.decode(self.encoded)
+  if not self.is_server and masked then
+    receive_init(self)
+    return clean(self, false,1006,'Websocket receive failed: frame was not masked')
+  end
+  if decoded then
+    if opcode == frame.CLOSE then
+      if not self.is_closing then
+        local code,reason = frame.decode_close(decoded)
+        -- echo code
+        local msg = frame.encode_close(code)
+        local encoded = frame.encode(msg,frame.CLOSE,not self.is_server)
+        local n,err = self:sock_send(encoded)
+        receive_init(self)
+        if n == #encoded then
+          return clean(self, true,code,reason)
         else
-          return decoded,opcode
+          return clean(self, false,code,err)
         end
-      end
-      if not first_opcode then
-        first_opcode = opcode
-      end
-      if not fin then
-        if not frames then
-          frames = {}
-        elseif opcode ~= frame.CONTINUATION then
-          return clean(false,1002,'protocol error')
-        end
-        bytes = 3
-        encoded = ''
-        tinsert(frames,decoded)
-      elseif not frames then
-        return decoded,first_opcode
       else
-        tinsert(frames,decoded)
-        return tconcat(frames),first_opcode
+        receive_init(self)
+        return decoded,opcode
       end
-    else
-      assert(type(fin) == 'number' and fin > 0)
-      bytes = fin
     end
+    if not self.first_opcode then
+      self.first_opcode = opcode
+    end
+    if not fin then
+      if not self.frames then
+        self.frames = {}
+      elseif opcode ~= frame.CONTINUATION then
+        receive_init(self)
+        return clean(self, false,1002,'protocol error')
+      end
+      self.bytes = 3
+      self.encoded = ''
+      tinsert(self.frames,decoded)
+    elseif not self.frames then
+      receive_init(self)
+      return decoded,self.first_opcode
+    else
+      tinsert(self.frames,decoded)
+      receive_init(self)
+      return tconcat(self.frames),self.first_opcode
+    end
+  else
+    assert(type(fin) == 'number' and fin > 0)
+    self.bytes = fin
   end
-  assert(false,'never reach here')
 end
 
 local send = function(self,data,opcode)
@@ -186,10 +195,12 @@ local extend = function(obj)
     obj.state = 'CLOSED'
   end
 
-  obj.receive = receive
+  obj.poll = poll
   obj.send = send
   obj.close = close
   obj.connect = connect
+
+  receive_init(obj)
 
   return obj
 end
