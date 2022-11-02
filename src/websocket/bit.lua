@@ -4,7 +4,13 @@ if has_bit32 then
   bit.rol = bit.lrotate
   bit.ror = bit.rrotate
   return bit
-else
+end
+
+local has_bit
+has_bit, bit = pcall(require,'bit')
+if has_bit then
   -- luajit / lua 5.1 + luabitop
   return require'bit'
 end
+
+return (require 'bitop.funcs').bit
