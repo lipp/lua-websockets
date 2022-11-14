@@ -15,6 +15,7 @@ description = {
 dependencies = {
   "lua >= 5.4",
   "luasocket",
+  "luabitop",
   "lua-ev",
   "copas",
   "luasec"
