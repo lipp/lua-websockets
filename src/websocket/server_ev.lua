@@ -1,6 +1,5 @@
 
 local socket = require'socket'
-local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 local tconcat = table.concat
