@@ -7,12 +7,9 @@ local band = bit.band
 local bnot = bit.bnot
 local lshift = bit.lshift
 local rshift = bit.rshift
-local sunpack = string.unpack
 local srep = string.rep
 local schar = string.char
-local tremove = table.remove
 local tinsert = table.insert
-local tconcat = table.concat
 local mrandom = math.random
 
 local read_n_bytes = function(str, pos, n)
