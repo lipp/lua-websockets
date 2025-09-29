@@ -1,8 +1,5 @@
 
 local socket = require'socket'
-local copas = require'copas'
-local tools = require'websocket.tools'
-local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
 local sync = require'websocket.sync'
 local tconcat = table.concat
