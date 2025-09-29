@@ -17,7 +17,6 @@ local http_headers = function(request)
     return headers
   end
   request = request:match('[^\r\n]+\r\n(.*)')
-  local empty_line
   for line in request:gmatch('[^\r\n]*\r\n') do
     local name,val = line:match('([^%s]+)%s*:%s*([^\r\n]+)')
     if name and val then
@@ -31,7 +30,6 @@ local http_headers = function(request)
         headers[name] = headers[name]..','..val
       end
     elseif line == '\r\n' then
-      empty_line = true
     else
       assert(false,line..'('..#line..')')
     end
