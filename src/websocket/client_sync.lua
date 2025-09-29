@@ -1,6 +1,5 @@
 local socket = require'socket'
 local sync = require'websocket.sync'
-local tools = require'websocket.tools'
 
 local new = function(ws)
   ws =  ws or {}
