@@ -3,9 +3,6 @@ local socket = require'socket'
 local tools = require'websocket.tools'
 local frame = require'websocket.frame'
 local handshake = require'websocket.handshake'
-local debug = require'debug'
-local tconcat = table.concat
-local tinsert = table.insert
 
 local ev = function(ws)
   ws = ws or {}
@@ -147,7 +144,6 @@ local ev = function(ws)
         async_send(
           req,
           function()
-            local resp = {}
             local response = ''
             local read_upgrade = function(loop,read_io)
               -- this seems to be possible, i don't understand why though :(
